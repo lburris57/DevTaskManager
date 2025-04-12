@@ -6,7 +6,7 @@
 //
 import Foundation
 
-enum TaskTypeEnum: String, CaseIterable
+enum TaskTypeEnum: String, Identifiable, CaseIterable, Hashable
 {
     case development = "Development"
     case requirements = "Requirements"

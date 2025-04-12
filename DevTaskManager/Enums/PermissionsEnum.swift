@@ -6,7 +6,7 @@
 //
 import Foundation
 
-enum PermissionsEnum: String, CaseIterable
+enum PermissionsEnum: String, Identifiable, CaseIterable, Hashable
 {
     case addUser = "Add User"
     case deleteUser = "Delete User"

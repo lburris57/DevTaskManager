@@ -11,9 +11,9 @@ import SwiftData
 class User
 {
     @Attribute(.unique) var userId = UUID().uuidString
-    var firstName: String
-    var lastName: String
-    var roles: [Role]
+    var firstName: String = Constants.EMPTY_STRING
+    var lastName: String = Constants.EMPTY_STRING
+    var roles: [Role] = []
     var createdBy: User?
     var dateCreated: Date = Date()
     var lastUpdated: Date?

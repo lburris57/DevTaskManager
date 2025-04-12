@@ -11,8 +11,8 @@ import SwiftData
 class Task
 {
     @Attribute(.unique) var taskId = UUID().uuidString
-    var taskName: String
-    var taskType: String
+    var taskName: String = Constants.EMPTY_STRING
+    var taskType: String = Constants.EMPTY_STRING
     var assignedUser: User?
     var taskStatus: String = "Unassigned"
     var taskComment: String?

@@ -6,7 +6,7 @@
 //
 import Foundation
 
-enum RoleNamesEnum: String, CaseIterable
+enum RoleNamesEnum: String, Identifiable, CaseIterable, Hashable
 {
     case admin = "Administrator"
     case developer = "Developer"

@@ -6,7 +6,7 @@
 //
 import Foundation
 
-enum TaskStatusEnum: String, CaseIterable
+enum TaskStatusEnum: String, Identifiable, CaseIterable, Hashable
 {
     case unassigned = "Unassigned"
     case inProgress = "In Progress"
