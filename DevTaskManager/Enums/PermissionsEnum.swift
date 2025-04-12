@@ -14,10 +14,11 @@ enum PermissionsEnum: String, CaseIterable
     case deleteTask = "Delete Task"
     case taskAssignment = "Task Assignment"
     case createReport = "Create Report"
+    case admin = "Admin"
     
     static var allValues: [PermissionsEnum]
     {
-        [.addUser, .deleteUser, .addTask, .deleteTask, .taskAssignment, .createReport]
+        [.addUser, .deleteUser, .addTask, .deleteTask, .taskAssignment, .createReport, .admin]
     }
 
     var id: String
