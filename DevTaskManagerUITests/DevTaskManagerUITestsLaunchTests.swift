@@ -7,18 +7,21 @@
 
 import XCTest
 
-final class DevTaskManagerUITestsLaunchTests: XCTestCase {
-
-    override class var runsForEachTargetApplicationUIConfiguration: Bool {
+final class DevTaskManagerUITestsLaunchTests: XCTestCase
+{
+    override class var runsForEachTargetApplicationUIConfiguration: Bool
+    {
         true
     }
 
-    override func setUpWithError() throws {
+    override func setUpWithError() throws
+    {
         continueAfterFailure = false
     }
 
     @MainActor
-    func testLaunch() throws {
+    func testLaunch() throws
+    {
         let app = XCUIApplication()
         app.launch()
 
