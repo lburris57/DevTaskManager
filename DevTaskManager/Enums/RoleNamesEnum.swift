@@ -13,6 +13,11 @@ enum RoleNamesEnum: String, CaseIterable
     case businessAnalyst = "Business Analyst"
     case validator = "Validator"
     
+    static var allValues: [RoleNamesEnum]
+    {
+        [.admin, .developer, .businessAnalyst, .validator]
+    }
+    
     var id: String
     {
         rawValue
