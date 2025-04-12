@@ -12,18 +12,17 @@ class TaskItem
 {
     var parentTask: Task?
     var taskDescription: String = Constants.EMPTY_STRING
-    var taskPriority: String = Constants.EMPTY_STRING
+    
     var taskItemComment: String?
     var dateCompleted: Date?
     var createdBy: User?
     var dateCreated: Date = Date()
     var lastUpdated: Date?
 
-    init(parentTask: Task? = nil, taskDescription: String, taskPriority: String, taskItemComment: String? = nil, dateCompleted: Date? = nil, createdBy: User? = nil, dateCreated: Date, lastUpdated: Date? = nil)
+    init(parentTask: Task? = nil, taskDescription: String, taskItemComment: String? = nil, dateCompleted: Date? = nil, createdBy: User? = nil, dateCreated: Date, lastUpdated: Date? = nil)
     {
         self.parentTask = parentTask
         self.taskDescription = taskDescription
-        self.taskPriority = taskPriority
         self.taskItemComment = taskItemComment
         self.dateCompleted = dateCompleted
         self.createdBy = createdBy

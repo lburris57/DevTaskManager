@@ -15,6 +15,7 @@ class Task
     var taskType: String = Constants.EMPTY_STRING
     var assignedUser: User?
     var taskStatus: String = "Unassigned"
+    var taskPriority: String = Constants.EMPTY_STRING
     var taskComment: String?
     var dateCompleted: Date?
     var createdBy: User?
@@ -25,13 +26,14 @@ class Task
     @Relationship(deleteRule: .cascade, inverse: \TaskItem.parentTask)
     var taskItems: [TaskItem] = []
 
-    init(taskId: String = UUID().uuidString, taskName: String, taskType: String, assignedUser: User? = nil, taskStatus: String, taskComment: String? = nil, dateCompleted: Date? = nil, createdBy: User? = nil, dateCreated: Date, dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem])
+    init(taskId: String = UUID().uuidString, taskName: String, taskType: String, assignedUser: User? = nil, taskStatus: String, taskPriority: String, taskComment: String? = nil, dateCompleted: Date? = nil, createdBy: User? = nil, dateCreated: Date, dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem])
     {
         self.taskId = taskId
         self.taskName = taskName
         self.taskType = taskType
         self.assignedUser = assignedUser
         self.taskStatus = taskStatus
+        self.taskPriority = taskPriority
         self.taskComment = taskComment
         self.dateCompleted = dateCompleted
         self.createdBy = createdBy
