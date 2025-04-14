@@ -12,7 +12,6 @@ class TaskItem
 {
     var parentTask: Task?
     var taskDescription: String = Constants.EMPTY_STRING
-    
     var taskItemComment: String?
     var dateCompleted: Date?
     var createdBy: User?

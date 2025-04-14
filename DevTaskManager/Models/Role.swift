@@ -21,4 +21,14 @@ class Role
         self.roleName = roleName
         self.permisssions = permisssions
     }
+    
+    static func loadRoles() -> [Role]
+    {
+        let role1 = Role(roleName: RoleNamesEnum.admin.id, permisssions: [PermissionsEnum.admin.id])
+        let role2 = Role(roleName: RoleNamesEnum.businessAnalyst.id, permisssions: [PermissionsEnum.useCases.id, PermissionsEnum.createReport.id])
+        let role3 = Role(roleName: RoleNamesEnum.developer.id, permisssions: [PermissionsEnum.addTask.id, PermissionsEnum.completeTask.id])
+        let role4 = Role(roleName: RoleNamesEnum.validator.id, permisssions: [PermissionsEnum.createDefect.id, PermissionsEnum.closeDefect.id, PermissionsEnum.createReport.id])
+        
+        return [role1, role2, role3, role4]
+    }
 }
