@@ -20,7 +20,7 @@ import Foundation
      {
          Text("Role:").font(.body).foregroundStyle(colorScheme == .dark ? .gray : .blue)
      
-         Picker(Constants.EMPTY_STRING, selection: $role.permission)
+         Picker(Constants.EMPTY_STRING, selection: $role.permissions)
          {
              ForEach(PermissionsEnum.allCases)
              {
@@ -78,9 +78,9 @@ extension PermissionsEnum
             case .taskAssignment:
                 return "Task Assignment"
             case .createDefect:
-                return "Foyer"
-            case .closeDefect:
                 return "Create Defect"
+            case .closeDefect:
+                return "Close Defect"
             case .createReport:
                 return "Create Report"
             case .useCases:
