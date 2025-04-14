@@ -8,18 +8,34 @@ import Foundation
 
 enum TaskPriorityEnum: String, Identifiable, CaseIterable, Hashable
 {
+    var id: UUID
+    {
+        return UUID()
+    }
+    
+    case all = "All"
     case low = "Low"
     case medium = "Medium"
     case high = "High"
     case enhancement = "Enhancement"
-    
-    static var allCases: [TaskPriorityEnum]
+}
+
+extension TaskPriorityEnum
+{
+    var title: String
     {
-        [.low, .medium, .high, .enhancement]
-    }
-    
-    var id: String
-    {
-        rawValue
+        switch self
+        {
+            case .all:
+                return "All"
+            case .low:
+                return "Low"
+            case .medium:
+                return "Medium"
+            case .high:
+                return "High"
+            case .enhancement:
+                return "Enhancement"
+        }
     }
 }

@@ -8,6 +8,12 @@ import Foundation
 
 enum TaskTypeEnum: String, Identifiable, CaseIterable, Hashable
 {
+    var id: UUID
+    {
+        return UUID()
+    }
+    
+    case all = "All"
     case development = "Development"
     case requirements = "Requirements"
     case design = "Design"
@@ -16,14 +22,32 @@ enum TaskTypeEnum: String, Identifiable, CaseIterable, Hashable
     case documentation = "Documentation"
     case database = "Database"
     case defectCorrection = "Defect Correction"
-    
-    static var allCases: [TaskTypeEnum]
+}
+
+extension TaskTypeEnum
+{
+    var title: String
     {
-        [.development, .requirements, .design, .useCases, .testing, .documentation, .database, .defectCorrection]
-    }
-    
-    var id: String
-    {
-        rawValue
+        switch self
+        {
+            case .all:
+                return "All"
+            case .development:
+                return "Devlopment"
+            case .requirements:
+                return "Requirements"
+            case .design:
+                return "Design"
+            case .useCases:
+                return "Use Cases"
+            case .testing:
+                return "Testing"
+            case .documentation:
+                return "Documentation"
+            case .database:
+                return "Database"
+            case .defectCorrection:
+                return "Defense Correction"
+        }
     }
 }

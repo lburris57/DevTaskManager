@@ -8,18 +8,34 @@ import Foundation
 
 enum TaskStatusEnum: String, Identifiable, CaseIterable, Hashable
 {
+    var id: UUID
+    {
+        return UUID()
+    }
+    
+    case all = "All"
     case unassigned = "Unassigned"
     case inProgress = "In Progress"
     case completed = "Completed"
     case deferred = "Deferred"
-    
-    static var allCases: [TaskStatusEnum]
+}
+
+extension TaskStatusEnum
+{
+    var title: String
     {
-        [.unassigned, .inProgress, .completed, .deferred]
-    }
-    
-    var id: String
-    {
-        rawValue
+        switch self
+        {
+            case .all:
+                return "All"
+            case .unassigned:
+                return "Unassigned"
+            case .inProgress:
+                return "In Progress"
+            case .completed:
+                return "Completed"
+            case .deferred:
+                return "Deferred"
+        }
     }
 }

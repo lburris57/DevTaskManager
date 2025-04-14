@@ -6,8 +6,44 @@
 //
 import Foundation
 
+/*
+ 
+ USAGE:
+ 
+ @Bindable var role: Role
+ 
+ var body: some View
+ {
+    ...
+ 
+    VStack(alignment: .leading, spacing: 5)
+     {
+         Text("Role:").font(.body).foregroundStyle(colorScheme == .dark ? .gray : .blue)
+     
+         Picker(Constants.EMPTY_STRING, selection: $role.permission)
+         {
+             ForEach(PermissionsEnum.allCases)
+             {
+                 permission in
+                 
+                 Text(permission.title).tag(permission.title)
+             }
+         }
+         .pickerStyle(.menu)
+         .labelsHidden()
+     }
+ }
+ 
+ */
+
 enum PermissionsEnum: String, Identifiable, CaseIterable, Hashable
 {
+    var id: UUID
+    {
+        return UUID()
+    }
+    
+    case all = "All"
     case addUser = "Add User"
     case deleteUser = "Delete User"
     case addTask = "Add Task"
@@ -19,14 +55,38 @@ enum PermissionsEnum: String, Identifiable, CaseIterable, Hashable
     case createReport = "Create Report"
     case useCases = "User Cases"
     case admin = "Admin"
-    
-    static var allValues: [PermissionsEnum]
-    {
-        [.addUser, .deleteUser, .addTask, .completeTask, .deleteTask, .taskAssignment, .createDefect, .closeDefect, .createReport, .useCases, .admin]
-    }
+}
 
-    var id: String
+extension PermissionsEnum
+{
+    var title: String
     {
-        rawValue
+        switch self
+        {
+            case .all:
+                return "All"
+            case .addUser:
+                return "Add User"
+            case .deleteUser:
+                return "Delete User"
+            case .addTask:
+                return "Add Task"
+            case .completeTask:
+                return "Complete Task"
+            case .deleteTask:
+                return "Delete Task"
+            case .taskAssignment:
+                return "Task Assignment"
+            case .createDefect:
+                return "Foyer"
+            case .closeDefect:
+                return "Create Defect"
+            case .createReport:
+                return "Create Report"
+            case .useCases:
+                return "Use Cases"
+            case .admin:
+                return "Admin"
+        }
     }
 }

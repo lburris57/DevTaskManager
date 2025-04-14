@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		912D4C3D2DAD9A9300F4BE80 /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 912D4C3C2DAD9A9300F4BE80 /* Inject */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		912D4BBB2DAA278500F4BE80 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				912D4C3D2DAD9A9300F4BE80 /* Inject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 				912D4BAF2DAA278500F4BE80 /* DevTaskManager */,
 				912D4BBD2DAA278500F4BE80 /* DevTaskManagerTests */,
 				912D4BC72DAA278500F4BE80 /* DevTaskManagerUITests */,
+				912D4C3B2DAD9A9300F4BE80 /* Frameworks */,
 				912D4BAE2DAA278500F4BE80 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +96,13 @@
 				912D4BC42DAA278500F4BE80 /* DevTaskManagerUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		912D4C3B2DAD9A9300F4BE80 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +125,7 @@
 			);
 			name = DevTaskManager;
 			packageProductDependencies = (
+				912D4C3C2DAD9A9300F4BE80 /* Inject */,
 			);
 			productName = DevTaskManager;
 			productReference = 912D4BAD2DAA278500F4BE80 /* DevTaskManager.app */;
@@ -195,6 +209,9 @@
 			);
 			mainGroup = 912D4BA42DAA278400F4BE80;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 912D4BAE2DAA278500F4BE80 /* Products */;
 			projectDirPath = "";
@@ -558,6 +575,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzysztofzablocki/Inject";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		912D4C3C2DAD9A9300F4BE80 /* Inject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */;
+			productName = Inject;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 912D4BA52DAA278400F4BE80 /* Project object */;
 }

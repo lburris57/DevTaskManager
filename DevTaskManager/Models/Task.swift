@@ -47,13 +47,13 @@ class Task
     {
         let users: [User] = User.loadUsers()
         
-        let task1 = Task(taskName: "Task1", taskType: TaskTypeEnum.development.id, taskStatus: TaskStatusEnum.unassigned.id, taskPriority: TaskPriorityEnum.low.id, createdBy: users[0], dateCreated: Date(), taskItems: [])
+        let task1 = Task(taskName: "Task1", taskType: TaskTypeEnum.development.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.low.title, createdBy: users[0], dateCreated: Date(), taskItems: [])
         
-        let task2 = Task(taskName: "Task2", taskType: TaskTypeEnum.testing.id, taskStatus: TaskStatusEnum.unassigned.id, taskPriority: TaskPriorityEnum.medium.id, createdBy: users[1], dateCreated: Date(), taskItems: [])
+        let task2 = Task(taskName: "Task2", taskType: TaskTypeEnum.testing.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.medium.title, createdBy: users[1], dateCreated: Date(), taskItems: [])
         
-        let task3 = Task(taskName: "Task3", taskType: TaskTypeEnum.design.id, taskStatus: TaskStatusEnum.unassigned.id, taskPriority: TaskPriorityEnum.high.id, createdBy: users[2], dateCreated: Date(), taskItems: [])
+        let task3 = Task(taskName: "Task3", taskType: TaskTypeEnum.design.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, createdBy: users[2], dateCreated: Date(), taskItems: [])
         
-        let task4 = Task(taskName: "Task4", taskType: TaskTypeEnum.documentation.id, taskStatus: TaskStatusEnum.unassigned.id, taskPriority: TaskPriorityEnum.high.id, createdBy: users[3], dateCreated: Date(), taskItems: [])
+        let task4 = Task(taskName: "Task4", taskType: TaskTypeEnum.documentation.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, createdBy: users[3], dateCreated: Date(), taskItems: [])
         
         return [task1, task2, task3, task4]
     }
