@@ -4,7 +4,7 @@
 //
 //  Created by Larry Burris on 4/12/25.
 //
-import Foundation
+import SwiftUI
 
 enum TaskTypeEnum: String, Identifiable, CaseIterable, Hashable
 {
@@ -33,7 +33,7 @@ extension TaskTypeEnum
             case .all:
                 return "All"
             case .development:
-                return "Devlopment"
+                return "Development"
             case .requirements:
                 return "Requirements"
             case .design:
@@ -47,7 +47,7 @@ extension TaskTypeEnum
             case .database:
                 return "Database"
             case .defectCorrection:
-                return "Defense Correction"
+                return "Defect Correction"
         }
     }
 }

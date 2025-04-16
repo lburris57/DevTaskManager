@@ -4,7 +4,7 @@
 //
 //  Created by Larry Burris on 4/12/25.
 //
-import Foundation
+import SwiftUI
 
 enum TaskPriorityEnum: String, Identifiable, CaseIterable, Hashable
 {
