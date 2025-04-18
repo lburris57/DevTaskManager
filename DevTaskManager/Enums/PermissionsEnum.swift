@@ -53,7 +53,7 @@ enum PermissionsEnum: String, Identifiable, CaseIterable, Hashable
     case createDefect = "Create Defect"
     case closeDefect = "Close Defect"
     case createReport = "Create Report"
-    case useCases = "User Cases"
+    case useCases = "Use Cases"
     case admin = "Admin"
 }
 

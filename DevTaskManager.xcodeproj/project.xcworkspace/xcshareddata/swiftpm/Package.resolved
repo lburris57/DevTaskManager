@@ -1,6 +1,15 @@
 {
-  "originHash" : "f6574bc137e785fb319fcf207eb8b8d80e495d9d4fc490ce8a7121f449c78df3",
+  "originHash" : "9e34d7a176f8db883b6e4ff81f628342ddd8942a8f16f146a26d6bb00cea616e",
   "pins" : [
+    {
+      "identity" : "floatingprompttextfield",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/EmilioPelaez/FloatingPromptTextField",
+      "state" : {
+        "revision" : "eac6ebeed385c7527eab8e63eb0371708a271b12",
+        "version" : "0.4.0"
+      }
+    },
     {
       "identity" : "inject",
       "kind" : "remoteSourceControl",

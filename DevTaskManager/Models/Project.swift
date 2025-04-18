@@ -19,7 +19,7 @@ final class Project
     var users: [User] = []
     var tasks: [Task] = []
 
-    init(projectId: String, title: String, descriptionText: String, createdBy: User? = nil, dateCreated: Date, lastUpdated: Date? = nil, users: [User] = [], tasks: [Task] = [])
+    init(projectId: String = UUID().uuidString, title: String = "", descriptionText: String = "", createdBy: User? = nil, dateCreated: Date = Date(), lastUpdated: Date? = nil, users: [User] = [], tasks: [Task] = [])
     {
         self.projectId = projectId
         self.title = title
@@ -29,5 +29,10 @@ final class Project
         self.lastUpdated = lastUpdated
         self.users = users
         self.tasks = tasks
+    }
+    
+    static func loadSampleProject() -> Project
+    {
+        return Project(title: "Sample Project", descriptionText: "This is a sample project.")
     }
 }

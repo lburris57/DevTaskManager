@@ -25,9 +25,9 @@ struct DevTaskManagerApp: App
     {
         WindowGroup
         {
-            ContentView()
+            ProjectListView()
         }
-        .modelContainer(for: [User.self, Role.self, Task.self, TaskItem.self])
+        .modelContainer(for: [Project.self, User.self, Role.self, Task.self, TaskItem.self])
     }
     
     init()

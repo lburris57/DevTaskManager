@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		912D4C3D2DAD9A9300F4BE80 /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 912D4C3C2DAD9A9300F4BE80 /* Inject */; };
+		912D4C912DB202D400F4BE80 /* FloatingPromptTextField in Frameworks */ = {isa = PBXBuildFile; productRef = 912D4C902DB202D400F4BE80 /* FloatingPromptTextField */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				912D4C912DB202D400F4BE80 /* FloatingPromptTextField in Frameworks */,
 				912D4C3D2DAD9A9300F4BE80 /* Inject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -126,6 +128,7 @@
 			name = DevTaskManager;
 			packageProductDependencies = (
 				912D4C3C2DAD9A9300F4BE80 /* Inject */,
+				912D4C902DB202D400F4BE80 /* FloatingPromptTextField */,
 			);
 			productName = DevTaskManager;
 			productReference = 912D4BAD2DAA278500F4BE80 /* DevTaskManager.app */;
@@ -211,6 +214,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */,
+				912D4C8F2DB202C700F4BE80 /* XCRemoteSwiftPackageReference "FloatingPromptTextField" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 912D4BAE2DAA278500F4BE80 /* Products */;
@@ -585,6 +589,14 @@
 				minimumVersion = 1.5.2;
 			};
 		};
+		912D4C8F2DB202C700F4BE80 /* XCRemoteSwiftPackageReference "FloatingPromptTextField" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/EmilioPelaez/FloatingPromptTextField";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -592,6 +604,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */;
 			productName = Inject;
+		};
+		912D4C902DB202D400F4BE80 /* FloatingPromptTextField */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 912D4C8F2DB202C700F4BE80 /* XCRemoteSwiftPackageReference "FloatingPromptTextField" */;
+			productName = FloatingPromptTextField;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
