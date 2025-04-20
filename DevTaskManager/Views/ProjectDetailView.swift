@@ -1,5 +1,5 @@
 //
-//  ProjectDetailsView.swift
+//  ProjectDetailView.swift
 //  DevTaskManager
 //
 //  Created by Larry Burris on 4/17/25.
@@ -7,8 +7,9 @@
 import SwiftUI
 import SwiftData
 import FloatingPromptTextField
+import Inject
 
-struct ProjectDetailsView: View
+struct ProjectDetailView: View
 {
     //  This is the project sent from the list view
     @Bindable var project: Project
@@ -19,6 +20,8 @@ struct ProjectDetailsView: View
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
+    
+    @ObserveInjection var inject
     
     //  Check whether to enable/disable Save button
     func validateFields() -> Bool
@@ -41,6 +44,7 @@ struct ProjectDetailsView: View
             withAnimation
             {
                 modelContext.delete(project)
+                try? modelContext.save()
             }
         }
     }
@@ -104,5 +108,6 @@ struct ProjectDetailsView: View
             .padding(.horizontal)
             .onDisappear(perform: validateProject)
             .navigationTitle(validateFields() ? "Edit Project" : "Add Project").navigationBarTitleDisplayMode(.inline)
+            .enableInjection()
         }
     }

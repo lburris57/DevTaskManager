@@ -1,14 +1,14 @@
 //
-//  ProjectListView.swift
+//  UserListView.swift
 //  DevTaskManager
 //
-//  Created by Larry Burris on 4/12/25.
+//  Created by Larry Burris on 4/19/25.
 //
 import SwiftData
 import SwiftUI
 import Inject
 
-struct ProjectListView: View
+struct UserListView: View
 {
     @Environment(\.modelContext) var modelContext
     
@@ -16,23 +16,9 @@ struct ProjectListView: View
 
     @State private var path = NavigationPath()
     
-    @Query(sort: \Project.title) var projects: [Project]
+    @Query(sort: \User.lastName) var users: [User]
     
-    //  Save roles to the database.
-    func saveRoles()
-    {
-        let roles = Role.loadRoles()
-        
-        Log.info("The permissions for validators are: \(roles[3].permissions)")
-        
-        for role in roles
-        {
-            role.lastUpdated = Date()
-            
-            modelContext.insert(role)
-            try? modelContext.save()
-        }
-    }
+    @Query(sort: \Role.roleName) var roles: [Role]
 
     var body: some View
     {
@@ -40,35 +26,42 @@ struct ProjectListView: View
         {
             VStack
             {
-                if !projects.isEmpty
+                if !users.isEmpty
                 {
                     VStack
                     {
                         List
                         {
-                            //  Display all the projects in a navigation link
-                            ForEach(projects)
+                            //  Display all the users in a navigation link
+                            ForEach(users)
                             {
-                                project in
+                                user in
 
                                 VStack(alignment: .leading, spacing: 3)
                                 {
-                                    NavigationLink(value: project)
+                                    NavigationLink(value: user)
                                     {
                                         VStack
                                         {
                                             HStack
                                             {
-                                                Text("Project Title:").bold()
+                                                Text("User:").bold()
                                                 Spacer()
-                                                Text(project.title)
+                                                Text(user.firstName + " " + user.lastName)
+                                            }
+                                            
+                                            HStack
+                                            {
+                                                Text("Role:").bold()
+                                                Spacer()
+                                                Text(user.roles.map(\.self).first?.roleName ?? roles[0].roleName)
                                             }
                                             
                                             HStack
                                             {
                                                 Text("Date Created:").bold()
                                                 Spacer()
-                                                Text(project.dateCreated.formatted())
+                                                Text(user.dateCreated.formatted())
                                             }
                                         }
                                     }
@@ -77,56 +70,55 @@ struct ProjectListView: View
                         }
                         .padding()
                         .listStyle(.plain)
-                        .navigationDestination(for: Project.self)
+                        .navigationDestination(for: User.self)
                         {
-                            project in
+                            user in
                             
                             //  Send the selected project to the ProjectDetailsView
                             //  along with the navigation path array
-                            ProjectDetailView(project: project, path: $path)
+                            UserDetailView(user: user, path: $path)
                         }
                     }
                 }
                 else
                 {
-                    //  No projects were found
+                    //  No users were found
                     ContentUnavailableView
                     {
-                        Label("No projects were found for display.", systemImage: "calendar.badge.clock")
+                        Label("No users were found for display.", systemImage: "calendar.badge.clock")
                     }
                     description:
                     {
-                        Text("\nPlease click the 'Add Project' button to create your first project.")
+                        Text("\nPlease click the 'Add User' button to create your first user record.")
                     }
                 }
             }
-            .onAppear(perform: saveRoles)
             .toolbar
             {
                 ToolbarItem(placement: .topBarTrailing)
                 {
-                    //  Save the skeleton project to the database and
+                    //  Save the skeleton user to the database and
                     //  add it to the NavigationPath array
                     Button(action:
                     {
-                        let project = Project(title: Constants.EMPTY_STRING,
-                                              descriptionText: Constants.EMPTY_STRING)
+                        let user = User(firstName: Constants.EMPTY_STRING,
+                                        lastName: Constants.EMPTY_STRING)
 
-                        modelContext.insert(project)
+                        modelContext.insert(user)
                         try? modelContext.save()
                         
-                        path.append(project)
+                        path.append(user)
                     },
                     label:
                     {
                         HStack
                         {
-                            Text("Add Project").font(.body)
+                            Text("Add User").font(.body)
                             Image(systemName: "plus")
                         }
                     })
                 }
-            }.navigationTitle("Project List").navigationBarTitleDisplayMode(.inline)
+            }.navigationTitle("User List").navigationBarTitleDisplayMode(.inline)
         }
         .enableInjection()
     }
@@ -134,5 +126,5 @@ struct ProjectListView: View
 
 #Preview
 {
-    ProjectListView()
+    UserListView()
 }

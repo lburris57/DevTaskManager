@@ -12,8 +12,8 @@ import Inject
  Just 3 steps to enable injection in your SwiftUI Views
 
  1. Import Inject in each view
- 2. Call .enableInjection() at the end of your body definition
- 3. Add @ObserveInjection var inject to your view struct
+ 2. Add @ObserveInjection var inject to your view struct
+ 3. Call .enableInjection() at the end of your body definition
  */
 
 @main
@@ -25,7 +25,7 @@ struct DevTaskManagerApp: App
     {
         WindowGroup
         {
-            ProjectListView()
+            UserListView()
         }
         .modelContainer(for: [Project.self, User.self, Role.self, Task.self, TaskItem.self])
     }

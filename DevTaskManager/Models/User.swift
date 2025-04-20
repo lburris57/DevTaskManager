@@ -14,20 +14,18 @@ class User
     var firstName: String = Constants.EMPTY_STRING
     var lastName: String = Constants.EMPTY_STRING
     var roles: [Role] = []
-    var createdBy: User?
     var dateCreated: Date = Date()
     var lastUpdated: Date?
 
     @Relationship(deleteRule: .cascade, inverse: \Task.assignedUser)
     var tasks: [Task] = []
 
-    init(userId: String = UUID().uuidString, firstName: String, lastName: String, roles: [Role] = [], createdBy: User? = nil, dateCreated: Date = Date(), lastUpdated: Date? = nil, tasks: [Task] = [])
+    init(userId: String = UUID().uuidString, firstName: String, lastName: String, roles: [Role] = [], dateCreated: Date = Date(), lastUpdated: Date? = nil, tasks: [Task] = [])
     {
         self.userId = userId
         self.firstName = firstName
         self.lastName = lastName
         self.roles = roles
-        self.createdBy = createdBy
         self.dateCreated = dateCreated
         self.lastUpdated = lastUpdated
         self.tasks = tasks

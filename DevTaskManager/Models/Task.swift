@@ -18,7 +18,6 @@ class Task
     var taskPriority: String = Constants.EMPTY_STRING
     var taskComment: String?
     var dateCompleted: Date?
-    var createdBy: User?
     var dateCreated: Date = Date()
     var dateAssigned: Date?
     var lastUpdated: Date?
@@ -26,7 +25,7 @@ class Task
     @Relationship(deleteRule: .cascade, inverse: \TaskItem.parentTask)
     var taskItems: [TaskItem] = []
 
-    init(taskId: String = UUID().uuidString, taskName: String, taskType: String, assignedUser: User? = nil, taskStatus: String, taskPriority: String, taskComment: String? = nil, dateCompleted: Date? = nil, createdBy: User? = nil, dateCreated: Date, dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem])
+    init(taskId: String = UUID().uuidString, taskName: String, taskType: String, assignedUser: User? = nil, taskStatus: String, taskPriority: String, taskComment: String? = nil, dateCompleted: Date? = nil, dateCreated: Date, dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem])
     {
         self.taskId = taskId
         self.taskName = taskName
@@ -36,7 +35,6 @@ class Task
         self.taskPriority = taskPriority
         self.taskComment = taskComment
         self.dateCompleted = dateCompleted
-        self.createdBy = createdBy
         self.dateCreated = dateCreated
         self.dateAssigned = dateAssigned
         self.lastUpdated = lastUpdated
@@ -45,15 +43,13 @@ class Task
     
     static func loadTasks() -> [Task]
     {
-        let users: [User] = User.loadUsers()
+        let task1 = Task(taskName: "Task1", taskType: TaskTypeEnum.development.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.low.title, dateCreated: Date(), taskItems: [])
         
-        let task1 = Task(taskName: "Task1", taskType: TaskTypeEnum.development.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.low.title, createdBy: users[0], dateCreated: Date(), taskItems: [])
+        let task2 = Task(taskName: "Task2", taskType: TaskTypeEnum.testing.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.medium.title, dateCreated: Date(), taskItems: [])
         
-        let task2 = Task(taskName: "Task2", taskType: TaskTypeEnum.testing.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.medium.title, createdBy: users[1], dateCreated: Date(), taskItems: [])
+        let task3 = Task(taskName: "Task3", taskType: TaskTypeEnum.design.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, dateCreated: Date(), taskItems: [])
         
-        let task3 = Task(taskName: "Task3", taskType: TaskTypeEnum.design.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, createdBy: users[2], dateCreated: Date(), taskItems: [])
-        
-        let task4 = Task(taskName: "Task4", taskType: TaskTypeEnum.documentation.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, createdBy: users[3], dateCreated: Date(), taskItems: [])
+        let task4 = Task(taskName: "Task4", taskType: TaskTypeEnum.documentation.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, dateCreated: Date(), taskItems: [])
         
         return [task1, task2, task3, task4]
     }
