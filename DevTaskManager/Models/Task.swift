@@ -12,11 +12,11 @@ class Task
 {
     @Attribute(.unique) var taskId = UUID().uuidString
     var taskName: String = Constants.EMPTY_STRING
-    var taskType: String = Constants.EMPTY_STRING
+    var taskType: String = TaskTypeEnum.development.title
     var assignedUser: User?
-    var taskStatus: String = "Unassigned"
-    var taskPriority: String = Constants.EMPTY_STRING
-    var taskComment: String?
+    var taskStatus: String = TaskStatusEnum.unassigned.title
+    var taskPriority: String = TaskPriorityEnum.medium.title
+    var taskComment: String = Constants.EMPTY_STRING
     var dateCompleted: Date?
     var dateCreated: Date = Date()
     var dateAssigned: Date?
@@ -25,7 +25,7 @@ class Task
     @Relationship(deleteRule: .cascade, inverse: \TaskItem.parentTask)
     var taskItems: [TaskItem] = []
 
-    init(taskId: String = UUID().uuidString, taskName: String, taskType: String, assignedUser: User? = nil, taskStatus: String, taskPriority: String, taskComment: String? = nil, dateCompleted: Date? = nil, dateCreated: Date, dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem])
+    init(taskId: String = UUID().uuidString, taskName: String, taskType: String = TaskTypeEnum.development.title, assignedUser: User? = nil, taskStatus: String = TaskStatusEnum.unassigned.title, taskPriority: String = TaskPriorityEnum.medium.title, taskComment: String = Constants.EMPTY_STRING, dateCompleted: Date? = nil, dateCreated: Date = Date(), dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem] = [])
     {
         self.taskId = taskId
         self.taskName = taskName

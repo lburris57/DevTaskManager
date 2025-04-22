@@ -27,6 +27,12 @@ struct UserDetailView: View
     
     @ObserveInjection var inject
     
+    //  Populate role from passed in User
+    func populateInitialSelectedRoleValue()
+    {
+        selectedRole = user.roles.first?.roleName ?? Constants.EMPTY_STRING
+    }
+    
     //  Check whether to enable/disable Save button
     func validateFields() -> Bool
     {
@@ -53,7 +59,7 @@ struct UserDetailView: View
         }
     }
     
-    //  Set the last updated date value when saving changes
+    //  Set the role and last updated date values when saving changes
     func saveUser()
     {
         let role = roles.first(where: { $0.roleName == selectedRole }) ?? roles[0]
@@ -132,6 +138,7 @@ struct UserDetailView: View
                 dismiss()
             })
             .padding(.horizontal)
+            .onAppear(perform: populateInitialSelectedRoleValue)
             .onDisappear(perform: validateUser)
             .navigationTitle(validateFields() ? "Edit User" : "Add User").navigationBarTitleDisplayMode(.inline)
             .enableInjection()

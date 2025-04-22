@@ -25,7 +25,7 @@ struct DevTaskManagerApp: App
     {
         WindowGroup
         {
-            UserListView()
+            MainMenuView()
         }
         .modelContainer(for: [Project.self, User.self, Role.self, Task.self, TaskItem.self])
     }

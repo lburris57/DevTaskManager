@@ -1,20 +1,22 @@
 //
-//  UserListView.swift
+//  TaskListView.swift
 //  DevTaskManager
 //
-//  Created by Larry Burris on 4/19/25.
+//  Created by Larry Burris on 4/20/25.
 //
 import SwiftData
 import SwiftUI
 import Inject
 
-struct UserListView: View
+struct TaskListView: View
 {
     @Environment(\.modelContext) var modelContext
     
     @ObserveInjection var inject
 
     @State private var path = NavigationPath()
+    
+    @Query(sort: \Task.taskName) var tasks: [Task]
     
     @Query(sort: \User.lastName) var users: [User]
     
@@ -26,42 +28,49 @@ struct UserListView: View
         {
             VStack
             {
-                if !users.isEmpty
+                if !tasks.isEmpty
                 {
-                    VStack
+                    VStack(spacing: 15)
                     {
                         List
                         {
-                            //  Display all the users in a navigation link
-                            ForEach(users)
+                            //  Display all the tasks in a navigation link
+                            ForEach(tasks)
                             {
-                                user in
+                                task in
 
                                 VStack(alignment: .leading, spacing: 3)
                                 {
-                                    NavigationLink(value: user)
+                                    NavigationLink(value: task)
                                     {
                                         VStack
                                         {
                                             HStack
                                             {
-                                                Text("User:").bold()
+                                                Text("Task Name:").bold()
                                                 Spacer()
-                                                Text(user.firstName + " " + user.lastName)
+                                                Text(task.taskName)
                                             }
                                             
                                             HStack
                                             {
-                                                Text("Role:").bold()
+                                                Text("Task Type:").bold()
                                                 Spacer()
-                                                Text(user.roles.map(\.self).first?.roleName ?? roles[0].roleName)
+                                                Text(task.taskType)
+                                            }
+                                            
+                                            HStack
+                                            {
+                                                Text("Task Priority:").bold()
+                                                Spacer()
+                                                Text(task.taskPriority)
                                             }
                                             
                                             HStack
                                             {
                                                 Text("Date Created:").bold()
                                                 Spacer()
-                                                Text(user.dateCreated.formatted())
+                                                Text(task.dateCreated.formatted())
                                             }
                                         }
                                     }
@@ -70,26 +79,26 @@ struct UserListView: View
                         }
                         .padding()
                         .listStyle(.plain)
-                        .navigationDestination(for: User.self)
+                        .navigationDestination(for: Task.self)
                         {
-                            user in
+                            task in
                             
-                            //  Send the selected user to the ProjectDetailsView
+                            //  Send the selected task to the TaskDetailsView
                             //  along with the navigation path array
-                            UserDetailView(user: user, path: $path)
+                            TaskDetailView(task: task, path: $path)
                         }
                     }
                 }
                 else
                 {
-                    //  No users were found
+                    //  No tasks were found
                     ContentUnavailableView
                     {
-                        Label("No users were found for display.", systemImage: "calendar.badge.clock")
+                        Label("No tasks were found for display.", systemImage: "calendar.badge.clock")
                     }
                     description:
                     {
-                        Text("\nPlease click the 'Add User' button to create your first user record.")
+                        Text("\nPlease click the 'Add Task' button to create your first task record.")
                     }
                 }
             }
@@ -101,30 +110,24 @@ struct UserListView: View
                     //  add it to the NavigationPath array
                     Button(action:
                     {
-                        let user = User(firstName: Constants.EMPTY_STRING,
-                                        lastName: Constants.EMPTY_STRING)
+                        let task = Task(taskName: Constants.EMPTY_STRING)
 
-                        modelContext.insert(user)
+                        modelContext.insert(task)
                         try? modelContext.save()
                         
-                        path.append(user)
+                        path.append(task)
                     },
                     label:
                     {
                         HStack
                         {
-                            Text("Add User").font(.body)
+                            Text("Add Task").font(.body)
                             Image(systemName: "plus")
                         }
                     })
                 }
-            }.navigationTitle("User List").navigationBarTitleDisplayMode(.inline)
+            }.navigationTitle("Task List").navigationBarTitleDisplayMode(.inline)
         }
         .enableInjection()
     }
-}
-
-#Preview
-{
-    UserListView()
 }
