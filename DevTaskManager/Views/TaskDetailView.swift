@@ -22,11 +22,14 @@ struct TaskDetailView: View
     
     @Query(sort: \Project.title) var projects: [Project]
     
+    @Query(sort: \User.lastName) var users: [User]
+    
     @State private var selectedRole = Constants.EMPTY_STRING
     @State private var selectedTaskType: String
     @State private var selectedTaskStatus: String
     @State private var selectedTaskPriority: String
     @State private var selectedProject: Project?
+    @State private var selectedUser: User?
     @State private var isNewTask: Bool
     
     // Initialize state from task
@@ -39,6 +42,7 @@ struct TaskDetailView: View
         self._selectedTaskStatus = State(initialValue: task.taskStatus)
         self._selectedTaskPriority = State(initialValue: task.taskPriority)
         self._selectedProject = State(initialValue: task.project)
+        self._selectedUser = State(initialValue: task.assignedUser)
         self._isNewTask = State(initialValue: task.taskName == Constants.EMPTY_STRING)
     }
     
@@ -79,7 +83,26 @@ struct TaskDetailView: View
         task.taskStatus = selectedTaskStatus
         task.taskPriority = selectedTaskPriority
         task.project = selectedProject
+        task.assignedUser = selectedUser
+        
+        // Update task status based on user assignment
+        if selectedUser != nil
+        {
+            // When a user is assigned, set status to In Progress
+            task.taskStatus = TaskStatusEnum.inProgress.title
+            task.dateAssigned = Date()
+        }
+        else
+        {
+            // When unassigned, set status to Unassigned
+            task.taskStatus = TaskStatusEnum.unassigned.title
+            task.dateAssigned = nil
+        }
+        
         task.lastUpdated = Date()
+        
+        // Update the selected status to reflect the automatic change
+        selectedTaskStatus = task.taskStatus
         
         // No need to insert - task is already in context
         try? modelContext.save()
@@ -206,6 +229,33 @@ struct TaskDetailView: View
                                 taskPriority in
                                 
                                 Text(taskPriority.title).tag(taskPriority.title)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .padding(.trailing, 15)
+                    }
+                    
+                    // Assigned User Picker
+                    HStack
+                    {
+                        Text("Assigned User:")
+                            .font(.body)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                            .padding(.leading, 15)
+                        
+                        Spacer()
+                        
+                        Picker(Constants.EMPTY_STRING, selection: $selectedUser)
+                        {
+                            Text("Unassigned").tag(nil as User?)
+                            
+                            ForEach(users)
+                            {
+                                user in
+                                
+                                Text(user.fullName())
+                                    .tag(user as User?)
                             }
                         }
                         .pickerStyle(.menu)

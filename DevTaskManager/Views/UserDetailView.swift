@@ -14,7 +14,7 @@ struct UserDetailView: View
     @Bindable var user: User
     
     //  This is the navigation path sent from the list view
-    @Binding var path: NavigationPath
+    @Binding var path: [AppNavigationDestination]
     
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
@@ -27,7 +27,12 @@ struct UserDetailView: View
     //  Populate role from passed in User
     func populateInitialSelectedRoleValue()
     {
-        selectedRole = user.roles.first?.roleName ?? Constants.EMPTY_STRING
+        if let userRole = user.roles.first?.roleName, !userRole.isEmpty {
+            selectedRole = userRole
+        } else {
+            // Set default role if none exists
+            selectedRole = RoleNamesEnum.allCases.first?.title ?? Constants.EMPTY_STRING
+        }
     }
     
     //  Check whether to enable/disable Save button
@@ -59,12 +64,18 @@ struct UserDetailView: View
     //  Set the role and last updated date values when saving changes
     func saveUser()
     {
-        let role = roles.first(where: { $0.roleName == selectedRole }) ?? roles[0]
+        // Clear existing roles first to avoid duplicates
+        user.roles.removeAll()
         
-        user.roles.append(role)
+        // Find and set the selected role
+        if let role = roles.first(where: { $0.roleName == selectedRole }) {
+            user.roles.append(role)
+        }
+        
         user.lastUpdated = Date()
         
-        modelContext.insert(user)
+        // Don't insert if user already exists in context
+        // modelContext.insert(user) // This line was causing issues
         try? modelContext.save()
     }
     
@@ -88,29 +99,27 @@ struct UserDetailView: View
                 .cornerRadius(10)
                 .padding(.leading, 15)
                 
-                VStack(alignment: .leading, spacing: 5)
+                HStack
                 {
-                    HStack
-                    {
-                        FloatingPromptTextField(text: $selectedRole, prompt: Text("Role:")
-                            .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                        .floatingPromptScale(1.0)
-                        .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                        .cornerRadius(10)
+                    Text("Role:")
+                        .font(.body)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
                         .padding(.leading, 15)
-                        
-                        Picker(Constants.EMPTY_STRING, selection: $selectedRole)
+                    
+                    Spacer()
+                    
+                    Picker(Constants.EMPTY_STRING, selection: $selectedRole)
+                    {
+                        ForEach(RoleNamesEnum.allCases)
                         {
-                            ForEach(RoleNamesEnum.allCases)
-                            {
-                                role in
-                                
-                                Text(role.title).tag(role.title)
-                            }
+                            role in
+                            
+                            Text(role.title).tag(role.title)
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
                     }
+                    .pickerStyle(.menu)
+                    .padding(.trailing, 15)
                 }
                 
                 Button("Save User")

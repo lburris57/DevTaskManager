@@ -1,22 +1,22 @@
 //
-//  ProjectTasksView.swift
+//  UserTasksView.swift
 //  DevTaskManager
 //
-//  Created by Assistant on 2/17/26.
+//  Created by Assistant on 2/19/26.
 //
 import SwiftData
 import SwiftUI
 
-struct ProjectTasksView: View
+struct UserTasksView: View
 {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
 
-    @Bindable var project: Project
+    @Bindable var user: User
+    
+    var isFromUserList: Bool = false
+    
     @Binding var path: [AppNavigationDestination]
-
-    @State private var showDeleteToast = false
-    @State private var deletedTaskName = ""
     @State private var sortOrder = SortOrder.dateNewest
     
     // Sort order options
@@ -24,6 +24,8 @@ struct ProjectTasksView: View
     {
         case taskNameAscending = "Task Name A-Z"
         case taskNameDescending = "Task Name Z-A"
+        case projectAscending = "Project A-Z"
+        case projectDescending = "Project Z-A"
         
         // Task Type options
         case taskTypeDevelopment = "Development"
@@ -54,7 +56,7 @@ struct ProjectTasksView: View
     // Computed property for sorted tasks
     private var sortedTasks: [Task]
     {
-        let tasks = project.tasks
+        let tasks = user.tasks
         
         switch sortOrder
         {
@@ -62,6 +64,10 @@ struct ProjectTasksView: View
             return tasks.sorted { $0.taskName < $1.taskName }
         case .taskNameDescending:
             return tasks.sorted { $0.taskName > $1.taskName }
+        case .projectAscending:
+            return tasks.sorted { ($0.project?.title ?? "") < ($1.project?.title ?? "") }
+        case .projectDescending:
+            return tasks.sorted { ($0.project?.title ?? "") > ($1.project?.title ?? "") }
             
         // Task Type filtering and sorting
         case .taskTypeDevelopment:
@@ -107,67 +113,6 @@ struct ProjectTasksView: View
             return tasks.sorted { $0.dateCreated < $1.dateCreated }
         }
     }
-    
-    // Helper function to assign numeric values to priorities for sorting
-    private func priorityValue(for priority: String) -> Int
-    {
-        switch priority.lowercased()
-        {
-        case "high":
-            return 3
-        case "medium":
-            return 2
-        case "low":
-            return 1
-        default:
-            return 0
-        }
-    }
-
-    // Delete tasks from this project
-    func deleteTasks(at offsets: IndexSet)
-    {
-        for index in offsets
-        {
-            let task = sortedTasks[index]
-            deletedTaskName = task.taskName.isEmpty ? "Untitled Task" : task.taskName
-            modelContext.delete(task)
-        }
-
-        do
-        {
-            try modelContext.save()
-            withAnimation
-            {
-                showDeleteToast = true
-            }
-        }
-        catch
-        {
-            Log.error("Failed to delete task: \(error.localizedDescription)")
-        }
-    }
-
-    // Create new task for this project
-    func createNewTask()
-    {
-        let task = Task(
-            taskName: Constants.EMPTY_STRING,
-            project: project
-        )
-        modelContext.insert(task)
-
-        do
-        {
-            try modelContext.save()
-            // Navigate to task detail
-            path.append(.taskDetail(task))
-        }
-        catch
-        {
-            Log.error("Failed to create task: \(error.localizedDescription)")
-        }
-    }
 
     var body: some View
     {
@@ -175,7 +120,7 @@ struct ProjectTasksView: View
         {
             VStack
             {
-                if !project.tasks.isEmpty
+                if !user.tasks.isEmpty
                 {
                     List
                     {
@@ -187,6 +132,18 @@ struct ProjectTasksView: View
                             {
                                 VStack(alignment: .leading, spacing: 8)
                                 {
+                                    // Project name at the top
+                                    if let project = task.project {
+                                        HStack {
+                                            Image(systemName: "folder.fill")
+                                                .font(.caption)
+                                                .foregroundStyle(.blue)
+                                            Text(project.title.isEmpty ? "Untitled Project" : project.title)
+                                                .font(.caption)
+                                                .foregroundStyle(.blue)
+                                        }
+                                    }
+                                    
                                     // Task Name with Priority
                                     HStack(spacing: 8) {
                                         Image(systemName: priorityIcon(for: task.taskPriority))
@@ -197,24 +154,6 @@ struct ProjectTasksView: View
                                             .font(.headline)
                                     }
                                     
-                                    // Assigned User (if any)
-                                    if let assignedUser = task.assignedUser {
-                                        HStack {
-                                            Image(systemName: "person.fill")
-                                                .font(.caption)
-                                                .foregroundStyle(.green)
-                                            if let dateAssigned = task.dateAssigned {
-                                                Text("Assigned to \(assignedUser.fullName()) on \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
-                                                    .font(.caption)
-                                                    .foregroundStyle(.green)
-                                            } else {
-                                                Text("Assigned to \(assignedUser.fullName())")
-                                                    .font(.caption)
-                                                    .foregroundStyle(.green)
-                                            }
-                                        }
-                                    }
-
                                     // Task Details
                                     HStack(spacing: 12)
                                     {
@@ -227,21 +166,22 @@ struct ProjectTasksView: View
                                             .foregroundStyle(.secondary)
                                     }
 
-                                    // Date Created
-                                    HStack
-                                    {
-                                        Image(systemName: "calendar")
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
-                                        Text(task.dateCreated.formatted(date: .abbreviated, time: .omitted))
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                    // Date Assigned
+                                    if let dateAssigned = task.dateAssigned {
+                                        HStack
+                                        {
+                                            Image(systemName: "calendar")
+                                                .font(.caption2)
+                                                .foregroundStyle(.secondary)
+                                            Text("Assigned: \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
                                     }
                                 }
                                 .padding(.vertical, 4)
                             }
                         }
-                        .onDelete(perform: deleteTasks)
                     }
                     .listStyle(.plain)
                 }
@@ -250,31 +190,41 @@ struct ProjectTasksView: View
                     // No tasks
                     ContentUnavailableView
                     {
-                        Label("No tasks yet", systemImage: "checkmark.circle.badge.plus")
+                        Label("No tasks assigned", systemImage: "checkmark.circle")
                     } description: {
-                        Text("Add tasks to \(project.title.isEmpty ? "this project" : project.title)")
-                    } actions: {
-                        Button("Add Task")
-                        {
-                            createNewTask()
-                        }
-                        .buttonStyle(.borderedProminent)
+                        Text("\(user.fullName()) has no tasks currently assigned")
                     }
                 }
             }
         }
         .toolbar
         {
+            ToolbarItem(placement: .topBarLeading)
+            {
+                Button(action: {
+                    // Navigate back to User List by clearing the path
+                    withAnimation {
+                        path.removeAll()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.body.weight(.semibold))
+                        Text("Back")
+                    }
+                }
+            }
+            
             ToolbarItem(placement: .principal)
             {
                 VStack(spacing: 2)
                 {
-                    Text(project.title.isEmpty ? "Untitled Project" : project.title)
+                    Text(user.fullName())
                         .font(.headline)
                         .lineLimit(1)
-                    Text("Task List")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
+                    Text("Assigned Tasks")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -293,6 +243,20 @@ struct ProjectTasksView: View
                         Button(action: { sortOrder = .taskNameDescending })
                         {
                             Label("Z-A", systemImage: sortOrder == .taskNameDescending ? "checkmark" : "")
+                        }
+                    }
+                    
+                    // Project submenu
+                    Menu("Project")
+                    {
+                        Button(action: { sortOrder = .projectAscending })
+                        {
+                            Label("A-Z", systemImage: sortOrder == .projectAscending ? "checkmark" : "")
+                        }
+                        
+                        Button(action: { sortOrder = .projectDescending })
+                        {
+                            Label("Z-A", systemImage: sortOrder == .projectDescending ? "checkmark" : "")
                         }
                     }
                     
@@ -391,21 +355,7 @@ struct ProjectTasksView: View
                     
                     Divider()
                     
-                    // Edit project button
-                    Button(action: {
-                        path.append(.projectDetail(project))
-                    })
-                    {
-                        Label("Edit Project", systemImage: "pencil")
-                    }
-
                     Divider()
-
-                    // Add task button
-                    Button(action: createNewTask)
-                    {
-                        Label("Add Task", systemImage: "plus")
-                    }
                 }
                 label:
                 {
@@ -413,10 +363,22 @@ struct ProjectTasksView: View
                 }
             }
         }
-        .successToast(
-            isShowing: $showDeleteToast,
-            message: "'\(deletedTaskName)' deleted"
-        )
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .navigationDestination(for: AppNavigationDestination.self) { destination in
+            switch destination {
+            case .taskDetail(let task):
+                TaskDetailView(task: task, path: $path)
+            case .projectDetail(let project):
+                ProjectDetailView(project: project, path: $path)
+            case .projectTasks(let project):
+                ProjectTasksView(project: project, path: $path)
+            case .userDetail(let user):
+                UserDetailView(user: user, path: $path)
+            case .userTasks:
+                EmptyView()
+            }
+        }
     }
 
     // MARK: - Helper Functions

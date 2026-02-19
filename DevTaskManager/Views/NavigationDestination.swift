@@ -11,6 +11,8 @@ enum AppNavigationDestination: Hashable {
     case projectTasks(Project)
     case projectDetail(Project)
     case taskDetail(Task)
+    case userTasks(User)
+    case userDetail(User)
     
     // Implement Hashable using the model IDs
     func hash(into hasher: inout Hasher) {
@@ -24,6 +26,12 @@ enum AppNavigationDestination: Hashable {
         case .taskDetail(let task):
             hasher.combine("taskDetail")
             hasher.combine(task.taskId)
+        case .userTasks(let user):
+            hasher.combine("userTasks")
+            hasher.combine(user.userId)
+        case .userDetail(let user):
+            hasher.combine("userDetail")
+            hasher.combine(user.userId)
         }
     }
     
@@ -35,6 +43,10 @@ enum AppNavigationDestination: Hashable {
             return lhsProject.projectId == rhsProject.projectId
         case (.taskDetail(let lhsTask), .taskDetail(let rhsTask)):
             return lhsTask.taskId == rhsTask.taskId
+        case (.userTasks(let lhsUser), .userTasks(let rhsUser)):
+            return lhsUser.userId == rhsUser.userId
+        case (.userDetail(let lhsUser), .userDetail(let rhsUser)):
+            return lhsUser.userId == rhsUser.userId
         default:
             return false
         }

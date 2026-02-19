@@ -242,6 +242,10 @@ struct ProjectListView: View
                     ProjectDetailView(project: project, path: $path)
                 case .taskDetail(let task):
                     TaskDetailView(task: task, path: $path)
+                case .userDetail(let user):
+                    UserDetailView(user: user, path: $path)
+                case .userTasks(let user):
+                    UserTasksView(user: user, path: $path)
                 }
             }
             .onAppear(perform: saveRoles)
