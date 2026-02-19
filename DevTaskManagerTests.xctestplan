@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "647CEB02-261D-4009-97B1-FEB18B489B0F",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:DevTaskManager.xcodeproj",
+      "identifier" : "912D4BAC2DAA278500F4BE80",
+      "name" : "DevTaskManager"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:DevTaskManager.xcodeproj",
+        "identifier" : "912D4BB92DAA278500F4BE80",
+        "name" : "DevTaskManagerTests"
+      }
+    }
+  ],
+  "version" : 1
+}
