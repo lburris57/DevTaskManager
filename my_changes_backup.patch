@@ -1,0 +1,2091 @@
+diff --git a/DevTaskManager.xcodeproj/project.pbxproj b/DevTaskManager.xcodeproj/project.pbxproj
+index 6df0e3a..6ec5a86 100644
+--- a/DevTaskManager.xcodeproj/project.pbxproj
++++ b/DevTaskManager.xcodeproj/project.pbxproj
+@@ -32,6 +32,7 @@
+ 		912D4BAD2DAA278500F4BE80 /* DevTaskManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DevTaskManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		912D4BBA2DAA278500F4BE80 /* DevTaskManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DevTaskManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		912D4BC42DAA278500F4BE80 /* DevTaskManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DevTaskManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
++		915DB7C72DECE6DE007D8471 /* DevTaskManagerTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DevTaskManagerTests.xctestplan; sourceTree = "<group>"; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFileSystemSynchronizedRootGroup section */
+@@ -82,6 +83,7 @@
+ 		912D4BA42DAA278400F4BE80 = {
+ 			isa = PBXGroup;
+ 			children = (
++				915DB7C72DECE6DE007D8471 /* DevTaskManagerTests.xctestplan */,
+ 				912D4BAF2DAA278500F4BE80 /* DevTaskManager */,
+ 				912D4BBD2DAA278500F4BE80 /* DevTaskManagerTests */,
+ 				912D4BC72DAA278500F4BE80 /* DevTaskManagerUITests */,
+@@ -188,7 +190,7 @@
+ 			attributes = {
+ 				BuildIndependentTargetsInParallel = 1;
+ 				LastSwiftUpdateCheck = 1630;
+-				LastUpgradeCheck = 1630;
++				LastUpgradeCheck = 2630;
+ 				TargetAttributes = {
+ 					912D4BAC2DAA278500F4BE80 = {
+ 						CreatedOnToolsVersion = 16.3;
+@@ -349,6 +351,7 @@
+ 				MTL_FAST_MATH = YES;
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				SDKROOT = iphoneos;
++				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+ 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+ 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+ 			};
+@@ -406,6 +409,7 @@
+ 				MTL_ENABLE_DEBUG_INFO = NO;
+ 				MTL_FAST_MATH = YES;
+ 				SDKROOT = iphoneos;
++				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+ 				SWIFT_COMPILATION_MODE = wholemodule;
+ 				VALIDATE_PRODUCT = YES;
+ 			};
+diff --git a/DevTaskManager.xcodeproj/xcuserdata/larryburris.xcuserdatad/xcschemes/xcschememanagement.plist b/DevTaskManager.xcodeproj/xcuserdata/larryburris.xcuserdatad/xcschemes/xcschememanagement.plist
+index 0c144f9..18a4d88 100644
+--- a/DevTaskManager.xcodeproj/xcuserdata/larryburris.xcuserdatad/xcschemes/xcschememanagement.plist
++++ b/DevTaskManager.xcodeproj/xcuserdata/larryburris.xcuserdatad/xcschemes/xcschememanagement.plist
+@@ -9,6 +9,29 @@
+ 			<key>orderHint</key>
+ 			<integer>0</integer>
+ 		</dict>
++		<key>DevTaskManagerTests.xcscheme_^#shared#^_</key>
++		<dict>
++			<key>orderHint</key>
++			<integer>1</integer>
++		</dict>
++	</dict>
++	<key>SuppressBuildableAutocreation</key>
++	<dict>
++		<key>912D4BAC2DAA278500F4BE80</key>
++		<dict>
++			<key>primary</key>
++			<true/>
++		</dict>
++		<key>912D4BB92DAA278500F4BE80</key>
++		<dict>
++			<key>primary</key>
++			<true/>
++		</dict>
++		<key>912D4BC32DAA278500F4BE80</key>
++		<dict>
++			<key>primary</key>
++			<true/>
++		</dict>
+ 	</dict>
+ </dict>
+ </plist>
+diff --git a/DevTaskManager/Models/Project.swift b/DevTaskManager/Models/Project.swift
+index f0e11df..d1727c8 100644
+--- a/DevTaskManager/Models/Project.swift
++++ b/DevTaskManager/Models/Project.swift
+@@ -16,6 +16,8 @@ final class Project
+     var dateCreated: Date = Date()
+     var lastUpdated: Date?
+     var users: [User] = []
++    
++    @Relationship(deleteRule: .cascade, inverse: \Task.project)
+     var tasks: [Task] = []
+ 
+     init(projectId: String = UUID().uuidString, title: String = "", descriptionText: String = "", dateCreated: Date = Date(), lastUpdated: Date? = nil, users: [User] = [], tasks: [Task] = [])
+diff --git a/DevTaskManager/Models/Task.swift b/DevTaskManager/Models/Task.swift
+index 0a3f7c8..2410322 100644
+--- a/DevTaskManager/Models/Task.swift
++++ b/DevTaskManager/Models/Task.swift
+@@ -21,11 +21,13 @@ class Task
+     var dateCreated: Date = Date()
+     var dateAssigned: Date?
+     var lastUpdated: Date?
++    
++    var project: Project?
+ 
+     @Relationship(deleteRule: .cascade, inverse: \TaskItem.parentTask)
+     var taskItems: [TaskItem] = []
+ 
+-    init(taskId: String = UUID().uuidString, taskName: String, taskType: String = TaskTypeEnum.development.title, assignedUser: User? = nil, taskStatus: String = TaskStatusEnum.unassigned.title, taskPriority: String = TaskPriorityEnum.medium.title, taskComment: String = Constants.EMPTY_STRING, dateCompleted: Date? = nil, dateCreated: Date = Date(), dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem] = [])
++    init(taskId: String = UUID().uuidString, taskName: String, taskType: String = TaskTypeEnum.development.title, assignedUser: User? = nil, taskStatus: String = TaskStatusEnum.unassigned.title, taskPriority: String = TaskPriorityEnum.medium.title, taskComment: String = Constants.EMPTY_STRING, dateCompleted: Date? = nil, dateCreated: Date = Date(), dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem] = [], project: Project? = nil)
+     {
+         self.taskId = taskId
+         self.taskName = taskName
+@@ -39,6 +41,7 @@ class Task
+         self.dateAssigned = dateAssigned
+         self.lastUpdated = lastUpdated
+         self.taskItems = taskItems
++        self.project = project
+     }
+     
+     static func loadTasks() -> [Task]
+diff --git a/DevTaskManager/Views/MainMenuView.swift b/DevTaskManager/Views/MainMenuView.swift
+index d7ad072..8569b1c 100644
+--- a/DevTaskManager/Views/MainMenuView.swift
++++ b/DevTaskManager/Views/MainMenuView.swift
+@@ -5,10 +5,21 @@
+ //  Created by Larry Burris on 4/20/25.
+ //
+ import SwiftUI
++import SwiftData
+ 
+ struct MainMenuView: View
+ {
+-    @State private var path = NavigationPath()
++    @Environment(\.modelContext) var modelContext
++    @State private var showSuccessToast = false
++    @State private var selectedView: MenuDestination?
++    
++    enum MenuDestination: Hashable, Identifiable {
++        case projectList
++        case userList
++        case taskList
++        
++        var id: Self { self }
++    }
+ 
+     var body: some View
+     {
+@@ -16,28 +27,93 @@ struct MainMenuView: View
+         {
+             List
+             {
+-                VStack
+-                {
+-                    NavigationLink("Project List", destination: ProjectListView())
++                Button {
++                    selectedView = .projectList
++                } label: {
++                    HStack {
++                        Text("Project List")
++                        Spacer()
++                        Image(systemName: "chevron.right")
++                            .font(.caption)
++                            .foregroundStyle(.secondary)
++                    }
+                 }
++                .buttonStyle(.plain)
+                 
+-                VStack
+-                {
+-                    NavigationLink("User List", destination: UserListView())
++                Button {
++                    selectedView = .userList
++                } label: {
++                    HStack {
++                        Text("User List")
++                        Spacer()
++                        Image(systemName: "chevron.right")
++                            .font(.caption)
++                            .foregroundStyle(.secondary)
++                    }
++                }
++                .buttonStyle(.plain)
++                
++                Button {
++                    selectedView = .taskList
++                } label: {
++                    HStack {
++                        Text("Task List")
++                        Spacer()
++                        Image(systemName: "chevron.right")
++                            .font(.caption)
++                            .foregroundStyle(.secondary)
++                    }
+                 }
++                .buttonStyle(.plain)
+                 
+-                VStack
++                #if DEBUG
++                Section("Development Tools")
+                 {
+-                    NavigationLink("Task List", destination: TaskListView())
++                    Button(action: loadSampleData)
++                    {
++                        HStack
++                        {
++                            Image(systemName: "tray.fill")
++                            Text("Load Sample Data")
++                            Spacer()
++                            Image(systemName: "chevron.right")
++                                .font(.caption)
++                                .foregroundStyle(.secondary)
++                        }
++                    }
+                 }
++                #endif
+             }
+             .navigationBarTitle(Text("Main Menu"), displayMode: .inline)
+             .listStyle(.plain)
++            .fullScreenCover(item: $selectedView) { destination in
++                switch destination {
++                case .projectList:
++                    ProjectListView()
++                case .userList:
++                    UserListView()
++                case .taskList:
++                    TaskListView()
++                }
++            }
++            .successToast(
++                isShowing: $showSuccessToast,
++                message: "Sample data loaded successfully! 🎉"
++            )
++        }
++    }
++    
++    // Load sample data with visual feedback
++    private func loadSampleData() {
++        SampleData.createSampleData(in: modelContext)
++        
++        // Show success toast (auto-dismisses after 3 seconds)
++        withAnimation {
++            showSuccessToast = true
+         }
+     }
+ }
+ 
+-#Preview
+-{
++#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier())) {
+     MainMenuView()
+ }
+diff --git a/DevTaskManager/Views/ModelContainer+SampleData.swift b/DevTaskManager/Views/ModelContainer+SampleData.swift
+index 9ae4089..c96ad1a 100644
+--- a/DevTaskManager/Views/ModelContainer+SampleData.swift
++++ b/DevTaskManager/Views/ModelContainer+SampleData.swift
+@@ -11,6 +11,7 @@ extension ModelContainer
+ {
+     /// Creates a model container pre-populated with sample data for development and testing
+     /// - Returns: A ModelContainer with sample data
++    @MainActor
+     static func withSampleData() throws -> ModelContainer
+     {
+         let config = ModelConfiguration(isStoredInMemoryOnly: true)
+@@ -27,6 +28,7 @@ extension ModelContainer
+     /// Creates a model container with sample data for testing specific scenarios
+     /// - Parameter includeEmptyProject: Whether to include an empty project for testing
+     /// - Returns: A ModelContainer with customized sample data
++    @MainActor
+     static func withCustomSampleData(includeEmptyProject: Bool = true) throws -> ModelContainer
+     {
+         let config = ModelConfiguration(isStoredInMemoryOnly: true)
+diff --git a/DevTaskManager/Views/ProjectDetailView.swift b/DevTaskManager/Views/ProjectDetailView.swift
+index a68e76a..690126f 100644
+--- a/DevTaskManager/Views/ProjectDetailView.swift
++++ b/DevTaskManager/Views/ProjectDetailView.swift
+@@ -7,7 +7,6 @@
+ import SwiftUI
+ import SwiftData
+ import FloatingPromptTextField
+-import Inject
+ 
+ struct ProjectDetailView: View
+ {
+@@ -15,14 +14,12 @@ struct ProjectDetailView: View
+     @Bindable var project: Project
+     
+     //  This is the navigation path sent from the list view
+-    @Binding var path: NavigationPath
++    @Binding var path: [AppNavigationDestination]
+     
+     @Environment(\.modelContext) var modelContext
+     @Environment(\.colorScheme) var colorScheme
+     @Environment(\.dismiss) var dismiss
+     
+-    @ObserveInjection var inject
+-    
+     //  Check whether to enable/disable Save button
+     func validateFields() -> Bool
+     {
+@@ -60,8 +57,8 @@ struct ProjectDetailView: View
+     
+     var body: some View
+     {
+-        NavigationView
+-        {
++        //NavigationView
++        //{
+             VStack(spacing: 15)
+             {
+                 FloatingPromptTextField(text: $project.title, prompt: Text("Title:")
+@@ -74,7 +71,7 @@ struct ProjectDetailView: View
+                 VStack(alignment: .leading, spacing: 5)
+                 {
+                     Text(" Description:")
+-                        .foregroundColor(Color.secondary)
++                        .foregroundColor(colorScheme == .dark ? .gray : .blue)
+                         .fontWeight(.bold)
+                         .padding(.horizontal)
+                     
+@@ -100,7 +97,7 @@ struct ProjectDetailView: View
+                 Spacer()
+                 
+                 }.padding()
+-            }
++            //}
+             .navigationBarItems(trailing: Button("Cancel")
+             {
+                 dismiss()
+@@ -108,6 +105,5 @@ struct ProjectDetailView: View
+             .padding(.horizontal)
+             .onDisappear(perform: validateProject)
+             .navigationTitle(validateFields() ? "Edit Project" : "Add Project").navigationBarTitleDisplayMode(.inline)
+-            .enableInjection()
+         }
+     }
+diff --git a/DevTaskManager/Views/ProjectListView.swift b/DevTaskManager/Views/ProjectListView.swift
+index e397661..637d34a 100644
+--- a/DevTaskManager/Views/ProjectListView.swift
++++ b/DevTaskManager/Views/ProjectListView.swift
+@@ -6,31 +6,134 @@
+ //
+ import SwiftData
+ import SwiftUI
+-import Inject
+ 
+ struct ProjectListView: View
+ {
+     @Environment(\.modelContext) var modelContext
+-    
+-    @ObserveInjection var inject
+-
+-    @State private var path = NavigationPath()
+-    
+-    @Query(sort: \Project.title) var projects: [Project]
+-    
+-    //  Save roles to the database.
++    @Environment(\.dismiss) var dismiss
++
++    @State private var path: [AppNavigationDestination] = []
++    @State private var hasLoadedRoles = false
++    @State private var searchText = ""
++    @State private var sortOrder = SortOrder.titleAscending
++    @State private var showDeleteToast = false
++    @State private var deletedProjectName = ""
++
++    @Query var projects: [Project]
++
++    // Sort order options
++    enum SortOrder: String, CaseIterable
++    {
++        case titleAscending = "Title A-Z"
++        case titleDescending = "Title Z-A"
++        case dateNewest = "Newest First"
++        case dateOldest = "Oldest First"
++    }
++
++    // Filtered and sorted projects
++    var filteredProjects: [Project]
++    {
++        let filtered: [Project]
++
++        if searchText.isEmpty
++        {
++            filtered = projects
++        }
++        else
++        {
++            filtered = projects.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
++        }
++
++        // Apply sorting
++        switch sortOrder
++        {
++        case .titleAscending:
++            return filtered.sorted { $0.title < $1.title }
++        case .titleDescending:
++            return filtered.sorted { $0.title > $1.title }
++        case .dateNewest:
++            return filtered.sorted { $0.dateCreated > $1.dateCreated }
++        case .dateOldest:
++            return filtered.sorted { $0.dateCreated < $1.dateCreated }
++        }
++    }
++
++    // Save roles to the database (only once)
+     func saveRoles()
+     {
++        // Only load roles once
++        guard !hasLoadedRoles else { return }
++
++        let descriptor = FetchDescriptor<Role>()
++        let existingRoles = (try? modelContext.fetch(descriptor)) ?? []
++
++        guard existingRoles.isEmpty
++        else
++        {
++            hasLoadedRoles = true
++            return
++        }
++
+         let roles = Role.loadRoles()
+-        
++
+         Log.info("The permissions for validators are: \(roles[3].permissions)")
+-        
++
+         for role in roles
+         {
+             role.lastUpdated = Date()
+-            
+             modelContext.insert(role)
+-            try? modelContext.save()
++        }
++
++        do
++        {
++            try modelContext.save()
++            hasLoadedRoles = true
++        }
++        catch
++        {
++            Log.error("Failed to save roles: \(error.localizedDescription)")
++        }
++    }
++
++    // Create a new project
++    func createNewProject()
++    {
++        let project = Project(title: Constants.EMPTY_STRING,
++                              descriptionText: Constants.EMPTY_STRING)
++        modelContext.insert(project)
++
++        do
++        {
++            try modelContext.save()
++            path.append(.projectDetail(project))
++        }
++        catch
++        {
++            Log.error("Failed to create project: \(error.localizedDescription)")
++        }
++    }
++
++    // Delete projects
++    func deleteProjects(at offsets: IndexSet)
++    {
++        for index in offsets
++        {
++            let project = filteredProjects[index]
++            deletedProjectName = project.title.isEmpty ? "Untitled Project" : project.title
++            modelContext.delete(project)
++        }
++
++        do
++        {
++            try modelContext.save()
++            withAnimation
++            {
++                showDeleteToast = true
++            }
++        }
++        catch
++        {
++            Log.error("Failed to delete project: \(error.localizedDescription)")
+         }
+     }
+ 
+@@ -38,101 +141,187 @@ struct ProjectListView: View
+     {
+         NavigationStack(path: $path)
+         {
+-            VStack
++            VStack(spacing: 0)
+             {
++                // Search bar at the top
++                HStack {
++                    Image(systemName: "magnifyingglass")
++                        .foregroundStyle(.secondary)
++                    TextField("Search projects", text: $searchText)
++                        .textFieldStyle(.plain)
++                    
++                    if !searchText.isEmpty {
++                        Button(action: { searchText = "" }) {
++                            Image(systemName: "xmark.circle.fill")
++                                .foregroundStyle(.secondary)
++                        }
++                    }
++                }
++                .padding(8)
++                .background(Color(.systemGray6))
++                .cornerRadius(10)
++                .padding(.horizontal)
++                .padding(.top, 8)
++                .padding(.bottom, 4)
++                
+                 if !projects.isEmpty
+                 {
+-                    VStack
++                    List
+                     {
+-                        List
+-                        {
+-                            //  Display all the projects in a navigation link
+-                            ForEach(projects)
+-                            {
+-                                project in
+-
+-                                VStack(alignment: .leading, spacing: 3)
+-                                {
+-                                    NavigationLink(value: project)
+-                                    {
+-                                        VStack
+-                                        {
+-                                            HStack
+-                                            {
+-                                                Text("Project Title:").bold()
+-                                                Spacer()
+-                                                Text(project.title)
+-                                            }
+-                                            
+-                                            HStack
+-                                            {
+-                                                Text("Date Created:").bold()
+-                                                Spacer()
+-                                                Text(project.dateCreated.formatted())
+-                                            }
+-                                        }
+-                                    }
+-                                }
+-                            }
+-                        }
+-                        .padding()
+-                        .listStyle(.plain)
+-                        .navigationDestination(for: Project.self)
++                        // Display all the projects in a navigation link
++                        ForEach(filteredProjects)
+                         {
+                             project in
+-                            
+-                            //  Send the selected project to the ProjectDetailsView
+-                            //  along with the navigation path array
+-                            ProjectDetailView(project: project, path: $path)
++
++                            ProjectRowView(project: project, path: $path)
+                         }
++                        .onDelete(perform: deleteProjects)
+                     }
++                    .listStyle(.plain)
+                 }
+                 else
+                 {
+-                    //  No projects were found
++                    // No projects were found
+                     ContentUnavailableView
+                     {
+-                        Label("No projects were found for display.", systemImage: "calendar.badge.clock")
+-                    }
+-                    description:
+-                    {
+-                        Text("\nPlease click the 'Add Project' button to create your first project.")
++                        Label("No projects yet", systemImage: "folder.badge.plus")
++                    } description: {
++                        Text("Create your first project to get started")
++                    } actions: {
++                        Button("Add Project")
++                        {
++                            createNewProject()
++                        }
++                        .buttonStyle(.borderedProminent)
+                     }
+                 }
+             }
+-            .onAppear(perform: saveRoles)
+             .toolbar
+             {
+-                ToolbarItem(placement: .topBarTrailing)
++                ToolbarItem(placement: .navigationBarLeading)
+                 {
+-                    //  Save the skeleton project to the database and
+-                    //  add it to the NavigationPath array
+-                    Button(action:
+-                    {
+-                        let project = Project(title: Constants.EMPTY_STRING,
+-                                              descriptionText: Constants.EMPTY_STRING)
+-
+-                        modelContext.insert(project)
+-                        try? modelContext.save()
+-                        
+-                        path.append(project)
+-                    },
+-                    label:
++                    Button(action: {
++                        dismiss()
++                    }) {
++                        Image(systemName: "chevron.left")
++                            .font(.body.weight(.semibold))
++                    }
++                }
++                
++                ToolbarItemGroup(placement: .topBarTrailing)
++                {
++                    Menu
+                     {
+-                        HStack
++                        Picker("Sort by", selection: $sortOrder)
+                         {
+-                            Text("Add Project").font(.body)
+-                            Image(systemName: "plus")
++                            ForEach(SortOrder.allCases, id: \.self)
++                            {
++                                order in
++                                Text(order.rawValue).tag(order)
++                            }
+                         }
++                    } label: {
++                        Image(systemName: "arrow.up.arrow.down")
++                    }
++                    
++                    Button(action: createNewProject)
++                    {
++                        Label("Add Project", systemImage: "plus")
++                    }
++                }
++            }
++            .navigationTitle("Project List")
++            .navigationBarTitleDisplayMode(.inline)
++            .navigationBarBackButtonHidden(true)
++            .toolbarBackground(.visible, for: .navigationBar)
++            .navigationDestination(for: AppNavigationDestination.self) { destination in
++                switch destination {
++                case .projectTasks(let project):
++                    ProjectTasksView(project: project, path: $path)
++                case .projectDetail(let project):
++                    ProjectDetailView(project: project, path: $path)
++                case .taskDetail(let task):
++                    TaskDetailView(task: task, path: $path)
++                }
++            }
++            .onAppear(perform: saveRoles)
++        }
++        .successToast(
++            isShowing: $showDeleteToast,
++            message: "'\(deletedProjectName)' deleted"
++        )
++        .background(Color(UIColor.systemBackground))
++        .ignoresSafeArea(.all, edges: .top)
++    }
++}
++
++// MARK: - Project Row View
++
++struct ProjectRowView: View
++{
++    let project: Project
++    @Binding var path: [AppNavigationDestination]
++
++    var body: some View
++    {
++        NavigationLink(value: AppNavigationDestination.projectTasks(project)) {
++            VStack(alignment: .leading, spacing: 8)
++            {
++                HStack {
++                    Text(project.title.isEmpty ? "Untitled Project" : project.title)
++                        .font(.headline)
++                    
++                    Spacer()
++                    
++                    Button(action: {
++                        path.append(.projectDetail(project))
+                     })
++                    {
++                        Image(systemName: "pencil.circle.fill")
++                            .font(.title2)
++                            .foregroundStyle(.blue)
++                    }
++                    .buttonStyle(.plain)
++                }
++
++                if !project.descriptionText.isEmpty
++                {
++                    Text(project.descriptionText)
++                        .font(.subheadline)
++                        .foregroundStyle(.secondary)
++                        .lineLimit(2)
+                 }
+-            }.navigationTitle("Project List").navigationBarTitleDisplayMode(.inline)
++
++                HStack
++                {
++                    Label(project.dateCreated.formatted(date: .abbreviated, time: .omitted),
++                          systemImage: "calendar")
++                        .font(.caption)
++                        .foregroundStyle(.secondary)
++
++                    Spacer()
++
++                    if !project.tasks.isEmpty
++                    {
++                        Label("\(project.tasks.count)", systemImage: "checkmark.circle")
++                            .font(.caption)
++                            .foregroundStyle(.blue)
++                    }
++                }
++            }
++            .padding(.vertical, 4)
+         }
+-        .enableInjection()
++        .accessibilityLabel("Project: \(project.title.isEmpty ? "Untitled" : project.title)")
++        .accessibilityHint("Tap to view tasks. Tap edit button to edit project.")
+     }
+ }
+ 
+-#Preview
++#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier()))
++{
++    ProjectListView()
++}
++
++#Preview("Empty State", traits: .modifier(EmptyDataPreviewModifier()))
+ {
+     ProjectListView()
+ }
+diff --git a/DevTaskManager/Views/ProjectTasksView.swift b/DevTaskManager/Views/ProjectTasksView.swift
+index 1ff91ba..77d0210 100644
+--- a/DevTaskManager/Views/ProjectTasksView.swift
++++ b/DevTaskManager/Views/ProjectTasksView.swift
+@@ -13,17 +13,22 @@ struct ProjectTasksView: View
+     @Environment(\.dismiss) var dismiss
+     
+     @Bindable var project: Project
+-    @Binding var path: NavigationPath
++    @Binding var path: [AppNavigationDestination]
+     
+     @State private var showDeleteToast = false
+     @State private var deletedTaskName = ""
+     
++    // Computed property for sorted tasks - lightweight enough
++    private var sortedTasks: [Task] {
++        project.tasks.sorted(by: { $0.dateCreated > $1.dateCreated })
++    }
++    
+     // Delete tasks from this project
+     func deleteTasks(at offsets: IndexSet)
+     {
+         for index in offsets
+         {
+-            let task = project.tasks[index]
++            let task = sortedTasks[index]
+             deletedTaskName = task.taskName.isEmpty ? "Untitled Task" : task.taskName
+             modelContext.delete(task)
+         }
+@@ -54,7 +59,7 @@ struct ProjectTasksView: View
+         {
+             try modelContext.save()
+             // Navigate to task detail
+-            path.append(task)
++            path.append(.taskDetail(task))
+         }
+         catch
+         {
+@@ -64,18 +69,18 @@ struct ProjectTasksView: View
+     
+     var body: some View
+     {
+-        VStack
+-        {
+-            if !project.tasks.isEmpty
++        Group {
++            VStack
+             {
+-                List
++                if !project.tasks.isEmpty
+                 {
+-                    ForEach(project.tasks.sorted(by: { $0.dateCreated > $1.dateCreated }))
++                    List
++                    {
++                    ForEach(sortedTasks)
+                     {
+                         task in
+                         
+-                        NavigationLink(value: task)
+-                        {
++                        NavigationLink(value: AppNavigationDestination.taskDetail(task)) {
+                             VStack(alignment: .leading, spacing: 8)
+                             {
+                                 // Task Name
+@@ -113,44 +118,45 @@ struct ProjectTasksView: View
+                     .onDelete(perform: deleteTasks)
+                 }
+                 .listStyle(.plain)
+-                .navigationDestination(for: Task.self)
+-                {
+-                    task in
+-                    TaskDetailView(task: task, path: $path)
+-                }
+             }
+             else
+             {
+                 // No tasks
+-                ContentUnavailableView
+-                {
++                ContentUnavailableView {
+                     Label("No tasks yet", systemImage: "checkmark.circle.badge.plus")
+-                }
+-                description:
+-                {
++                } description: {
+                     Text("Add tasks to \(project.title.isEmpty ? "this project" : project.title)")
+-                }
+-                actions:
+-                {
+-                    Button("Add Task")
+-                    {
++                } actions: {
++                    Button("Add Task") {
+                         createNewTask()
+                     }
+                     .buttonStyle(.borderedProminent)
+                 }
+             }
+         }
+-        .navigationTitle(project.title.isEmpty ? "Untitled Project" : project.title)
+-        .navigationBarTitleDisplayMode(.large)
++        }
+         .toolbar
+         {
++            ToolbarItem(placement: .principal)
++            {
++                VStack(spacing: 2)
++                {
++                    Text(project.title.isEmpty ? "Untitled Project" : project.title)
++                        .font(.headline)
++                        .lineLimit(1)
++                    Text("Tasks")
++                        .font(.headline)
++                        .foregroundStyle(.secondary)
++                }
++            }
++            
+             ToolbarItem(placement: .topBarTrailing)
+             {
+                 Menu
+                 {
+                     // Edit project button
+                     Button(action: {
+-                        path.append(project)
++                        path.append(.projectDetail(project))
+                     })
+                     {
+                         Label("Edit Project", systemImage: "pencil")
+@@ -204,7 +210,7 @@ struct ProjectTasksView: View
+         }
+     }
+     
+-    private func statusIcon(for status: String) -> Color {
++    private func statusIcon(for status: String) -> String {
+         switch status.lowercased() {
+         case "completed":
+             return "checkmark.circle.fill"
+diff --git a/DevTaskManager/Views/SampleData.swift b/DevTaskManager/Views/SampleData.swift
+index 443eed0..bc68b42 100644
+--- a/DevTaskManager/Views/SampleData.swift
++++ b/DevTaskManager/Views/SampleData.swift
+@@ -13,46 +13,92 @@ struct SampleData
+     /// - Parameter modelContext: The SwiftData model context to insert data into
+     static func createSampleData(in modelContext: ModelContext)
+     {
++        Log.info("Starting sample data creation...")
++        
+         // Check if sample data already exists
+         let projectDescriptor = FetchDescriptor<Project>()
+         let existingProjects = (try? modelContext.fetch(projectDescriptor)) ?? []
+         
+         guard existingProjects.isEmpty else
+         {
+-            Log.info("Sample data already exists, skipping creation")
++            Log.info("Sample data already exists (\(existingProjects.count) projects), skipping creation")
+             return
+         }
+         
+-        // Create Roles
+-        let roles = createRoles()
+-        for role in roles
+-        {
+-            modelContext.insert(role)
+-        }
++        // Check if roles already exist
++        let roleDescriptor = FetchDescriptor<Role>()
++        var roles: [Role]
+         
+-        // Create Users
+-        let users = createUsers(with: roles)
+-        for user in users
++        do
+         {
+-            modelContext.insert(user)
++            let existingRoles = try modelContext.fetch(roleDescriptor)
++            
++            if !existingRoles.isEmpty
++            {
++                Log.info("Using \(existingRoles.count) existing roles")
++                roles = existingRoles
++            }
++            else
++            {
++                Log.info("Creating new roles...")
++                // Create Roles first
++                roles = createRoles()
++                for role in roles
++                {
++                    modelContext.insert(role)
++                }
++                
++                // Save roles before creating users that reference them
++                try modelContext.save()
++                Log.info("✅ Roles saved successfully: \(roles.count) roles")
++            }
+         }
+-        
+-        // Create Projects with Tasks
+-        let projects = createProjects(with: users)
+-        for project in projects
++        catch
+         {
+-            modelContext.insert(project)
++            Log.error("❌ Failed to handle roles: \(error.localizedDescription)")
++            return
+         }
+         
+-        // Save everything
++        // Create Users
+         do
+         {
++            Log.info("Creating users...")
++            let users = createUsers(with: roles)
++            for user in users
++            {
++                modelContext.insert(user)
++            }
++            
++            // Save users before creating projects that reference them
++            try modelContext.save()
++            Log.info("✅ Users saved successfully: \(users.count) users")
++            
++            // Create Projects and Tasks with proper relationships
++            Log.info("Creating projects with tasks...")
++            let projects = createProjectsWithTasks(with: users, in: modelContext)
++            
++            // Save everything
+             try modelContext.save()
+-            Log.info("Sample data created successfully")
++            
++            let totalTasks = projects.reduce(0) { $0 + $1.tasks.count }
++            Log.info("✅ Sample data created successfully!")
++            Log.info("   📊 \(projects.count) projects")
++            Log.info("   👥 \(users.count) users")
++            Log.info("   ✅ \(totalTasks) tasks")
++            Log.info("   🔐 \(roles.count) roles")
+         }
+         catch
+         {
+-            Log.error("Failed to save sample data: \(error.localizedDescription)")
++            Log.error("❌ Failed to save sample data: \(error)")
++            Log.error("   Error description: \(error.localizedDescription)")
++            
++            // Print more detailed error info
++            if let nsError = error as NSError?
++            {
++                Log.error("   Error domain: \(nsError.domain)")
++                Log.error("   Error code: \(nsError.code)")
++                Log.error("   User info: \(nsError.userInfo)")
++            }
+         }
+     }
+     
+@@ -110,9 +156,9 @@ struct SampleData
+         return [user1, user2, user3, user4, user5]
+     }
+     
+-    // MARK: - Create Projects
++    // MARK: - Create Projects with Proper Task Relationships
+     
+-    private static func createProjects(with users: [User]) -> [Project]
++    private static func createProjectsWithTasks(with users: [User], in modelContext: ModelContext) -> [Project]
+     {
+         var projects: [Project] = []
+         
+@@ -123,9 +169,14 @@ struct SampleData
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 45), // 45 days ago
+             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 2)  // 2 days ago
+         )
+-        
+         project1.users = Array(users.prefix(3))
+-        project1.tasks = createTasksForECommerce(users: users)
++        modelContext.insert(project1)
++        
++        // Create tasks for project1 and link them
++        let tasks1 = createTasksForECommerce(users: users, project: project1)
++        for task in tasks1 {
++            modelContext.insert(task)
++        }
+         projects.append(project1)
+         
+         // Project 2: Mobile Banking App
+@@ -135,9 +186,13 @@ struct SampleData
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 30), // 30 days ago
+             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 1)  // 1 day ago
+         )
+-        
+         project2.users = Array(users.suffix(3))
+-        project2.tasks = createTasksForBanking(users: users)
++        modelContext.insert(project2)
++        
++        let tasks2 = createTasksForBanking(users: users, project: project2)
++        for task in tasks2 {
++            modelContext.insert(task)
++        }
+         projects.append(project2)
+         
+         // Project 3: Task Management System
+@@ -147,9 +202,13 @@ struct SampleData
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 20), // 20 days ago
+             lastUpdated: Date().addingTimeInterval(-60 * 60 * 3)        // 3 hours ago
+         )
+-        
+         project3.users = users
+-        project3.tasks = createTasksForTaskManager(users: users)
++        modelContext.insert(project3)
++        
++        let tasks3 = createTasksForTaskManager(users: users, project: project3)
++        for task in tasks3 {
++            modelContext.insert(task)
++        }
+         projects.append(project3)
+         
+         // Project 4: Social Media Dashboard
+@@ -159,9 +218,13 @@ struct SampleData
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 15), // 15 days ago
+             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 5)  // 5 days ago
+         )
+-        
+         project4.users = [users[0], users[2], users[4]]
+-        project4.tasks = createTasksForSocialMedia(users: users)
++        modelContext.insert(project4)
++        
++        let tasks4 = createTasksForSocialMedia(users: users, project: project4)
++        for task in tasks4 {
++            modelContext.insert(task)
++        }
+         projects.append(project4)
+         
+         // Project 5: Healthcare Portal (just started)
+@@ -171,9 +234,13 @@ struct SampleData
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 5), // 5 days ago
+             lastUpdated: Date().addingTimeInterval(-60 * 60 * 2)       // 2 hours ago
+         )
+-        
+         project5.users = [users[1], users[3]]
+-        project5.tasks = createTasksForHealthcare(users: users)
++        modelContext.insert(project5)
++        
++        let tasks5 = createTasksForHealthcare(users: users, project: project5)
++        for task in tasks5 {
++            modelContext.insert(task)
++        }
+         projects.append(project5)
+         
+         // Project 6: Fitness Tracker App (empty project for testing)
+@@ -183,17 +250,17 @@ struct SampleData
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 2), // 2 days ago
+             lastUpdated: nil
+         )
+-        
+         project6.users = []
+-        project6.tasks = []
++        modelContext.insert(project6)
+         projects.append(project6)
+         
+         return projects
+     }
+     
++    
+     // MARK: - Create Tasks for E-Commerce
+     
+-    private static func createTasksForECommerce(users: [User]) -> [Task]
++    private static func createTasksForECommerce(users: [User], project: Project) -> [Task]
+     {
+         let task1 = Task(
+             taskName: "Implement Shopping Cart",
+@@ -203,7 +270,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "Add to cart functionality with session persistence",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 10),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9),
++            project: project
+         )
+         
+         let task2 = Task(
+@@ -215,7 +283,8 @@ struct SampleData
+             taskComment: "Integrated Stripe and PayPal",
+             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 5),
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 15),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14),
++            project: project
+         )
+         
+         let task3 = Task(
+@@ -224,7 +293,8 @@ struct SampleData
+             taskStatus: TaskStatusEnum.unassigned.title,
+             taskPriority: TaskPriorityEnum.medium.title,
+             taskComment: "Implement full-text search with filters",
+-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 8)
++            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 8),
++            project: project
+         )
+         
+         let task4 = Task(
+@@ -235,7 +305,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "End-to-end testing of payment process",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 4),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 3)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 3),
++            project: project
+         )
+         
+         let task5 = Task(
+@@ -246,7 +317,8 @@ struct SampleData
+             taskComment: "Mockups completed and approved",
+             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 12),
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 20),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 19)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 19),
++            project: project
+         )
+         
+         return [task1, task2, task3, task4, task5]
+@@ -254,7 +326,7 @@ struct SampleData
+     
+     // MARK: - Create Tasks for Banking
+     
+-    private static func createTasksForBanking(users: [User]) -> [Task]
++    private static func createTasksForBanking(users: [User], project: Project) -> [Task]
+     {
+         let task1 = Task(
+             taskName: "Implement Biometric Authentication",
+@@ -264,7 +336,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "Face ID and Touch ID support",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 7),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 6)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 6),
++            project: project
+         )
+         
+         let task2 = Task(
+@@ -276,7 +349,8 @@ struct SampleData
+             taskComment: "Real-time balance updates implemented",
+             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 3),
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 12),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 11)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 11),
++            project: project
+         )
+         
+         let task3 = Task(
+@@ -287,7 +361,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "Documenting security protocols",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 5),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4),
++            project: project
+         )
+         
+         return [task1, task2, task3]
+@@ -295,7 +370,7 @@ struct SampleData
+     
+     // MARK: - Create Tasks for Task Manager
+     
+-    private static func createTasksForTaskManager(users: [User]) -> [Task]
++    private static func createTasksForTaskManager(users: [User], project: Project) -> [Task]
+     {
+         let task1 = Task(
+             taskName: "Drag-and-Drop Kanban Board",
+@@ -305,7 +380,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "Implementing drag and drop functionality",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 6),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 5)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 5),
++            project: project
+         )
+         
+         let task2 = Task(
+@@ -314,7 +390,8 @@ struct SampleData
+             taskStatus: TaskStatusEnum.unassigned.title,
+             taskPriority: TaskPriorityEnum.medium.title,
+             taskComment: "WebSocket implementation needed",
+-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 4)
++            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 4),
++            project: project
+         )
+         
+         let task3 = Task(
+@@ -326,7 +403,8 @@ struct SampleData
+             taskComment: "Widget completed with start/stop timer",
+             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 2),
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 10),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9),
++            project: project
+         )
+         
+         let task4 = Task(
+@@ -337,7 +415,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.medium.title,
+             taskComment: "Testing role-based access control",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2),
++            project: project
+         )
+         
+         let task5 = Task(
+@@ -348,7 +427,8 @@ struct SampleData
+             taskComment: "Design system documented and shared",
+             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 8),
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 15),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14),
++            project: project
+         )
+         
+         let task6 = Task(
+@@ -359,7 +439,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.medium.title,
+             taskComment: "Writing comprehensive API docs",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 1),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 12)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 12),
++            project: project
+         )
+         
+         return [task1, task2, task3, task4, task5, task6]
+@@ -367,7 +448,7 @@ struct SampleData
+     
+     // MARK: - Create Tasks for Social Media
+     
+-    private static func createTasksForSocialMedia(users: [User]) -> [Task]
++    private static func createTasksForSocialMedia(users: [User], project: Project) -> [Task]
+     {
+         let task1 = Task(
+             taskName: "Post Scheduling System",
+@@ -378,7 +459,8 @@ struct SampleData
+             taskComment: "Schedule posts across platforms",
+             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 6),
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 10),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9),
++            project: project
+         )
+         
+         let task2 = Task(
+@@ -389,7 +471,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "Charts and metrics for engagement",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 5),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4),
++            project: project
+         )
+         
+         let task3 = Task(
+@@ -398,7 +481,8 @@ struct SampleData
+             taskStatus: TaskStatusEnum.unassigned.title,
+             taskPriority: TaskPriorityEnum.medium.title,
+             taskComment: "Monthly view calendar mockup",
+-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3)
++            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3),
++            project: project
+         )
+         
+         let task4 = Task(
+@@ -407,7 +491,8 @@ struct SampleData
+             taskStatus: TaskStatusEnum.unassigned.title,
+             taskPriority: TaskPriorityEnum.low.title,
+             taskComment: "Test API connections",
+-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 1)
++            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 1),
++            project: project
+         )
+         
+         return [task1, task2, task3, task4]
+@@ -415,7 +500,7 @@ struct SampleData
+     
+     // MARK: - Create Tasks for Healthcare
+     
+-    private static func createTasksForHealthcare(users: [User]) -> [Task]
++    private static func createTasksForHealthcare(users: [User], project: Project) -> [Task]
+     {
+         let task1 = Task(
+             taskName: "Patient Authentication System",
+@@ -425,7 +510,8 @@ struct SampleData
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "HIPAA-compliant authentication",
+             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3),
+-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2)
++            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2),
++            project: project
+         )
+         
+         let task2 = Task(
+@@ -434,7 +520,8 @@ struct SampleData
+             taskStatus: TaskStatusEnum.unassigned.title,
+             taskPriority: TaskPriorityEnum.high.title,
+             taskComment: "Calendar-based appointment booking",
+-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 2)
++            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 2),
++            project: project
+         )
+         
+         return [task1, task2]
+diff --git a/DevTaskManager/Views/SampleDataPreviewModifier.swift b/DevTaskManager/Views/SampleDataPreviewModifier.swift
+index 2d75597..8b5038f 100644
+--- a/DevTaskManager/Views/SampleDataPreviewModifier.swift
++++ b/DevTaskManager/Views/SampleDataPreviewModifier.swift
+@@ -17,7 +17,7 @@ struct SampleDataPreviewModifier: PreviewModifier {
+             configurations: config
+         )
+         
+-        // Load sample data
++        // Load sample data on the main actor
+         await MainActor.run {
+             SampleData.createSampleData(in: container.mainContext)
+         }
+@@ -30,3 +30,25 @@ struct SampleDataPreviewModifier: PreviewModifier {
+             .modelContainer(context)
+     }
+ }
++/// A preview modifier that provides an empty model container (no data)
++struct EmptyDataPreviewModifier: PreviewModifier {
++    
++    static func makeSharedContext() async throws -> ModelContainer {
++        let config = ModelConfiguration(isStoredInMemoryOnly: true)
++        let container = try ModelContainer(
++            for: Project.self, Task.self, User.self, Role.self,
++            configurations: config
++        )
++        
++        // Don't load any sample data - useful for testing empty states
++        
++        return container
++    }
++    
++    func body(content: Content, context: ModelContainer) -> some View {
++        content
++            .modelContainer(context)
++    }
++}
++
++
+diff --git a/DevTaskManager/Views/TaskDetailView.swift b/DevTaskManager/Views/TaskDetailView.swift
+index a2404f7..ac79d9f 100644
+--- a/DevTaskManager/Views/TaskDetailView.swift
++++ b/DevTaskManager/Views/TaskDetailView.swift
+@@ -7,7 +7,6 @@
+ import FloatingPromptTextField
+ import SwiftData
+ import SwiftUI
+-import Inject
+ 
+ struct TaskDetailView: View
+ {
+@@ -15,31 +14,43 @@ struct TaskDetailView: View
+     @Bindable var task: Task
+     
+     //  This is the navigation path sent from the list view
+-    @Binding var path: NavigationPath
++    @Binding var path: [AppNavigationDestination]
+     
+     @Environment(\.modelContext) var modelContext
+     @Environment(\.colorScheme) var colorScheme
+     @Environment(\.dismiss) var dismiss
+     
++    @Query(sort: \Project.title) var projects: [Project]
++    
+     @State private var selectedRole = Constants.EMPTY_STRING
+-    @State private var selectedTaskType = Constants.EMPTY_STRING
+-    @State private var selectedTaskStatus = Constants.EMPTY_STRING
+-    @State private var selectedTaskPriority = Constants.EMPTY_STRING
++    @State private var selectedTaskType: String
++    @State private var selectedTaskStatus: String
++    @State private var selectedTaskPriority: String
++    @State private var selectedProject: Project?
++    @State private var isNewTask: Bool
+     
+-    @ObserveInjection var inject
+-
+-    //  Populate values from passed in Task
+-    func populateInitialSelectedValues()
+-    {
+-        selectedTaskType = task.taskType
+-        selectedTaskStatus = task.taskStatus
+-        selectedTaskPriority = task.taskPriority
++    // Initialize state from task
++    init(task: Task, path: Binding<[AppNavigationDestination]>) {
++        self._task = Bindable(wrappedValue: task)
++        self._path = path
++        
++        // Initialize state values from task
++        self._selectedTaskType = State(initialValue: task.taskType)
++        self._selectedTaskStatus = State(initialValue: task.taskStatus)
++        self._selectedTaskPriority = State(initialValue: task.taskPriority)
++        self._selectedProject = State(initialValue: task.project)
++        self._isNewTask = State(initialValue: task.taskName == Constants.EMPTY_STRING)
+     }
+     
+     //  Check whether to enable/disable Save button
+     func validateFields() -> Bool
+     {
+-        if  task.taskName == Constants.EMPTY_STRING
++        if task.taskName == Constants.EMPTY_STRING
++        {
++            return false
++        }
++        
++        if selectedProject == nil
+         {
+             return false
+         }
+@@ -50,7 +61,8 @@ struct TaskDetailView: View
+     //  Delete the skeleton task from the database if not edited
+     func validateTask()
+     {
+-        if  task.taskName == Constants.EMPTY_STRING
++        // Only delete if this was a new task that was never filled in
++        if isNewTask && task.taskName == Constants.EMPTY_STRING
+         {
+             withAnimation
+             {
+@@ -66,18 +78,44 @@ struct TaskDetailView: View
+         task.taskType = selectedTaskType
+         task.taskStatus = selectedTaskStatus
+         task.taskPriority = selectedTaskPriority
++        task.project = selectedProject
+         task.lastUpdated = Date()
+         
+-        modelContext.insert(task)
++        // No need to insert - task is already in context
+         try? modelContext.save()
+     }
+     
+     var body: some View
+     {
+-        NavigationView
++        VStack(spacing: 15)
+         {
+-            VStack(spacing: 15)
+-            {
++                // Project section
++                HStack
++                {
++                    Text("Project:")
++                        .font(.body)
++                        .fontWeight(.bold)
++                        .foregroundColor(.blue)
++                        .padding(.leading, 15)
++                    
++                    Spacer()
++                    
++                    Picker(Constants.EMPTY_STRING, selection: $selectedProject)
++                    {
++                        Text("No Project").tag(nil as Project?)
++                        
++                        ForEach(projects)
++                        {
++                            project in
++                            
++                            Text(project.title.isEmpty ? "Untitled Project" : project.title)
++                                .tag(project as Project?)
++                        }
++                    }
++                    .pickerStyle(.menu)
++                    .padding(.trailing, 15)
++                }
++            
+                 FloatingPromptTextField(text: $task.taskName, prompt: Text("Task Name:")
+                 .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
+                 .floatingPromptScale(1.0)
+@@ -85,23 +123,35 @@ struct TaskDetailView: View
+                 .cornerRadius(10)
+                 .padding(.leading, 15)
+                 
+-                FloatingPromptTextField(text: $task.taskComment, prompt: Text("Comment:")
+-                .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
+-                .floatingPromptScale(1.0)
+-                .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
+-                .cornerRadius(10)
+-                .padding(.leading, 15)
++                VStack(alignment: .leading, spacing: 5) {
++                    Text("Comment:")
++                        .foregroundColor(colorScheme == .dark ? .gray : .blue)
++                        .fontWeight(.bold)
++                        .padding(.leading, 15)
++                    
++                    TextEditor(text: $task.taskComment)
++                        .frame(minHeight: 40, maxHeight: 160) // ~8 lines at 20px per line
++                        .scrollContentBackground(.hidden)
++                        .background(colorScheme == .dark ? Color.gray.opacity(0.2) : Color.gray.opacity(0.1))
++                        .cornerRadius(10)
++                        .overlay(
++                            RoundedRectangle(cornerRadius: 10)
++                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
++                        )
++                        .padding(.horizontal, 15)
++                }
+                 
+-                VStack(alignment: .leading, spacing: 15)
++                VStack(alignment: .leading, spacing: 8)
+                 {
+                     HStack
+                     {
+-                        FloatingPromptTextField(text: $selectedTaskType, prompt: Text("Task Type:")
+-                            .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
+-                        .floatingPromptScale(1.0)
+-                        .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
+-                        .cornerRadius(10)
+-                        .padding(.leading, 15)
++                        Text("Task Type:")
++                            .font(.body)
++                            .fontWeight(.bold)
++                            .foregroundColor(.blue)
++                            .padding(.leading, 15)
++                        
++                        Spacer()
+                         
+                         Picker(Constants.EMPTY_STRING, selection: $selectedTaskType)
+                         {
+@@ -113,17 +163,18 @@ struct TaskDetailView: View
+                             }
+                         }
+                         .pickerStyle(.menu)
+-                        .labelsHidden()
++                        .padding(.trailing, 15)
+                     }
+                     
+                     HStack
+                     {
+-                        FloatingPromptTextField(text: $selectedTaskStatus, prompt: Text("Task Status:")
+-                            .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
+-                        .floatingPromptScale(1.0)
+-                        .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
+-                        .cornerRadius(10)
+-                        .padding(.leading, 15)
++                        Text("Task Status:")
++                            .font(.body)
++                            .fontWeight(.bold)
++                            .foregroundColor(.blue)
++                            .padding(.leading, 15)
++                        
++                        Spacer()
+                         
+                         Picker(Constants.EMPTY_STRING, selection: $selectedTaskStatus)
+                         {
+@@ -135,17 +186,18 @@ struct TaskDetailView: View
+                             }
+                         }
+                         .pickerStyle(.menu)
+-                        .labelsHidden()
++                        .padding(.trailing, 15)
+                     }
+                     
+                     HStack
+                     {
+-                        FloatingPromptTextField(text: $selectedTaskPriority, prompt: Text("Task Priority:")
+-                            .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
+-                        .floatingPromptScale(1.0)
+-                        .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
+-                        .cornerRadius(10)
+-                        .padding(.leading, 15)
++                        Text("Task Priority:")
++                            .font(.body)
++                            .fontWeight(.bold)
++                            .foregroundColor(.blue)
++                            .padding(.leading, 15)
++                        
++                        Spacer()
+                         
+                         Picker(Constants.EMPTY_STRING, selection: $selectedTaskPriority)
+                         {
+@@ -157,7 +209,7 @@ struct TaskDetailView: View
+                             }
+                         }
+                         .pickerStyle(.menu)
+-                        .labelsHidden()
++                        .padding(.trailing, 15)
+                     }
+                 }
+                 
+@@ -175,17 +227,15 @@ struct TaskDetailView: View
+                 .shadow(color: .black, radius: 2.0, x: 2.0, y: 2.0)
+                 
+                 Spacer()
+-                
+-                }.padding()
+             }
++            .padding()
+             .navigationBarItems(trailing: Button("Cancel")
+             {
+                 dismiss()
+             })
+             .padding(.horizontal)
+-            .onAppear(perform: populateInitialSelectedValues)
+             .onDisappear(perform: validateTask)
+-            .navigationTitle(validateFields() ? "Edit Task" : "Add Task").navigationBarTitleDisplayMode(.inline)
+-            .enableInjection()
+-        }
++            .navigationTitle(validateFields() ? "Edit Task" : "Add Task")
++            .navigationBarTitleDisplayMode(.inline)
++    }
+ }
+diff --git a/DevTaskManager/Views/TaskListView.swift b/DevTaskManager/Views/TaskListView.swift
+index 02f95cb..74620db 100644
+--- a/DevTaskManager/Views/TaskListView.swift
++++ b/DevTaskManager/Views/TaskListView.swift
+@@ -6,21 +6,44 @@
+ //
+ import SwiftData
+ import SwiftUI
+-import Inject
+ 
+ struct TaskListView: View
+ {
+     @Environment(\.modelContext) var modelContext
+-    
+-    @ObserveInjection var inject
++    @Environment(\.dismiss) var dismiss
+ 
+-    @State private var path = NavigationPath()
++    @State private var path: [AppNavigationDestination] = []
++    @State private var showDeleteToast = false
++    @State private var deletedTaskName = ""
+     
+     @Query(sort: \Task.taskName) var tasks: [Task]
+     
+     @Query(sort: \User.lastName) var users: [User]
+     
+     @Query(sort: \Role.roleName) var roles: [Role]
++    
++    // Delete tasks
++    func deleteTasks(at offsets: IndexSet)
++    {
++        for index in offsets
++        {
++            let task = tasks[index]
++            deletedTaskName = task.taskName.isEmpty ? "Untitled Task" : task.taskName
++            modelContext.delete(task)
++        }
++        
++        do
++        {
++            try modelContext.save()
++            withAnimation {
++                showDeleteToast = true
++            }
++        }
++        catch
++        {
++            Log.error("Failed to delete task: \(error.localizedDescription)")
++        }
++    }
+ 
+     var body: some View
+     {
+@@ -39,53 +62,66 @@ struct TaskListView: View
+                             {
+                                 task in
+ 
+-                                VStack(alignment: .leading, spacing: 3)
+-                                {
+-                                    NavigationLink(value: task)
++                                NavigationLink(value: AppNavigationDestination.taskDetail(task)) {
++                                    VStack(alignment: .leading, spacing: 8)
+                                     {
+-                                        VStack
+-                                        {
+-                                            HStack
+-                                            {
+-                                                Text("Task Name:").bold()
+-                                                Spacer()
+-                                                Text(task.taskName)
++                                        // Project name at the top
++                                        if let project = task.project {
++                                            HStack {
++                                                Image(systemName: "folder.fill")
++                                                    .font(.caption)
++                                                    .foregroundStyle(.blue)
++                                                Text(project.title.isEmpty ? "Untitled Project" : project.title)
++                                                    .font(.caption)
++                                                    .foregroundStyle(.blue)
+                                             }
++                                        }
++                                        
++                                        // Task Name
++                                        Text(task.taskName.isEmpty ? "Untitled Task" : task.taskName)
++                                            .font(.headline)
++                                        
++                                        // Task Details
++                                        HStack(spacing: 12) {
++                                            Label(task.taskType, systemImage: "hammer.fill")
++                                                .font(.caption)
++                                                .foregroundStyle(.secondary)
+                                             
+-                                            HStack
+-                                            {
+-                                                Text("Task Type:").bold()
+-                                                Spacer()
+-                                                Text(task.taskType)
+-                                            }
++                                            Label(task.taskPriority, systemImage: priorityIcon(for: task.taskPriority))
++                                                .font(.caption)
++                                                .foregroundStyle(priorityColor(for: task.taskPriority))
+                                             
+-                                            HStack
+-                                            {
+-                                                Text("Task Priority:").bold()
+-                                                Spacer()
+-                                                Text(task.taskPriority)
+-                                            }
+-                                            
+-                                            HStack
+-                                            {
+-                                                Text("Date Created:").bold()
+-                                                Spacer()
+-                                                Text(task.dateCreated.formatted())
+-                                            }
++                                            Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
++                                                .font(.caption)
++                                                .foregroundStyle(.secondary)
++                                        }
++                                        
++                                        // Date Created
++                                        HStack {
++                                            Image(systemName: "calendar")
++                                                .font(.caption2)
++                                                .foregroundStyle(.secondary)
++                                            Text(task.dateCreated.formatted(date: .abbreviated, time: .omitted))
++                                                .font(.caption)
++                                                .foregroundStyle(.secondary)
+                                         }
+                                     }
++                                    .padding(.vertical, 4)
+                                 }
+                             }
++                            .onDelete(perform: deleteTasks)
+                         }
+                         .padding()
+                         .listStyle(.plain)
+-                        .navigationDestination(for: Task.self)
+-                        {
+-                            task in
+-                            
+-                            //  Send the selected task to the TaskDetailsView
+-                            //  along with the navigation path array
+-                            TaskDetailView(task: task, path: $path)
++                        .navigationDestination(for: AppNavigationDestination.self) { destination in
++                            switch destination {
++                            case .taskDetail(let task):
++                                TaskDetailView(task: task, path: $path)
++                            case .projectDetail(let project):
++                                ProjectDetailView(project: project, path: $path)
++                            case .projectTasks(let project):
++                                ProjectTasksView(project: project, path: $path)
++                            }
+                         }
+                     }
+                 }
+@@ -104,6 +140,16 @@ struct TaskListView: View
+             }
+             .toolbar
+             {
++                ToolbarItem(placement: .navigationBarLeading)
++                {
++                    Button(action: {
++                        dismiss()
++                    }) {
++                        Image(systemName: "chevron.left")
++                            .font(.body.weight(.semibold))
++                    }
++                }
++                
+                 ToolbarItem(placement: .topBarTrailing)
+                 {
+                     //  Save the skeleton user to the database and
+@@ -115,7 +161,7 @@ struct TaskListView: View
+                         modelContext.insert(task)
+                         try? modelContext.save()
+                         
+-                        path.append(task)
++                        path.append(.taskDetail(task))
+                     },
+                     label:
+                     {
+@@ -128,6 +174,60 @@ struct TaskListView: View
+                 }
+             }.navigationTitle("Task List").navigationBarTitleDisplayMode(.inline)
+         }
+-        .enableInjection()
++        .successToast(
++            isShowing: $showDeleteToast,
++            message: "'\(deletedTaskName)' deleted"
++        )
++        .background(Color(UIColor.systemBackground))
++        .ignoresSafeArea(.all, edges: .top)
++    }
++    
++    // MARK: - Helper Functions
++    
++    private func priorityIcon(for priority: String) -> String {
++        switch priority.lowercased() {
++        case "high":
++            return "exclamationmark.triangle.fill"
++        case "medium":
++            return "exclamationmark.circle.fill"
++        case "low":
++            return "minus.circle.fill"
++        default:
++            return "circle.fill"
++        }
++    }
++    
++    private func priorityColor(for priority: String) -> Color {
++        switch priority.lowercased() {
++        case "high":
++            return .red
++        case "medium":
++            return .orange
++        case "low":
++            return .green
++        default:
++            return .gray
++        }
++    }
++    
++    private func statusIcon(for status: String) -> String {
++        switch status.lowercased() {
++        case "completed":
++            return "checkmark.circle.fill"
++        case "in progress", "inprogress":
++            return "clock.fill"
++        case "unassigned":
++            return "circle.dashed"
++        default:
++            return "circle"
++        }
+     }
+ }
++
++#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier())) {
++    TaskListView()
++}
++
++#Preview("Empty State", traits: .modifier(EmptyDataPreviewModifier())) {
++    TaskListView()
++}
+diff --git a/DevTaskManager/Views/ToastView.swift b/DevTaskManager/Views/ToastView.swift
+index 477f4d0..f358be9 100644
+--- a/DevTaskManager/Views/ToastView.swift
++++ b/DevTaskManager/Views/ToastView.swift
+@@ -54,8 +54,8 @@ struct ToastModifier: ViewModifier {
+                         .transition(.move(edge: .top).combined(with: .opacity))
+                         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isShowing)
+                         .onAppear {
+-                            Task {
+-                                try? await Task.sleep(for: .seconds(duration))
++                            _Concurrency.Task {
++                                try? await _Concurrency.Task.sleep(for: .seconds(duration))
+                                 await MainActor.run {
+                                     withAnimation {
+                                         isShowing = false
+@@ -75,13 +75,13 @@ extension View {
+     ///   - message: The message to display
+     ///   - icon: SF Symbol name for the icon
+     ///   - iconColor: Color of the icon
+-    ///   - duration: How long to show the toast (default: 3 seconds)
++    ///   - duration: How long to show the toast (default: 1.5 seconds)
+     func toast(
+         isShowing: Binding<Bool>,
+         message: String,
+         icon: String = "checkmark.circle.fill",
+         iconColor: Color = .green,
+-        duration: TimeInterval = 3.0
++        duration: TimeInterval = 1.5
+     ) -> some View {
+         modifier(ToastModifier(
+             isShowing: isShowing,
+@@ -97,7 +97,7 @@ extension View {
+ 
+ extension View {
+     /// Shows a success toast
+-    func successToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
++    func successToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+         toast(
+             isShowing: isShowing,
+             message: message,
+@@ -108,7 +108,7 @@ extension View {
+     }
+     
+     /// Shows an error toast
+-    func errorToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
++    func errorToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+         toast(
+             isShowing: isShowing,
+             message: message,
+@@ -119,7 +119,7 @@ extension View {
+     }
+     
+     /// Shows an info toast
+-    func infoToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
++    func infoToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+         toast(
+             isShowing: isShowing,
+             message: message,
+@@ -130,7 +130,7 @@ extension View {
+     }
+     
+     /// Shows a warning toast
+-    func warningToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
++    func warningToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+         toast(
+             isShowing: isShowing,
+             message: message,
+diff --git a/DevTaskManager/Views/UserDetailView.swift b/DevTaskManager/Views/UserDetailView.swift
+index 370feaf..051f632 100644
+--- a/DevTaskManager/Views/UserDetailView.swift
++++ b/DevTaskManager/Views/UserDetailView.swift
+@@ -7,7 +7,6 @@
+ import FloatingPromptTextField
+ import SwiftData
+ import SwiftUI
+-import Inject
+ 
+ struct UserDetailView: View
+ {
+@@ -25,8 +24,6 @@ struct UserDetailView: View
+     
+     @Query(sort: \Role.roleName) var roles: [Role]
+     
+-    @ObserveInjection var inject
+-    
+     //  Populate role from passed in User
+     func populateInitialSelectedRoleValue()
+     {
+@@ -141,6 +138,5 @@ struct UserDetailView: View
+             .onAppear(perform: populateInitialSelectedRoleValue)
+             .onDisappear(perform: validateUser)
+             .navigationTitle(validateFields() ? "Edit User" : "Add User").navigationBarTitleDisplayMode(.inline)
+-            .enableInjection()
+         }
+ }
+diff --git a/DevTaskManager/Views/UserListView.swift b/DevTaskManager/Views/UserListView.swift
+index 27127fa..b248f6f 100644
+--- a/DevTaskManager/Views/UserListView.swift
++++ b/DevTaskManager/Views/UserListView.swift
+@@ -6,19 +6,42 @@
+ //
+ import SwiftData
+ import SwiftUI
+-import Inject
+ 
+ struct UserListView: View
+ {
+     @Environment(\.modelContext) var modelContext
+-    
+-    @ObserveInjection var inject
++    @Environment(\.dismiss) var dismiss
+ 
+     @State private var path = NavigationPath()
++    @State private var showDeleteToast = false
++    @State private var deletedUserName = ""
+     
+     @Query(sort: \User.lastName) var users: [User]
+     
+     @Query(sort: \Role.roleName) var roles: [Role]
++    
++    // Delete users
++    func deleteUsers(at offsets: IndexSet)
++    {
++        for index in offsets
++        {
++            let user = users[index]
++            deletedUserName = user.fullName()
++            modelContext.delete(user)
++        }
++        
++        do
++        {
++            try modelContext.save()
++            withAnimation {
++                showDeleteToast = true
++            }
++        }
++        catch
++        {
++            Log.error("Failed to delete user: \(error.localizedDescription)")
++        }
++    }
+ 
+     var body: some View
+     {
+@@ -67,6 +90,7 @@ struct UserListView: View
+                                     }
+                                 }
+                             }
++                            .onDelete(perform: deleteUsers)
+                         }
+                         .padding()
+                         .listStyle(.plain)
+@@ -95,6 +119,16 @@ struct UserListView: View
+             }
+             .toolbar
+             {
++                ToolbarItem(placement: .navigationBarLeading)
++                {
++                    Button(action: {
++                        dismiss()
++                    }) {
++                        Image(systemName: "chevron.left")
++                            .font(.body.weight(.semibold))
++                    }
++                }
++                
+                 ToolbarItem(placement: .topBarTrailing)
+                 {
+                     //  Save the skeleton user to the database and
+@@ -111,16 +145,21 @@ struct UserListView: View
+                     },
+                     label:
+                     {
+-                        HStack
+-                        {
+-                            Text("Add User").font(.body)
+-                            Image(systemName: "plus")
+-                        }
++                        Image(systemName: "plus")
+                     })
+                 }
+-            }.navigationTitle("User List").navigationBarTitleDisplayMode(.inline)
++            }
++            .navigationTitle("User List")
++            .navigationBarTitleDisplayMode(.inline)
++            .navigationBarBackButtonHidden(true)
++            .toolbarBackground(.visible, for: .navigationBar)
+         }
+-        .enableInjection()
++        .successToast(
++            isShowing: $showDeleteToast,
++            message: "'\(deletedUserName)' deleted"
++        )
++        .background(Color(UIColor.systemBackground))
++        .ignoresSafeArea(.all, edges: .top)
+     }
+ }
+ 
+@@ -128,3 +167,4 @@ struct UserListView: View
+ {
+     UserListView()
+ }
++

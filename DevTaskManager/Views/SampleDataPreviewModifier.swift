@@ -17,7 +17,7 @@ struct SampleDataPreviewModifier: PreviewModifier {
             configurations: config
         )
         
-        // Load sample data
+        // Load sample data on the main actor
         await MainActor.run {
             SampleData.createSampleData(in: container.mainContext)
         }
@@ -30,3 +30,25 @@ struct SampleDataPreviewModifier: PreviewModifier {
             .modelContainer(context)
     }
 }
+/// A preview modifier that provides an empty model container (no data)
+struct EmptyDataPreviewModifier: PreviewModifier {
+    
+    static func makeSharedContext() async throws -> ModelContainer {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: Project.self, Task.self, User.self, Role.self,
+            configurations: config
+        )
+        
+        // Don't load any sample data - useful for testing empty states
+        
+        return container
+    }
+    
+    func body(content: Content, context: ModelContainer) -> some View {
+        content
+            .modelContainer(context)
+    }
+}
+
+

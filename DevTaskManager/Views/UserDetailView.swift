@@ -7,7 +7,6 @@
 import FloatingPromptTextField
 import SwiftData
 import SwiftUI
-import Inject
 
 struct UserDetailView: View
 {
@@ -24,8 +23,6 @@ struct UserDetailView: View
     @State private var selectedRole = Constants.EMPTY_STRING
     
     @Query(sort: \Role.roleName) var roles: [Role]
-    
-    @ObserveInjection var inject
     
     //  Populate role from passed in User
     func populateInitialSelectedRoleValue()
@@ -141,6 +138,5 @@ struct UserDetailView: View
             .onAppear(perform: populateInitialSelectedRoleValue)
             .onDisappear(perform: validateUser)
             .navigationTitle(validateFields() ? "Edit User" : "Add User").navigationBarTitleDisplayMode(.inline)
-            .enableInjection()
         }
 }

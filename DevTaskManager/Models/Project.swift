@@ -16,6 +16,8 @@ final class Project
     var dateCreated: Date = Date()
     var lastUpdated: Date?
     var users: [User] = []
+    
+    @Relationship(deleteRule: .cascade, inverse: \Task.project)
     var tasks: [Task] = []
 
     init(projectId: String = UUID().uuidString, title: String = "", descriptionText: String = "", dateCreated: Date = Date(), lastUpdated: Date? = nil, users: [User] = [], tasks: [Task] = [])

@@ -7,7 +7,6 @@
 import FloatingPromptTextField
 import SwiftData
 import SwiftUI
-import Inject
 
 struct TaskDetailView: View
 {
@@ -15,31 +14,43 @@ struct TaskDetailView: View
     @Bindable var task: Task
     
     //  This is the navigation path sent from the list view
-    @Binding var path: NavigationPath
+    @Binding var path: [AppNavigationDestination]
     
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
     
-    @State private var selectedRole = Constants.EMPTY_STRING
-    @State private var selectedTaskType = Constants.EMPTY_STRING
-    @State private var selectedTaskStatus = Constants.EMPTY_STRING
-    @State private var selectedTaskPriority = Constants.EMPTY_STRING
+    @Query(sort: \Project.title) var projects: [Project]
     
-    @ObserveInjection var inject
-
-    //  Populate values from passed in Task
-    func populateInitialSelectedValues()
-    {
-        selectedTaskType = task.taskType
-        selectedTaskStatus = task.taskStatus
-        selectedTaskPriority = task.taskPriority
+    @State private var selectedRole = Constants.EMPTY_STRING
+    @State private var selectedTaskType: String
+    @State private var selectedTaskStatus: String
+    @State private var selectedTaskPriority: String
+    @State private var selectedProject: Project?
+    @State private var isNewTask: Bool
+    
+    // Initialize state from task
+    init(task: Task, path: Binding<[AppNavigationDestination]>) {
+        self._task = Bindable(wrappedValue: task)
+        self._path = path
+        
+        // Initialize state values from task
+        self._selectedTaskType = State(initialValue: task.taskType)
+        self._selectedTaskStatus = State(initialValue: task.taskStatus)
+        self._selectedTaskPriority = State(initialValue: task.taskPriority)
+        self._selectedProject = State(initialValue: task.project)
+        self._isNewTask = State(initialValue: task.taskName == Constants.EMPTY_STRING)
     }
     
     //  Check whether to enable/disable Save button
     func validateFields() -> Bool
     {
-        if  task.taskName == Constants.EMPTY_STRING
+        if task.taskName == Constants.EMPTY_STRING
+        {
+            return false
+        }
+        
+        if selectedProject == nil
         {
             return false
         }
@@ -50,7 +61,8 @@ struct TaskDetailView: View
     //  Delete the skeleton task from the database if not edited
     func validateTask()
     {
-        if  task.taskName == Constants.EMPTY_STRING
+        // Only delete if this was a new task that was never filled in
+        if isNewTask && task.taskName == Constants.EMPTY_STRING
         {
             withAnimation
             {
@@ -66,18 +78,44 @@ struct TaskDetailView: View
         task.taskType = selectedTaskType
         task.taskStatus = selectedTaskStatus
         task.taskPriority = selectedTaskPriority
+        task.project = selectedProject
         task.lastUpdated = Date()
         
-        modelContext.insert(task)
+        // No need to insert - task is already in context
         try? modelContext.save()
     }
     
     var body: some View
     {
-        NavigationView
+        VStack(spacing: 15)
         {
-            VStack(spacing: 15)
-            {
+                // Project section
+                HStack
+                {
+                    Text("Project:")
+                        .font(.body)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+                        .padding(.leading, 15)
+                    
+                    Spacer()
+                    
+                    Picker(Constants.EMPTY_STRING, selection: $selectedProject)
+                    {
+                        Text("No Project").tag(nil as Project?)
+                        
+                        ForEach(projects)
+                        {
+                            project in
+                            
+                            Text(project.title.isEmpty ? "Untitled Project" : project.title)
+                                .tag(project as Project?)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .padding(.trailing, 15)
+                }
+            
                 FloatingPromptTextField(text: $task.taskName, prompt: Text("Task Name:")
                 .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
                 .floatingPromptScale(1.0)
@@ -85,23 +123,35 @@ struct TaskDetailView: View
                 .cornerRadius(10)
                 .padding(.leading, 15)
                 
-                FloatingPromptTextField(text: $task.taskComment, prompt: Text("Comment:")
-                .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                .floatingPromptScale(1.0)
-                .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                .cornerRadius(10)
-                .padding(.leading, 15)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Comment:")
+                        .foregroundColor(colorScheme == .dark ? .gray : .blue)
+                        .fontWeight(.bold)
+                        .padding(.leading, 15)
+                    
+                    TextEditor(text: $task.taskComment)
+                        .frame(minHeight: 40, maxHeight: 160) // ~8 lines at 20px per line
+                        .scrollContentBackground(.hidden)
+                        .background(colorScheme == .dark ? Color.gray.opacity(0.2) : Color.gray.opacity(0.1))
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                        .padding(.horizontal, 15)
+                }
                 
-                VStack(alignment: .leading, spacing: 15)
+                VStack(alignment: .leading, spacing: 8)
                 {
                     HStack
                     {
-                        FloatingPromptTextField(text: $selectedTaskType, prompt: Text("Task Type:")
-                            .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                        .floatingPromptScale(1.0)
-                        .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                        .cornerRadius(10)
-                        .padding(.leading, 15)
+                        Text("Task Type:")
+                            .font(.body)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                            .padding(.leading, 15)
+                        
+                        Spacer()
                         
                         Picker(Constants.EMPTY_STRING, selection: $selectedTaskType)
                         {
@@ -113,17 +163,18 @@ struct TaskDetailView: View
                             }
                         }
                         .pickerStyle(.menu)
-                        .labelsHidden()
+                        .padding(.trailing, 15)
                     }
                     
                     HStack
                     {
-                        FloatingPromptTextField(text: $selectedTaskStatus, prompt: Text("Task Status:")
-                            .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                        .floatingPromptScale(1.0)
-                        .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                        .cornerRadius(10)
-                        .padding(.leading, 15)
+                        Text("Task Status:")
+                            .font(.body)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                            .padding(.leading, 15)
+                        
+                        Spacer()
                         
                         Picker(Constants.EMPTY_STRING, selection: $selectedTaskStatus)
                         {
@@ -135,17 +186,18 @@ struct TaskDetailView: View
                             }
                         }
                         .pickerStyle(.menu)
-                        .labelsHidden()
+                        .padding(.trailing, 15)
                     }
                     
                     HStack
                     {
-                        FloatingPromptTextField(text: $selectedTaskPriority, prompt: Text("Task Priority:")
-                            .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                        .floatingPromptScale(1.0)
-                        .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                        .cornerRadius(10)
-                        .padding(.leading, 15)
+                        Text("Task Priority:")
+                            .font(.body)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                            .padding(.leading, 15)
+                        
+                        Spacer()
                         
                         Picker(Constants.EMPTY_STRING, selection: $selectedTaskPriority)
                         {
@@ -157,7 +209,7 @@ struct TaskDetailView: View
                             }
                         }
                         .pickerStyle(.menu)
-                        .labelsHidden()
+                        .padding(.trailing, 15)
                     }
                 }
                 
@@ -175,17 +227,15 @@ struct TaskDetailView: View
                 .shadow(color: .black, radius: 2.0, x: 2.0, y: 2.0)
                 
                 Spacer()
-                
-                }.padding()
             }
+            .padding()
             .navigationBarItems(trailing: Button("Cancel")
             {
                 dismiss()
             })
             .padding(.horizontal)
-            .onAppear(perform: populateInitialSelectedValues)
             .onDisappear(perform: validateTask)
-            .navigationTitle(validateFields() ? "Edit Task" : "Add Task").navigationBarTitleDisplayMode(.inline)
-            .enableInjection()
-        }
+            .navigationTitle(validateFields() ? "Edit Task" : "Add Task")
+            .navigationBarTitleDisplayMode(.inline)
+    }
 }

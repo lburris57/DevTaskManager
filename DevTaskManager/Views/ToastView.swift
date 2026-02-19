@@ -54,8 +54,8 @@ struct ToastModifier: ViewModifier {
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isShowing)
                         .onAppear {
-                            Task {
-                                try? await Task.sleep(for: .seconds(duration))
+                            _Concurrency.Task {
+                                try? await _Concurrency.Task.sleep(for: .seconds(duration))
                                 await MainActor.run {
                                     withAnimation {
                                         isShowing = false
@@ -75,13 +75,13 @@ extension View {
     ///   - message: The message to display
     ///   - icon: SF Symbol name for the icon
     ///   - iconColor: Color of the icon
-    ///   - duration: How long to show the toast (default: 3 seconds)
+    ///   - duration: How long to show the toast (default: 1.5 seconds)
     func toast(
         isShowing: Binding<Bool>,
         message: String,
         icon: String = "checkmark.circle.fill",
         iconColor: Color = .green,
-        duration: TimeInterval = 3.0
+        duration: TimeInterval = 1.5
     ) -> some View {
         modifier(ToastModifier(
             isShowing: isShowing,
@@ -97,7 +97,7 @@ extension View {
 
 extension View {
     /// Shows a success toast
-    func successToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
+    func successToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
         toast(
             isShowing: isShowing,
             message: message,
@@ -108,7 +108,7 @@ extension View {
     }
     
     /// Shows an error toast
-    func errorToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
+    func errorToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
         toast(
             isShowing: isShowing,
             message: message,
@@ -119,7 +119,7 @@ extension View {
     }
     
     /// Shows an info toast
-    func infoToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
+    func infoToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
         toast(
             isShowing: isShowing,
             message: message,
@@ -130,7 +130,7 @@ extension View {
     }
     
     /// Shows a warning toast
-    func warningToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 3.0) -> some View {
+    func warningToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
         toast(
             isShowing: isShowing,
             message: message,

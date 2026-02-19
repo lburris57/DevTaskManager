@@ -21,11 +21,13 @@ class Task
     var dateCreated: Date = Date()
     var dateAssigned: Date?
     var lastUpdated: Date?
+    
+    var project: Project?
 
     @Relationship(deleteRule: .cascade, inverse: \TaskItem.parentTask)
     var taskItems: [TaskItem] = []
 
-    init(taskId: String = UUID().uuidString, taskName: String, taskType: String = TaskTypeEnum.development.title, assignedUser: User? = nil, taskStatus: String = TaskStatusEnum.unassigned.title, taskPriority: String = TaskPriorityEnum.medium.title, taskComment: String = Constants.EMPTY_STRING, dateCompleted: Date? = nil, dateCreated: Date = Date(), dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem] = [])
+    init(taskId: String = UUID().uuidString, taskName: String, taskType: String = TaskTypeEnum.development.title, assignedUser: User? = nil, taskStatus: String = TaskStatusEnum.unassigned.title, taskPriority: String = TaskPriorityEnum.medium.title, taskComment: String = Constants.EMPTY_STRING, dateCompleted: Date? = nil, dateCreated: Date = Date(), dateAssigned: Date? = nil, lastUpdated: Date? = nil, taskItems: [TaskItem] = [], project: Project? = nil)
     {
         self.taskId = taskId
         self.taskName = taskName
@@ -39,6 +41,7 @@ class Task
         self.dateAssigned = dateAssigned
         self.lastUpdated = lastUpdated
         self.taskItems = taskItems
+        self.project = project
     }
     
     static func loadTasks() -> [Task]

@@ -13,46 +13,92 @@ struct SampleData
     /// - Parameter modelContext: The SwiftData model context to insert data into
     static func createSampleData(in modelContext: ModelContext)
     {
+        Log.info("Starting sample data creation...")
+        
         // Check if sample data already exists
         let projectDescriptor = FetchDescriptor<Project>()
         let existingProjects = (try? modelContext.fetch(projectDescriptor)) ?? []
         
         guard existingProjects.isEmpty else
         {
-            Log.info("Sample data already exists, skipping creation")
+            Log.info("Sample data already exists (\(existingProjects.count) projects), skipping creation")
             return
         }
         
-        // Create Roles
-        let roles = createRoles()
-        for role in roles
-        {
-            modelContext.insert(role)
-        }
+        // Check if roles already exist
+        let roleDescriptor = FetchDescriptor<Role>()
+        var roles: [Role]
         
-        // Create Users
-        let users = createUsers(with: roles)
-        for user in users
-        {
-            modelContext.insert(user)
-        }
-        
-        // Create Projects with Tasks
-        let projects = createProjects(with: users)
-        for project in projects
-        {
-            modelContext.insert(project)
-        }
-        
-        // Save everything
         do
         {
-            try modelContext.save()
-            Log.info("Sample data created successfully")
+            let existingRoles = try modelContext.fetch(roleDescriptor)
+            
+            if !existingRoles.isEmpty
+            {
+                Log.info("Using \(existingRoles.count) existing roles")
+                roles = existingRoles
+            }
+            else
+            {
+                Log.info("Creating new roles...")
+                // Create Roles first
+                roles = createRoles()
+                for role in roles
+                {
+                    modelContext.insert(role)
+                }
+                
+                // Save roles before creating users that reference them
+                try modelContext.save()
+                Log.info("✅ Roles saved successfully: \(roles.count) roles")
+            }
         }
         catch
         {
-            Log.error("Failed to save sample data: \(error.localizedDescription)")
+            Log.error("❌ Failed to handle roles: \(error.localizedDescription)")
+            return
+        }
+        
+        // Create Users
+        do
+        {
+            Log.info("Creating users...")
+            let users = createUsers(with: roles)
+            for user in users
+            {
+                modelContext.insert(user)
+            }
+            
+            // Save users before creating projects that reference them
+            try modelContext.save()
+            Log.info("✅ Users saved successfully: \(users.count) users")
+            
+            // Create Projects and Tasks with proper relationships
+            Log.info("Creating projects with tasks...")
+            let projects = createProjectsWithTasks(with: users, in: modelContext)
+            
+            // Save everything
+            try modelContext.save()
+            
+            let totalTasks = projects.reduce(0) { $0 + $1.tasks.count }
+            Log.info("✅ Sample data created successfully!")
+            Log.info("   📊 \(projects.count) projects")
+            Log.info("   👥 \(users.count) users")
+            Log.info("   ✅ \(totalTasks) tasks")
+            Log.info("   🔐 \(roles.count) roles")
+        }
+        catch
+        {
+            Log.error("❌ Failed to save sample data: \(error)")
+            Log.error("   Error description: \(error.localizedDescription)")
+            
+            // Print more detailed error info
+            if let nsError = error as NSError?
+            {
+                Log.error("   Error domain: \(nsError.domain)")
+                Log.error("   Error code: \(nsError.code)")
+                Log.error("   User info: \(nsError.userInfo)")
+            }
         }
     }
     
@@ -110,9 +156,9 @@ struct SampleData
         return [user1, user2, user3, user4, user5]
     }
     
-    // MARK: - Create Projects
+    // MARK: - Create Projects with Proper Task Relationships
     
-    private static func createProjects(with users: [User]) -> [Project]
+    private static func createProjectsWithTasks(with users: [User], in modelContext: ModelContext) -> [Project]
     {
         var projects: [Project] = []
         
@@ -123,9 +169,14 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 45), // 45 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 2)  // 2 days ago
         )
-        
         project1.users = Array(users.prefix(3))
-        project1.tasks = createTasksForECommerce(users: users)
+        modelContext.insert(project1)
+        
+        // Create tasks for project1 and link them
+        let tasks1 = createTasksForECommerce(users: users, project: project1)
+        for task in tasks1 {
+            modelContext.insert(task)
+        }
         projects.append(project1)
         
         // Project 2: Mobile Banking App
@@ -135,9 +186,13 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 30), // 30 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 1)  // 1 day ago
         )
-        
         project2.users = Array(users.suffix(3))
-        project2.tasks = createTasksForBanking(users: users)
+        modelContext.insert(project2)
+        
+        let tasks2 = createTasksForBanking(users: users, project: project2)
+        for task in tasks2 {
+            modelContext.insert(task)
+        }
         projects.append(project2)
         
         // Project 3: Task Management System
@@ -147,9 +202,13 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 20), // 20 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 3)        // 3 hours ago
         )
-        
         project3.users = users
-        project3.tasks = createTasksForTaskManager(users: users)
+        modelContext.insert(project3)
+        
+        let tasks3 = createTasksForTaskManager(users: users, project: project3)
+        for task in tasks3 {
+            modelContext.insert(task)
+        }
         projects.append(project3)
         
         // Project 4: Social Media Dashboard
@@ -159,9 +218,13 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 15), // 15 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 5)  // 5 days ago
         )
-        
         project4.users = [users[0], users[2], users[4]]
-        project4.tasks = createTasksForSocialMedia(users: users)
+        modelContext.insert(project4)
+        
+        let tasks4 = createTasksForSocialMedia(users: users, project: project4)
+        for task in tasks4 {
+            modelContext.insert(task)
+        }
         projects.append(project4)
         
         // Project 5: Healthcare Portal (just started)
@@ -171,9 +234,13 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 5), // 5 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 2)       // 2 hours ago
         )
-        
         project5.users = [users[1], users[3]]
-        project5.tasks = createTasksForHealthcare(users: users)
+        modelContext.insert(project5)
+        
+        let tasks5 = createTasksForHealthcare(users: users, project: project5)
+        for task in tasks5 {
+            modelContext.insert(task)
+        }
         projects.append(project5)
         
         // Project 6: Fitness Tracker App (empty project for testing)
@@ -183,17 +250,17 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 2), // 2 days ago
             lastUpdated: nil
         )
-        
         project6.users = []
-        project6.tasks = []
+        modelContext.insert(project6)
         projects.append(project6)
         
         return projects
     }
     
+    
     // MARK: - Create Tasks for E-Commerce
     
-    private static func createTasksForECommerce(users: [User]) -> [Task]
+    private static func createTasksForECommerce(users: [User], project: Project) -> [Task]
     {
         let task1 = Task(
             taskName: "Implement Shopping Cart",
@@ -203,7 +270,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "Add to cart functionality with session persistence",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 10),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9),
+            project: project
         )
         
         let task2 = Task(
@@ -215,7 +283,8 @@ struct SampleData
             taskComment: "Integrated Stripe and PayPal",
             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 5),
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 15),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14),
+            project: project
         )
         
         let task3 = Task(
@@ -224,7 +293,8 @@ struct SampleData
             taskStatus: TaskStatusEnum.unassigned.title,
             taskPriority: TaskPriorityEnum.medium.title,
             taskComment: "Implement full-text search with filters",
-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 8)
+            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 8),
+            project: project
         )
         
         let task4 = Task(
@@ -235,7 +305,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "End-to-end testing of payment process",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 4),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 3)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 3),
+            project: project
         )
         
         let task5 = Task(
@@ -246,7 +317,8 @@ struct SampleData
             taskComment: "Mockups completed and approved",
             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 12),
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 20),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 19)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 19),
+            project: project
         )
         
         return [task1, task2, task3, task4, task5]
@@ -254,7 +326,7 @@ struct SampleData
     
     // MARK: - Create Tasks for Banking
     
-    private static func createTasksForBanking(users: [User]) -> [Task]
+    private static func createTasksForBanking(users: [User], project: Project) -> [Task]
     {
         let task1 = Task(
             taskName: "Implement Biometric Authentication",
@@ -264,7 +336,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "Face ID and Touch ID support",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 7),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 6)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 6),
+            project: project
         )
         
         let task2 = Task(
@@ -276,7 +349,8 @@ struct SampleData
             taskComment: "Real-time balance updates implemented",
             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 3),
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 12),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 11)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 11),
+            project: project
         )
         
         let task3 = Task(
@@ -287,7 +361,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "Documenting security protocols",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 5),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4),
+            project: project
         )
         
         return [task1, task2, task3]
@@ -295,7 +370,7 @@ struct SampleData
     
     // MARK: - Create Tasks for Task Manager
     
-    private static func createTasksForTaskManager(users: [User]) -> [Task]
+    private static func createTasksForTaskManager(users: [User], project: Project) -> [Task]
     {
         let task1 = Task(
             taskName: "Drag-and-Drop Kanban Board",
@@ -305,7 +380,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "Implementing drag and drop functionality",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 6),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 5)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 5),
+            project: project
         )
         
         let task2 = Task(
@@ -314,7 +390,8 @@ struct SampleData
             taskStatus: TaskStatusEnum.unassigned.title,
             taskPriority: TaskPriorityEnum.medium.title,
             taskComment: "WebSocket implementation needed",
-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 4)
+            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 4),
+            project: project
         )
         
         let task3 = Task(
@@ -326,7 +403,8 @@ struct SampleData
             taskComment: "Widget completed with start/stop timer",
             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 2),
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 10),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9),
+            project: project
         )
         
         let task4 = Task(
@@ -337,7 +415,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.medium.title,
             taskComment: "Testing role-based access control",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2),
+            project: project
         )
         
         let task5 = Task(
@@ -348,7 +427,8 @@ struct SampleData
             taskComment: "Design system documented and shared",
             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 8),
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 15),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 14),
+            project: project
         )
         
         let task6 = Task(
@@ -359,7 +439,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.medium.title,
             taskComment: "Writing comprehensive API docs",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 1),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 12)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 12),
+            project: project
         )
         
         return [task1, task2, task3, task4, task5, task6]
@@ -367,7 +448,7 @@ struct SampleData
     
     // MARK: - Create Tasks for Social Media
     
-    private static func createTasksForSocialMedia(users: [User]) -> [Task]
+    private static func createTasksForSocialMedia(users: [User], project: Project) -> [Task]
     {
         let task1 = Task(
             taskName: "Post Scheduling System",
@@ -378,7 +459,8 @@ struct SampleData
             taskComment: "Schedule posts across platforms",
             dateCompleted: Date().addingTimeInterval(-60 * 60 * 24 * 6),
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 10),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 9),
+            project: project
         )
         
         let task2 = Task(
@@ -389,7 +471,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "Charts and metrics for engagement",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 5),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 4),
+            project: project
         )
         
         let task3 = Task(
@@ -398,7 +481,8 @@ struct SampleData
             taskStatus: TaskStatusEnum.unassigned.title,
             taskPriority: TaskPriorityEnum.medium.title,
             taskComment: "Monthly view calendar mockup",
-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3)
+            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3),
+            project: project
         )
         
         let task4 = Task(
@@ -407,7 +491,8 @@ struct SampleData
             taskStatus: TaskStatusEnum.unassigned.title,
             taskPriority: TaskPriorityEnum.low.title,
             taskComment: "Test API connections",
-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 1)
+            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 1),
+            project: project
         )
         
         return [task1, task2, task3, task4]
@@ -415,7 +500,7 @@ struct SampleData
     
     // MARK: - Create Tasks for Healthcare
     
-    private static func createTasksForHealthcare(users: [User]) -> [Task]
+    private static func createTasksForHealthcare(users: [User], project: Project) -> [Task]
     {
         let task1 = Task(
             taskName: "Patient Authentication System",
@@ -425,7 +510,8 @@ struct SampleData
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "HIPAA-compliant authentication",
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 3),
-            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2)
+            dateAssigned: Date().addingTimeInterval(-60 * 60 * 24 * 2),
+            project: project
         )
         
         let task2 = Task(
@@ -434,7 +520,8 @@ struct SampleData
             taskStatus: TaskStatusEnum.unassigned.title,
             taskPriority: TaskPriorityEnum.high.title,
             taskComment: "Calendar-based appointment booking",
-            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 2)
+            dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 2),
+            project: project
         )
         
         return [task1, task2]

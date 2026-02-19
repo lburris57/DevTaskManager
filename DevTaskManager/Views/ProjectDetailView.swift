@@ -7,7 +7,6 @@
 import SwiftUI
 import SwiftData
 import FloatingPromptTextField
-import Inject
 
 struct ProjectDetailView: View
 {
@@ -15,13 +14,11 @@ struct ProjectDetailView: View
     @Bindable var project: Project
     
     //  This is the navigation path sent from the list view
-    @Binding var path: NavigationPath
+    @Binding var path: [AppNavigationDestination]
     
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
-    
-    @ObserveInjection var inject
     
     //  Check whether to enable/disable Save button
     func validateFields() -> Bool
@@ -60,8 +57,8 @@ struct ProjectDetailView: View
     
     var body: some View
     {
-        NavigationView
-        {
+        //NavigationView
+        //{
             VStack(spacing: 15)
             {
                 FloatingPromptTextField(text: $project.title, prompt: Text("Title:")
@@ -74,7 +71,7 @@ struct ProjectDetailView: View
                 VStack(alignment: .leading, spacing: 5)
                 {
                     Text(" Description:")
-                        .foregroundColor(Color.secondary)
+                        .foregroundColor(colorScheme == .dark ? .gray : .blue)
                         .fontWeight(.bold)
                         .padding(.horizontal)
                     
@@ -100,7 +97,7 @@ struct ProjectDetailView: View
                 Spacer()
                 
                 }.padding()
-            }
+            //}
             .navigationBarItems(trailing: Button("Cancel")
             {
                 dismiss()
@@ -108,6 +105,5 @@ struct ProjectDetailView: View
             .padding(.horizontal)
             .onDisappear(perform: validateProject)
             .navigationTitle(validateFields() ? "Edit Project" : "Add Project").navigationBarTitleDisplayMode(.inline)
-            .enableInjection()
         }
     }

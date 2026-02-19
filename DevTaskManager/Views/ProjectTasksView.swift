@@ -13,17 +13,22 @@ struct ProjectTasksView: View
     @Environment(\.dismiss) var dismiss
     
     @Bindable var project: Project
-    @Binding var path: NavigationPath
+    @Binding var path: [AppNavigationDestination]
     
     @State private var showDeleteToast = false
     @State private var deletedTaskName = ""
+    
+    // Computed property for sorted tasks - lightweight enough
+    private var sortedTasks: [Task] {
+        project.tasks.sorted(by: { $0.dateCreated > $1.dateCreated })
+    }
     
     // Delete tasks from this project
     func deleteTasks(at offsets: IndexSet)
     {
         for index in offsets
         {
-            let task = project.tasks[index]
+            let task = sortedTasks[index]
             deletedTaskName = task.taskName.isEmpty ? "Untitled Task" : task.taskName
             modelContext.delete(task)
         }
@@ -54,7 +59,7 @@ struct ProjectTasksView: View
         {
             try modelContext.save()
             // Navigate to task detail
-            path.append(task)
+            path.append(.taskDetail(task))
         }
         catch
         {
@@ -64,18 +69,18 @@ struct ProjectTasksView: View
     
     var body: some View
     {
-        VStack
-        {
-            if !project.tasks.isEmpty
+        Group {
+            VStack
             {
-                List
+                if !project.tasks.isEmpty
                 {
-                    ForEach(project.tasks.sorted(by: { $0.dateCreated > $1.dateCreated }))
+                    List
+                    {
+                    ForEach(sortedTasks)
                     {
                         task in
                         
-                        NavigationLink(value: task)
-                        {
+                        NavigationLink(value: AppNavigationDestination.taskDetail(task)) {
                             VStack(alignment: .leading, spacing: 8)
                             {
                                 // Task Name
@@ -113,44 +118,45 @@ struct ProjectTasksView: View
                     .onDelete(perform: deleteTasks)
                 }
                 .listStyle(.plain)
-                .navigationDestination(for: Task.self)
-                {
-                    task in
-                    TaskDetailView(task: task, path: $path)
-                }
             }
             else
             {
                 // No tasks
-                ContentUnavailableView
-                {
+                ContentUnavailableView {
                     Label("No tasks yet", systemImage: "checkmark.circle.badge.plus")
-                }
-                description:
-                {
+                } description: {
                     Text("Add tasks to \(project.title.isEmpty ? "this project" : project.title)")
-                }
-                actions:
-                {
-                    Button("Add Task")
-                    {
+                } actions: {
+                    Button("Add Task") {
                         createNewTask()
                     }
                     .buttonStyle(.borderedProminent)
                 }
             }
         }
-        .navigationTitle(project.title.isEmpty ? "Untitled Project" : project.title)
-        .navigationBarTitleDisplayMode(.large)
+        }
         .toolbar
         {
+            ToolbarItem(placement: .principal)
+            {
+                VStack(spacing: 2)
+                {
+                    Text(project.title.isEmpty ? "Untitled Project" : project.title)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text("Tasks")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
             ToolbarItem(placement: .topBarTrailing)
             {
                 Menu
                 {
                     // Edit project button
                     Button(action: {
-                        path.append(project)
+                        path.append(.projectDetail(project))
                     })
                     {
                         Label("Edit Project", systemImage: "pencil")
@@ -204,7 +210,7 @@ struct ProjectTasksView: View
         }
     }
     
-    private func statusIcon(for status: String) -> Color {
+    private func statusIcon(for status: String) -> String {
         switch status.lowercased() {
         case "completed":
             return "checkmark.circle.fill"

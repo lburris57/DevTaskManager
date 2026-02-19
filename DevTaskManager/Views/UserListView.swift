@@ -6,19 +6,42 @@
 //
 import SwiftData
 import SwiftUI
-import Inject
 
 struct UserListView: View
 {
     @Environment(\.modelContext) var modelContext
-    
-    @ObserveInjection var inject
+    @Environment(\.dismiss) var dismiss
 
     @State private var path = NavigationPath()
+    @State private var showDeleteToast = false
+    @State private var deletedUserName = ""
     
     @Query(sort: \User.lastName) var users: [User]
     
     @Query(sort: \Role.roleName) var roles: [Role]
+    
+    // Delete users
+    func deleteUsers(at offsets: IndexSet)
+    {
+        for index in offsets
+        {
+            let user = users[index]
+            deletedUserName = user.fullName()
+            modelContext.delete(user)
+        }
+        
+        do
+        {
+            try modelContext.save()
+            withAnimation {
+                showDeleteToast = true
+            }
+        }
+        catch
+        {
+            Log.error("Failed to delete user: \(error.localizedDescription)")
+        }
+    }
 
     var body: some View
     {
@@ -67,6 +90,7 @@ struct UserListView: View
                                     }
                                 }
                             }
+                            .onDelete(perform: deleteUsers)
                         }
                         .padding()
                         .listStyle(.plain)
@@ -95,6 +119,16 @@ struct UserListView: View
             }
             .toolbar
             {
+                ToolbarItem(placement: .navigationBarLeading)
+                {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.body.weight(.semibold))
+                    }
+                }
+                
                 ToolbarItem(placement: .topBarTrailing)
                 {
                     //  Save the skeleton user to the database and
@@ -111,16 +145,21 @@ struct UserListView: View
                     },
                     label:
                     {
-                        HStack
-                        {
-                            Text("Add User").font(.body)
-                            Image(systemName: "plus")
-                        }
+                        Image(systemName: "plus")
                     })
                 }
-            }.navigationTitle("User List").navigationBarTitleDisplayMode(.inline)
+            }
+            .navigationTitle("User List")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
-        .enableInjection()
+        .successToast(
+            isShowing: $showDeleteToast,
+            message: "'\(deletedUserName)' deleted"
+        )
+        .background(Color(UIColor.systemBackground))
+        .ignoresSafeArea(.all, edges: .top)
     }
 }
 
@@ -128,3 +167,4 @@ struct UserListView: View
 {
     UserListView()
 }
+

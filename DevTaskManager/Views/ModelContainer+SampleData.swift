@@ -11,6 +11,7 @@ extension ModelContainer
 {
     /// Creates a model container pre-populated with sample data for development and testing
     /// - Returns: A ModelContainer with sample data
+    @MainActor
     static func withSampleData() throws -> ModelContainer
     {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -27,6 +28,7 @@ extension ModelContainer
     /// Creates a model container with sample data for testing specific scenarios
     /// - Parameter includeEmptyProject: Whether to include an empty project for testing
     /// - Returns: A ModelContainer with customized sample data
+    @MainActor
     static func withCustomSampleData(includeEmptyProject: Bool = true) throws -> ModelContainer
     {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
