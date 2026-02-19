@@ -16,6 +16,9 @@ struct TaskDetailView: View
     //  This is the navigation path sent from the list view
     @Binding var path: [AppNavigationDestination]
     
+    // Optional callback to dismiss to main menu
+    var onDismissToMain: (() -> Void)? = nil
+    
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
@@ -31,11 +34,13 @@ struct TaskDetailView: View
     @State private var selectedProject: Project?
     @State private var selectedUser: User?
     @State private var isNewTask: Bool
+    @State private var taskSaved = false
     
     // Initialize state from task
-    init(task: Task, path: Binding<[AppNavigationDestination]>) {
+    init(task: Task, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil) {
         self._task = Bindable(wrappedValue: task)
         self._path = path
+        self.onDismissToMain = onDismissToMain
         
         // Initialize state values from task
         self._selectedTaskType = State(initialValue: task.taskType)
@@ -62,18 +67,10 @@ struct TaskDetailView: View
         return true
     }
     
-    //  Delete the skeleton task from the database if not edited
+    //  Clean up if needed (no-op now since task isn't inserted until saved)
     func validateTask()
     {
-        // Only delete if this was a new task that was never filled in
-        if isNewTask && task.taskName == Constants.EMPTY_STRING
-        {
-            withAnimation
-            {
-                modelContext.delete(task)
-                try? modelContext.save()
-            }
-        }
+        // Task is only inserted when saved, so no cleanup needed
     }
     
     //  Set the last updated date value when saving changes
@@ -104,7 +101,11 @@ struct TaskDetailView: View
         // Update the selected status to reflect the automatic change
         selectedTaskStatus = task.taskStatus
         
-        // No need to insert - task is already in context
+        // Insert task if it's new (not already in context)
+        if isNewTask {
+            modelContext.insert(task)
+        }
+        
         try? modelContext.save()
     }
     
@@ -279,13 +280,75 @@ struct TaskDetailView: View
                 Spacer()
             }
             .padding()
-            .navigationBarItems(trailing: Button("Cancel")
-            {
-                dismiss()
-            })
+            .toolbar {
+                toolbarLeadingContent
+                toolbarTrailingContent
+            }
             .padding(.horizontal)
             .onDisappear(perform: validateTask)
             .navigationTitle(validateFields() ? "Edit Task" : "Add Task")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+    }
+    
+    // MARK: - Toolbar Components
+    
+    @ToolbarContentBuilder
+    private var toolbarLeadingContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            navigationMenu
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var toolbarTrailingContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button("Cancel") {
+                dismiss()
+            }
+        }
+    }
+    
+    // MARK: - Helper Views
+    
+    private var navigationMenu: some View {
+        Menu {
+            Button {
+                navigateBackOneLevel()
+            } label: {
+                Label("Back To Assigned Tasks", systemImage: "list.bullet.clipboard")
+            }
+            
+            Button {
+                navigateToMainMenu()
+            } label: {
+                Label("Back To Main Menu", systemImage: "house.fill")
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "chevron.left")
+                    .font(.body.weight(.semibold))
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+            }
+        }
+    }
+    
+    // MARK: - Navigation Actions
+    
+    private func navigateBackOneLevel() {
+        if !path.isEmpty {
+            path.removeLast()
+        }
+        dismiss()
+    }
+    
+    private func navigateToMainMenu() {
+        path.removeAll()
+        if let onDismissToMain = onDismissToMain {
+            onDismissToMain()
+        } else {
+            dismiss()
+        }
     }
 }

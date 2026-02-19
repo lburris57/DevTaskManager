@@ -155,18 +155,9 @@ struct ProjectTasksView: View
             taskName: Constants.EMPTY_STRING,
             project: project
         )
-        modelContext.insert(task)
-
-        do
-        {
-            try modelContext.save()
-            // Navigate to task detail
-            path.append(.taskDetail(task))
-        }
-        catch
-        {
-            Log.error("Failed to create task: \(error.localizedDescription)")
-        }
+        
+        // Don't insert or save yet - let the detail view handle it
+        path.append(.taskDetail(task))
     }
 
     var body: some View
@@ -221,10 +212,13 @@ struct ProjectTasksView: View
                                         Label(task.taskType, systemImage: "hammer.fill")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
+                                        
+                                        Spacer()
 
                                         Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
                                             .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(statusColor(for: task.taskStatus))
+                                            .labelStyle(.titleAndIcon)
                                     }
 
                                     // Date Created
@@ -287,12 +281,22 @@ struct ProjectTasksView: View
                     {
                         Button(action: { sortOrder = .taskNameAscending })
                         {
-                            Label("A-Z", systemImage: sortOrder == .taskNameAscending ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskNameAscending {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("A-Z")
+                            }
                         }
                         
                         Button(action: { sortOrder = .taskNameDescending })
                         {
-                            Label("Z-A", systemImage: sortOrder == .taskNameDescending ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskNameDescending {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Z-A")
+                            }
                         }
                     }
                     
@@ -301,35 +305,75 @@ struct ProjectTasksView: View
                     {
                         Button(action: { sortOrder = .taskTypeDevelopment })
                         {
-                            Label("Development", systemImage: sortOrder == .taskTypeDevelopment ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeDevelopment {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Development")
+                            }
                         }
                         Button(action: { sortOrder = .taskTypeRequirements })
                         {
-                            Label("Requirements", systemImage: sortOrder == .taskTypeRequirements ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeRequirements {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Requirements")
+                            }
                         }
                         Button(action: { sortOrder = .taskTypeDesign })
                         {
-                            Label("Design", systemImage: sortOrder == .taskTypeDesign ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeDesign {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Design")
+                            }
                         }
                         Button(action: { sortOrder = .taskTypeUseCases })
                         {
-                            Label("Use Cases", systemImage: sortOrder == .taskTypeUseCases ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeUseCases {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Use Cases")
+                            }
                         }
                         Button(action: { sortOrder = .taskTypeTesting })
                         {
-                            Label("Testing", systemImage: sortOrder == .taskTypeTesting ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeTesting {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Testing")
+                            }
                         }
                         Button(action: { sortOrder = .taskTypeDocumentation })
                         {
-                            Label("Documentation", systemImage: sortOrder == .taskTypeDocumentation ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeDocumentation {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Documentation")
+                            }
                         }
                         Button(action: { sortOrder = .taskTypeDatabase })
                         {
-                            Label("Database", systemImage: sortOrder == .taskTypeDatabase ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeDatabase {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Database")
+                            }
                         }
                         Button(action: { sortOrder = .taskTypeDefectCorrection })
                         {
-                            Label("Defect Correction", systemImage: sortOrder == .taskTypeDefectCorrection ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .taskTypeDefectCorrection {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Defect Correction")
+                            }
                         }
                     }
                     
@@ -338,19 +382,39 @@ struct ProjectTasksView: View
                     {
                         Button(action: { sortOrder = .priorityHigh })
                         {
-                            Label("High", systemImage: sortOrder == .priorityHigh ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .priorityHigh {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("High")
+                            }
                         }
                         Button(action: { sortOrder = .priorityMedium })
                         {
-                            Label("Medium", systemImage: sortOrder == .priorityMedium ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .priorityMedium {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Medium")
+                            }
                         }
                         Button(action: { sortOrder = .priorityLow })
                         {
-                            Label("Low", systemImage: sortOrder == .priorityLow ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .priorityLow {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Low")
+                            }
                         }
                         Button(action: { sortOrder = .priorityEnhancement })
                         {
-                            Label("Enhancement", systemImage: sortOrder == .priorityEnhancement ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .priorityEnhancement {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Enhancement")
+                            }
                         }
                     }
                     
@@ -359,19 +423,39 @@ struct ProjectTasksView: View
                     {
                         Button(action: { sortOrder = .statusUnassigned })
                         {
-                            Label("Unassigned", systemImage: sortOrder == .statusUnassigned ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .statusUnassigned {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Unassigned")
+                            }
                         }
                         Button(action: { sortOrder = .statusInProgress })
                         {
-                            Label("In Progress", systemImage: sortOrder == .statusInProgress ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .statusInProgress {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("In Progress")
+                            }
                         }
                         Button(action: { sortOrder = .statusCompleted })
                         {
-                            Label("Completed", systemImage: sortOrder == .statusCompleted ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .statusCompleted {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Completed")
+                            }
                         }
                         Button(action: { sortOrder = .statusDeferred })
                         {
-                            Label("Deferred", systemImage: sortOrder == .statusDeferred ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .statusDeferred {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Deferred")
+                            }
                         }
                     }
                     
@@ -380,12 +464,22 @@ struct ProjectTasksView: View
                     {
                         Button(action: { sortOrder = .dateNewest })
                         {
-                            Label("Newest First", systemImage: sortOrder == .dateNewest ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .dateNewest {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Newest First")
+                            }
                         }
                         
                         Button(action: { sortOrder = .dateOldest })
                         {
-                            Label("Oldest First", systemImage: sortOrder == .dateOldest ? "checkmark" : "")
+                            HStack {
+                                if sortOrder == .dateOldest {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("Oldest First")
+                            }
                         }
                     }
                     
@@ -463,6 +557,21 @@ struct ProjectTasksView: View
             return "circle.dashed"
         default:
             return "circle"
+        }
+    }
+    
+    private func statusColor(for status: String) -> Color
+    {
+        switch status.lowercased()
+        {
+        case "unassigned":
+            return .orange.opacity(0.8) // Light orange
+        case "completed":
+            return .green
+        case "in progress", "inprogress":
+            return .blue.opacity(0.7) // Light blue
+        default:
+            return .secondary
         }
     }
 }

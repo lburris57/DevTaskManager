@@ -21,8 +21,17 @@ struct UserDetailView: View
     @Environment(\.dismiss) var dismiss
     
     @State private var selectedRole = Constants.EMPTY_STRING
+    @State private var isNewUser: Bool
+    @State private var userSaved = false
     
     @Query(sort: \Role.roleName) var roles: [Role]
+    
+    // Initialize state from user
+    init(user: User, path: Binding<[AppNavigationDestination]>) {
+        self._user = Bindable(wrappedValue: user)
+        self._path = path
+        self._isNewUser = State(initialValue: user.firstName == Constants.EMPTY_STRING && user.lastName == Constants.EMPTY_STRING)
+    }
     
     //  Populate role from passed in User
     func populateInitialSelectedRoleValue()
@@ -47,17 +56,13 @@ struct UserDetailView: View
         return true
     }
     
-    //  Delete the skeleton user from the database if not edited
+    //  Clean up if needed - delete unsaved new users
     func validateUser()
     {
-        if  user.firstName == Constants.EMPTY_STRING ||
-            user.lastName == Constants.EMPTY_STRING
-        {
-            withAnimation
-            {
-                modelContext.delete(user)
-                try? modelContext.save()
-            }
+        // If this is a new user that wasn't saved, delete it
+        if isNewUser && !userSaved {
+            modelContext.delete(user)
+            try? modelContext.save()
         }
     }
     
@@ -74,9 +79,15 @@ struct UserDetailView: View
         
         user.lastUpdated = Date()
         
-        // Don't insert if user already exists in context
-        // modelContext.insert(user) // This line was causing issues
+        // Insert user if it's new (not already in context)
+        if isNewUser {
+            modelContext.insert(user)
+        }
+        
         try? modelContext.save()
+        
+        // Mark as saved so validateUser doesn't delete it
+        userSaved = true
     }
     
     var body: some View

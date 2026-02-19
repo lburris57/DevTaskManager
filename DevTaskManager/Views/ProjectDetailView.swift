@@ -16,9 +16,23 @@ struct ProjectDetailView: View
     //  This is the navigation path sent from the list view
     @Binding var path: [AppNavigationDestination]
     
+    // Optional callback to dismiss to main menu
+    var onDismissToMain: (() -> Void)? = nil
+    
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
+    
+    @State private var isNewProject: Bool
+    @State private var projectSaved = false
+    
+    // Initialize state from project
+    init(project: Project, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil) {
+        self._project = Bindable(wrappedValue: project)
+        self._path = path
+        self.onDismissToMain = onDismissToMain
+        self._isNewProject = State(initialValue: project.title == Constants.EMPTY_STRING && project.descriptionText == Constants.EMPTY_STRING)
+    }
     
     //  Check whether to enable/disable Save button
     func validateFields() -> Bool
@@ -32,17 +46,13 @@ struct ProjectDetailView: View
         return true
     }
     
-    //  Delete the skeleton project from the database if not edited
+    //  Clean up if needed - delete unsaved new projects
     func validateProject()
     {
-        if  project.title == Constants.EMPTY_STRING ||
-            project.descriptionText == Constants.EMPTY_STRING
-        {
-            withAnimation
-            {
-                modelContext.delete(project)
-                try? modelContext.save()
-            }
+        // If this is a new project that wasn't saved, delete it
+        if isNewProject && !projectSaved {
+            modelContext.delete(project)
+            try? modelContext.save()
         }
     }
     
@@ -51,8 +61,15 @@ struct ProjectDetailView: View
     {
         project.lastUpdated = Date()
         
-        modelContext.insert(project)
+        // Insert project if it's new (not already in context)
+        if isNewProject {
+            modelContext.insert(project)
+        }
+        
         try? modelContext.save()
+        
+        // Mark as saved so validateProject doesn't delete it
+        projectSaved = true
     }
     
     var body: some View
@@ -98,12 +115,75 @@ struct ProjectDetailView: View
                 
                 }.padding()
             //}
-            .navigationBarItems(trailing: Button("Cancel")
-            {
-                dismiss()
-            })
+            .toolbar {
+                toolbarLeadingContent
+                toolbarTrailingContent
+            }
             .padding(.horizontal)
             .onDisappear(perform: validateProject)
-            .navigationTitle(validateFields() ? "Edit Project" : "Add Project").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(validateFields() ? "Edit Project" : "Add Project")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+    }
+    
+    // MARK: - Toolbar Components
+    
+    @ToolbarContentBuilder
+    private var toolbarLeadingContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            navigationMenu
         }
     }
+    
+    @ToolbarContentBuilder
+    private var toolbarTrailingContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button("Cancel") {
+                dismiss()
+            }
+        }
+    }
+    
+    // MARK: - Helper Views
+    
+    private var navigationMenu: some View {
+        Menu {
+            Button {
+                navigateBackOneLevel()
+            } label: {
+                Label("Back To Project List", systemImage: "folder.fill")
+            }
+            
+            Button {
+                navigateToMainMenu()
+            } label: {
+                Label("Back To Main Menu", systemImage: "house.fill")
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "chevron.left")
+                    .font(.body.weight(.semibold))
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+            }
+        }
+    }
+    
+    // MARK: - Navigation Actions
+    
+    private func navigateBackOneLevel() {
+        if !path.isEmpty {
+            path.removeLast()
+        }
+        dismiss()
+    }
+    
+    private func navigateToMainMenu() {
+        path.removeAll()
+        if let onDismissToMain = onDismissToMain {
+            onDismissToMain()
+        } else {
+            dismiss()
+        }
+    }
+}

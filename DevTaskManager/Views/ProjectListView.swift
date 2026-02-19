@@ -100,17 +100,9 @@ struct ProjectListView: View
     {
         let project = Project(title: Constants.EMPTY_STRING,
                               descriptionText: Constants.EMPTY_STRING)
-        modelContext.insert(project)
-
-        do
-        {
-            try modelContext.save()
-            path.append(.projectDetail(project))
-        }
-        catch
-        {
-            Log.error("Failed to create project: \(error.localizedDescription)")
-        }
+        
+        // Don't insert or save yet - let the detail view handle it
+        path.append(.projectDetail(project))
     }
 
     // Delete projects
@@ -239,9 +231,9 @@ struct ProjectListView: View
                 case .projectTasks(let project):
                     ProjectTasksView(project: project, path: $path)
                 case .projectDetail(let project):
-                    ProjectDetailView(project: project, path: $path)
+                    ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
                 case .taskDetail(let task):
-                    TaskDetailView(task: task, path: $path)
+                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() })
                 case .userDetail(let user):
                     UserDetailView(user: user, path: $path)
                 case .userTasks(let user):

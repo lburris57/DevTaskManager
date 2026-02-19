@@ -152,11 +152,11 @@ struct UserListView: View
                 case .userDetail(let user):
                     UserDetailView(user: user, path: $path)
                 case .userTasks(let user):
-                    UserTasksView(user: user, path: $path)
+                    UserTasksView(user: user, onDismissToMain: { dismiss() }, path: $path)
                 case .taskDetail(let task):
-                    TaskDetailView(task: task, path: $path)
+                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() })
                 case .projectDetail(let project):
-                    ProjectDetailView(project: project, path: $path)
+                    ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
                 case .projectTasks(let project):
                     ProjectTasksView(project: project, path: $path)
                 }
@@ -315,9 +315,7 @@ struct UserListView: View
                 let user = User(firstName: Constants.EMPTY_STRING,
                                 lastName: Constants.EMPTY_STRING)
 
-                modelContext.insert(user)
-                try? modelContext.save()
-                
+                // Don't insert or save yet - let the detail view handle it
                 path.append(.userDetail(user))
             })
             {
