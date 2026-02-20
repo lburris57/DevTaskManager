@@ -26,7 +26,8 @@ final class Project
         self.title = title
         self.descriptionText = descriptionText
         self.dateCreated = dateCreated
-        self.lastUpdated = lastUpdated
+        // If lastUpdated is not provided, set it to dateCreated for new projects
+        self.lastUpdated = lastUpdated ?? dateCreated
         self.users = users
         self.tasks = tasks
     }

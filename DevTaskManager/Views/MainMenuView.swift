@@ -18,6 +18,7 @@ struct MainMenuView: View
         case projectList
         case userList
         case taskList
+        case reports
 
         var id: Self { self }
     }
@@ -95,6 +96,15 @@ struct MainMenuView: View
                                 action: { selectedView = .taskList }
                             )
 
+                            // Reports Card
+                            MenuCard(
+                                icon: "chart.bar.doc.horizontal.fill",
+                                title: "Reports",
+                                subtitle: "View project analytics",
+                                gradientColors: [.indigo, .purple],
+                                action: { selectedView = .reports }
+                            )
+
                             #if DEBUG
                                 // Developer Tools Card (Debug only)
                                 MenuCard(
@@ -124,6 +134,8 @@ struct MainMenuView: View
                     UserListView()
                 case .taskList:
                     TaskListView()
+                case .reports:
+                    SimpleReportsView()
                 }
             }
             .successToast(

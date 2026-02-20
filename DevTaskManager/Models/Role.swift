@@ -19,6 +19,7 @@ class Role
     {
         self.roleName = roleName
         self.permissions = permissions
+        self.lastUpdated = Date()
     }
     
     static func loadRoles() -> [Role]

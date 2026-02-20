@@ -39,7 +39,7 @@ class Task
         self.dateCompleted = dateCompleted
         self.dateCreated = dateCreated
         self.dateAssigned = dateAssigned
-        self.lastUpdated = lastUpdated
+        self.lastUpdated = lastUpdated ?? dateCreated
         self.taskItems = taskItems
         self.project = project
     }

@@ -207,6 +207,7 @@ struct ProjectListView: View
                                             Label("Delete", systemImage: "trash")
                                         }
                                     }
+                                    .id(project.projectId)
                                 }
                             }
                             .padding(.top, 8)
@@ -248,19 +249,23 @@ struct ProjectListView: View
 
                 ToolbarItemGroup(placement: .topBarTrailing)
                 {
-                    Menu
+                    // Only show sort menu when there are projects
+                    if !projects.isEmpty
                     {
-                        Picker("Sort by", selection: $sortOrder)
+                        Menu
                         {
-                            ForEach(SortOrder.allCases, id: \.self)
+                            Picker("Sort by", selection: $sortOrder)
                             {
-                                order in
-                                Text(order.rawValue).tag(order)
+                                ForEach(SortOrder.allCases, id: \.self)
+                                {
+                                    order in
+                                    Text(order.rawValue).tag(order)
+                                }
                             }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                                .foregroundStyle(AppGradients.projectGradient)
                         }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .foregroundStyle(AppGradients.projectGradient)
                     }
 
                     Button(action: createNewProject)

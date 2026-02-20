@@ -291,62 +291,98 @@ struct UserListView: View
     {
         ToolbarItemGroup(placement: .topBarTrailing)
         {
-            Menu
+            // Only show sort/filter menu when there are users
+            if !users.isEmpty
             {
-                // User Name submenu
-                Menu("User Name")
+                Menu
                 {
-                    Button(action: { sortOrder = .nameAscending })
+                    // User Name submenu
+                    Menu("User Name")
                     {
-                        Label("A-Z", systemImage: sortOrder == .nameAscending ? "checkmark" : "")
+                        Button(action: { sortOrder = .nameAscending })
+                        {
+                            if sortOrder == .nameAscending {
+                                Label("A-Z", systemImage: "checkmark")
+                            } else {
+                                Text("A-Z")
+                            }
+                        }
+
+                        Button(action: { sortOrder = .nameDescending })
+                        {
+                            if sortOrder == .nameDescending {
+                                Label("Z-A", systemImage: "checkmark")
+                            } else {
+                                Text("Z-A")
+                            }
+                        }
                     }
 
-                    Button(action: { sortOrder = .nameDescending })
+                    // Role submenu
+                    Menu("Role")
                     {
-                        Label("Z-A", systemImage: sortOrder == .nameDescending ? "checkmark" : "")
+                        Button(action: { sortOrder = .roleAdministrator })
+                        {
+                            if sortOrder == .roleAdministrator {
+                                Label("Administrator", systemImage: "checkmark")
+                            } else {
+                                Text("Administrator")
+                            }
+                        }
+
+                        Button(action: { sortOrder = .roleDeveloper })
+                        {
+                            if sortOrder == .roleDeveloper {
+                                Label("Developer", systemImage: "checkmark")
+                            } else {
+                                Text("Developer")
+                            }
+                        }
+
+                        Button(action: { sortOrder = .roleBusinessAnalyst })
+                        {
+                            if sortOrder == .roleBusinessAnalyst {
+                                Label("Business Analyst", systemImage: "checkmark")
+                            } else {
+                                Text("Business Analyst")
+                            }
+                        }
+
+                        Button(action: { sortOrder = .roleValidator })
+                        {
+                            if sortOrder == .roleValidator {
+                                Label("Validator", systemImage: "checkmark")
+                            } else {
+                                Text("Validator")
+                            }
+                        }
                     }
+
+                    // Date Created submenu
+                    Menu("Date Created")
+                    {
+                        Button(action: { sortOrder = .dateNewest })
+                        {
+                            if sortOrder == .dateNewest {
+                                Label("Newest First", systemImage: "checkmark")
+                            } else {
+                                Text("Newest First")
+                            }
+                        }
+
+                        Button(action: { sortOrder = .dateOldest })
+                        {
+                            if sortOrder == .dateOldest {
+                                Label("Oldest First", systemImage: "checkmark")
+                            } else {
+                                Text("Oldest First")
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .foregroundStyle(AppGradients.userGradient)
                 }
-
-                // Role submenu
-                Menu("Role")
-                {
-                    Button(action: { sortOrder = .roleAdministrator })
-                    {
-                        Label("Administrator", systemImage: sortOrder == .roleAdministrator ? "checkmark" : "")
-                    }
-
-                    Button(action: { sortOrder = .roleDeveloper })
-                    {
-                        Label("Developer", systemImage: sortOrder == .roleDeveloper ? "checkmark" : "")
-                    }
-
-                    Button(action: { sortOrder = .roleBusinessAnalyst })
-                    {
-                        Label("Business Analyst", systemImage: sortOrder == .roleBusinessAnalyst ? "checkmark" : "")
-                    }
-
-                    Button(action: { sortOrder = .roleValidator })
-                    {
-                        Label("Validator", systemImage: sortOrder == .roleValidator ? "checkmark" : "")
-                    }
-                }
-
-                // Date Created submenu
-                Menu("Date Created")
-                {
-                    Button(action: { sortOrder = .dateNewest })
-                    {
-                        Label("Newest First", systemImage: sortOrder == .dateNewest ? "checkmark" : "")
-                    }
-
-                    Button(action: { sortOrder = .dateOldest })
-                    {
-                        Label("Oldest First", systemImage: sortOrder == .dateOldest ? "checkmark" : "")
-                    }
-                }
-            } label: {
-                Image(systemName: "arrow.up.arrow.down")
-                    .foregroundStyle(AppGradients.userGradient)
             }
 
             Button(action:

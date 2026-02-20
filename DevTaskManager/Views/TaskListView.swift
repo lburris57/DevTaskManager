@@ -258,6 +258,7 @@ struct TaskListView: View
                                             Label("Delete", systemImage: "trash")
                                         }
                                     }
+                                    .id(task.taskId)
                                 }
                             }
                             .padding(.top, 8)
@@ -302,51 +303,55 @@ struct TaskListView: View
 
                 ToolbarItemGroup(placement: .topBarTrailing)
                 {
-                    Menu
+                    // Only show sort/filter menu when there are tasks
+                    if !tasks.isEmpty
                     {
-                        Picker("Sort by", selection: $sortOrder)
+                        Menu
                         {
-                            Text("Task Name A-Z").tag(SortOrder.taskNameAscending)
-                            Text("Task Name Z-A").tag(SortOrder.taskNameDescending)
-                            Text("Project A-Z").tag(SortOrder.projectAscending)
-                            Text("Project Z-A").tag(SortOrder.projectDescending)
-                            Text("Newest First").tag(SortOrder.dateNewest)
-                            Text("Oldest First").tag(SortOrder.dateOldest)
-                        }
-                        .pickerStyle(.inline)
+                            Picker("Sort by", selection: $sortOrder)
+                            {
+                                Text("Task Name A-Z").tag(SortOrder.taskNameAscending)
+                                Text("Task Name Z-A").tag(SortOrder.taskNameDescending)
+                                Text("Project A-Z").tag(SortOrder.projectAscending)
+                                Text("Project Z-A").tag(SortOrder.projectDescending)
+                                Text("Newest First").tag(SortOrder.dateNewest)
+                                Text("Oldest First").tag(SortOrder.dateOldest)
+                            }
+                            .pickerStyle(.inline)
 
-                        Divider()
+                            Divider()
 
-                        Menu("Filter by Task Type")
-                        {
-                            Button("Development") { sortOrder = .taskTypeDevelopment }
-                            Button("Requirements") { sortOrder = .taskTypeRequirements }
-                            Button("Design") { sortOrder = .taskTypeDesign }
-                            Button("Use Cases") { sortOrder = .taskTypeUseCases }
-                            Button("Testing") { sortOrder = .taskTypeTesting }
-                            Button("Documentation") { sortOrder = .taskTypeDocumentation }
-                            Button("Database") { sortOrder = .taskTypeDatabase }
-                            Button("Defect Correction") { sortOrder = .taskTypeDefectCorrection }
-                        }
+                            Menu("Filter by Task Type")
+                            {
+                                Button("Development") { sortOrder = .taskTypeDevelopment }
+                                Button("Requirements") { sortOrder = .taskTypeRequirements }
+                                Button("Design") { sortOrder = .taskTypeDesign }
+                                Button("Use Cases") { sortOrder = .taskTypeUseCases }
+                                Button("Testing") { sortOrder = .taskTypeTesting }
+                                Button("Documentation") { sortOrder = .taskTypeDocumentation }
+                                Button("Database") { sortOrder = .taskTypeDatabase }
+                                Button("Defect Correction") { sortOrder = .taskTypeDefectCorrection }
+                            }
 
-                        Menu("Filter by Priority")
-                        {
-                            Button("High") { sortOrder = .priorityHigh }
-                            Button("Medium") { sortOrder = .priorityMedium }
-                            Button("Low") { sortOrder = .priorityLow }
-                            Button("Enhancement") { sortOrder = .priorityEnhancement }
-                        }
+                            Menu("Filter by Priority")
+                            {
+                                Button("High") { sortOrder = .priorityHigh }
+                                Button("Medium") { sortOrder = .priorityMedium }
+                                Button("Low") { sortOrder = .priorityLow }
+                                Button("Enhancement") { sortOrder = .priorityEnhancement }
+                            }
 
-                        Menu("Filter by Status")
-                        {
-                            Button("Unassigned") { sortOrder = .statusUnassigned }
-                            Button("In Progress") { sortOrder = .statusInProgress }
-                            Button("Completed") { sortOrder = .statusCompleted }
-                            Button("Deferred") { sortOrder = .statusDeferred }
+                            Menu("Filter by Status")
+                            {
+                                Button("Unassigned") { sortOrder = .statusUnassigned }
+                                Button("In Progress") { sortOrder = .statusInProgress }
+                                Button("Completed") { sortOrder = .statusCompleted }
+                                Button("Deferred") { sortOrder = .statusDeferred }
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                                .foregroundStyle(AppGradients.taskGradient)
                         }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .foregroundStyle(AppGradients.taskGradient)
                     }
 
                     Button(action:

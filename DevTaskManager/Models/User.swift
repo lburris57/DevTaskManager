@@ -13,7 +13,10 @@ class User
     @Attribute(.unique) var userId = UUID().uuidString
     var firstName: String = Constants.EMPTY_STRING
     var lastName: String = Constants.EMPTY_STRING
+    
+    @Relationship(deleteRule: .nullify)
     var roles: [Role] = []
+    
     var dateCreated: Date = Date()
     var lastUpdated: Date?
 
@@ -27,7 +30,7 @@ class User
         self.lastName = lastName
         self.roles = roles
         self.dateCreated = dateCreated
-        self.lastUpdated = lastUpdated
+        self.lastUpdated = lastUpdated ?? dateCreated
         self.tasks = tasks
     }
     
