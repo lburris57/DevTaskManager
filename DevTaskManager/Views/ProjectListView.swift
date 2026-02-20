@@ -133,61 +133,87 @@ struct ProjectListView: View
     {
         NavigationStack(path: $path)
         {
-            VStack(spacing: 0)
-            {
-                // Search bar at the top
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField("Search projects", text: $searchText)
-                        .textFieldStyle(.plain)
-                    
-                    if !searchText.isEmpty {
-                        Button(action: { searchText = "" }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .padding(8)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-                .padding(.horizontal)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
+            ZStack {
+                // Solid background to prevent content showing through
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
                 
-                if !projects.isEmpty
-                {
-                    List
-                    {
-                        // Display all the projects in a navigation link
-                        ForEach(filteredProjects)
-                        {
-                            project in
-
-                            ProjectRowView(project: project, path: $path)
+                // Modern gradient background overlay
+                AppGradients.mainBackground
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Modern header
+                    ModernHeaderView(
+                        icon: "folder.fill",
+                        title: "Projects",
+                        subtitle: "\(filteredProjects.count) total",
+                        gradientColors: [.blue, .cyan]
+                    )
+                    
+                    // Modern search bar
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.secondary)
+                        TextField("Search projects", text: $searchText)
+                            .textFieldStyle(.plain)
+                        
+                        if !searchText.isEmpty {
+                            Button(action: { searchText = "" }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
                         }
-                        .onDelete(perform: deleteProjects)
                     }
-                    .listStyle(.plain)
-                }
-                else
-                {
-                    // No projects were found
-                    ContentUnavailableView
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(UIColor.systemBackground))
+                            .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+                    
+                    if !projects.isEmpty
                     {
-                        Label("No projects yet", systemImage: "folder.badge.plus")
-                    } description: {
-                        Text("Create your first project to get started")
-                    } actions: {
-                        Button("Add Project")
-                        {
-                            createNewProject()
+                        ScrollView {
+                            LazyVStack(spacing: 8) {
+                                ForEach(filteredProjects) { project in
+                                    NavigationLink(value: AppNavigationDestination.projectDetail(project)) {
+                                        ModernListRow {
+                                            ProjectRowView(project: project, path: $path)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            if let index = filteredProjects.firstIndex(where: { $0.id == project.id }) {
+                                                deleteProjects(at: IndexSet(integer: index))
+                                            }
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.top, 8)
                         }
-                        .buttonStyle(.borderedProminent)
+                    }
+                    else
+                    {
+                        Spacer()
+                        EmptyStateCard(
+                            icon: "folder.badge.plus",
+                            title: "No Projects Yet",
+                            message: "Create your first project to get started organizing your work",
+                            buttonTitle: "Add Project",
+                            buttonAction: createNewProject
+                        )
+                        Spacer()
                     }
                 }
             }
+            .navigationBarBackButtonHidden(true)
             .toolbar
             {
                 ToolbarItem(placement: .navigationBarLeading)
@@ -195,8 +221,13 @@ struct ProjectListView: View
                     Button(action: {
                         dismiss()
                     }) {
-                        Image(systemName: "chevron.left")
-                            .font(.body.weight(.semibold))
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.body.weight(.semibold))
+                            Text("Back")
+                                .font(.body)
+                        }
+                        .foregroundStyle(AppGradients.projectGradient)
                     }
                 }
                 
@@ -214,17 +245,17 @@ struct ProjectListView: View
                         }
                     } label: {
                         Image(systemName: "arrow.up.arrow.down")
+                            .foregroundStyle(AppGradients.projectGradient)
                     }
                     
                     Button(action: createNewProject)
                     {
-                        Label("Add Project", systemImage: "plus")
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(AppGradients.projectGradient)
                     }
                 }
             }
-            .navigationTitle("Project List")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbarBackground(.visible, for: .navigationBar)
             .navigationDestination(for: AppNavigationDestination.self) { destination in
                 switch destination {
@@ -232,8 +263,8 @@ struct ProjectListView: View
                     ProjectTasksView(project: project, path: $path)
                 case .projectDetail(let project):
                     ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-                case .taskDetail(let task):
-                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() })
+                case .taskDetail(let task, let context):
+                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
                 case .userDetail(let user):
                     UserDetailView(user: user, path: $path)
                 case .userTasks(let user):
@@ -246,8 +277,6 @@ struct ProjectListView: View
             isShowing: $showDeleteToast,
             message: "'\(deletedProjectName)' deleted"
         )
-        .background(Color(UIColor.systemBackground))
-        .ignoresSafeArea(.all, edges: .top)
     }
 }
 

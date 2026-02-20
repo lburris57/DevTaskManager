@@ -93,17 +93,50 @@ struct UserListView: View
     {
         NavigationStack(path: $path)
         {
-            VStack
-            {
-                if !users.isEmpty
-                {
-                    userListContent
-                }
-                else
-                {
-                    emptyStateView
+            ZStack {
+                // Solid background to prevent content showing through
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
+                
+                // Modern gradient background overlay
+                AppGradients.mainBackground
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Modern header
+                    ModernHeaderView(
+                        icon: "person.3.fill",
+                        title: "Users",
+                        subtitle: "\(sortedUsers.count) team members",
+                        gradientColors: [.purple, .pink]
+                    )
+                    
+                    if !users.isEmpty
+                    {
+                        ScrollView {
+                            LazyVStack(spacing: 8) {
+                                ForEach(sortedUsers) { user in
+                                    ModernListRow {
+                                        userRow(for: user)
+                                    }
+                                }
+                            }
+                            .padding(.top, 8)
+                        }
+                    }
+                    else
+                    {
+                        Spacer()
+                        EmptyStateCard(
+                            icon: "person.badge.plus",
+                            title: "No Users Yet",
+                            message: "Add team members to start assigning tasks and collaborating"
+                        )
+                        Spacer()
+                    }
                 }
             }
+            .navigationBarBackButtonHidden(true)
             .toolbar
             {
                 ToolbarItem(placement: .navigationBarLeading)
@@ -111,50 +144,27 @@ struct UserListView: View
                     Button(action: {
                         dismiss()
                     }) {
-                        Image(systemName: "chevron.left")
-                            .font(.body.weight(.semibold))
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.body.weight(.semibold))
+                            Text("Back")
+                                .font(.body)
+                        }
+                        .foregroundStyle(AppGradients.userGradient)
                     }
                 }
                 
                 toolbarContent
             }
-            .navigationTitle("User List")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbarBackground(.visible, for: .navigationBar)
-        }
-        .successToast(
-            isShowing: $showDeleteToast,
-            message: "'\(deletedUserName)' deleted"
-        )
-        .background(Color(UIColor.systemBackground))
-        .ignoresSafeArea(.all, edges: .top)
-    }
-    
-    // MARK: - View Components
-    
-    private var userListContent: some View {
-        VStack
-        {
-            List
-            {
-                ForEach(sortedUsers)
-                {
-                    user in
-                    userRow(for: user)
-                }
-                .onDelete(perform: deleteUsers)
-            }
-            .padding()
-            .listStyle(.plain)
             .navigationDestination(for: AppNavigationDestination.self) { destination in
                 switch destination {
                 case .userDetail(let user):
                     UserDetailView(user: user, path: $path)
                 case .userTasks(let user):
                     UserTasksView(user: user, onDismissToMain: { dismiss() }, path: $path)
-                case .taskDetail(let task):
-                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() })
+                case .taskDetail(let task, let context):
+                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
                 case .projectDetail(let project):
                     ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
                 case .projectTasks(let project):
@@ -162,7 +172,13 @@ struct UserListView: View
                 }
             }
         }
+        .successToast(
+            isShowing: $showDeleteToast,
+            message: "'\(deletedUserName)' deleted"
+        )
     }
+    
+    // MARK: - View Components
     
     private func userRow(for user: User) -> some View {
         VStack(alignment: .leading, spacing: 8)
@@ -308,6 +324,7 @@ struct UserListView: View
                 }
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
+                    .foregroundStyle(AppGradients.userGradient)
             }
             
             Button(action:
@@ -319,7 +336,9 @@ struct UserListView: View
                 path.append(.userDetail(user))
             })
             {
-                Image(systemName: "plus")
+                Image(systemName: "plus.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(AppGradients.userGradient)
             }
         }
     }

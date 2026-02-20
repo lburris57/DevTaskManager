@@ -92,71 +92,139 @@ struct UserDetailView: View
     
     var body: some View
     {
-        NavigationView
-        {
-            VStack(spacing: 15)
-            {
-                FloatingPromptTextField(text: $user.firstName, prompt: Text("First Name:")
-                .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                .floatingPromptScale(1.0)
-                .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                .cornerRadius(10)
-                .padding(.leading, 15)
+        ZStack {
+            // Solid background to prevent content showing through
+            Color(UIColor.systemBackground)
+                .ignoresSafeArea()
+            
+            // Modern gradient background overlay
+            AppGradients.mainBackground
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Modern header
+                ModernHeaderView(
+                    icon: "person.fill",
+                    title: isNewUser ? "New User" : "Edit User",
+                    subtitle: user.tasks.isEmpty ? "No tasks assigned" : "\(user.tasks.count) task\(user.tasks.count == 1 ? "" : "s") assigned",
+                    gradientColors: [.purple, .pink]
+                )
                 
-                FloatingPromptTextField(text: $user.lastName, prompt: Text("Last Name:")
-                .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                .floatingPromptScale(1.0)
-                .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                .cornerRadius(10)
-                .padding(.leading, 15)
-                
-                HStack
-                {
-                    Text("Role:")
-                        .font(.body)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                        .padding(.leading, 15)
-                    
-                    Spacer()
-                    
-                    Picker(Constants.EMPTY_STRING, selection: $selectedRole)
-                    {
-                        ForEach(RoleNamesEnum.allCases)
-                        {
-                            role in
-                            
-                            Text(role.title).tag(role.title)
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // First Name Card
+                        ModernFormCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("First Name")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                TextField("Enter first name", text: $user.firstName)
+                                    .textFieldStyle(.plain)
+                                    .font(.body)
+                            }
                         }
+                        
+                        // Last Name Card
+                        ModernFormCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Last Name")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                TextField("Enter last name", text: $user.lastName)
+                                    .textFieldStyle(.plain)
+                                    .font(.body)
+                            }
+                        }
+                        
+                        // Role Card
+                        ModernFormCard {
+                            HStack {
+                                Text("Role")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                Spacer()
+                                
+                                Picker("Select Role", selection: $selectedRole)
+                                {
+                                    ForEach(RoleNamesEnum.allCases)
+                                    {
+                                        role in
+                                        Text(role.title).tag(role.title)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .tint(.purple)
+                            }
+                        }
+                        
+                        // Save Button
+                        Button(action: {
+                            saveUser()
+                            dismiss()
+                        }) {
+                            Text("Save User")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(
+                                            validateFields() ?
+                                                LinearGradient(
+                                                    colors: [.purple, .pink],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                ) :
+                                                LinearGradient(
+                                                    colors: [.gray.opacity(0.5), .gray.opacity(0.5)],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
+                                        )
+                                        .shadow(color: validateFields() ? .purple.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+                                )
+                        }
+                        .disabled(!validateFields())
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
                     }
-                    .pickerStyle(.menu)
-                    .padding(.trailing, 15)
+                    .padding(.top, 8)
                 }
-                
-                Button("Save User")
-                {
-                    saveUser()
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.body.weight(.semibold))
+                        Text("Back")
+                            .font(.body)
+                    }
+                    .foregroundStyle(AppGradients.userGradient)
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Cancel") {
                     dismiss()
                 }
-                .frame(maxWidth: .infinity)
-                .disabled(!validateFields())
-                .padding(10)
-                .background(Color.blue).opacity(!validateFields() ? 0.6 : 1)
-                .foregroundColor(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 10.0, style: .continuous))
-                .shadow(color: .black, radius: 2.0, x: 2.0, y: 2.0)
-                
-                Spacer()
-                
-                }.padding()
+                .foregroundStyle(AppGradients.userGradient)
             }
-            .navigationBarItems(trailing: Button("Cancel")
-            {
-                dismiss()
-            })
-            .padding(.horizontal)
-            .onAppear(perform: populateInitialSelectedRoleValue)
-            .onDisappear(perform: validateUser)
-            .navigationTitle(validateFields() ? "Edit User" : "Add User").navigationBarTitleDisplayMode(.inline)
         }
+        .toolbarBackground(.visible, for: .navigationBar)
+        .onAppear(perform: populateInitialSelectedRoleValue)
+        .onDisappear(perform: validateUser)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+    }
 }

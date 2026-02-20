@@ -19,6 +19,9 @@ struct TaskDetailView: View
     // Optional callback to dismiss to main menu
     var onDismissToMain: (() -> Void)? = nil
     
+    // Track where we came from for proper navigation
+    var sourceContext: TaskDetailSourceContext = .taskList
+    
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
@@ -37,10 +40,11 @@ struct TaskDetailView: View
     @State private var taskSaved = false
     
     // Initialize state from task
-    init(task: Task, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil) {
+    init(task: Task, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil, sourceContext: TaskDetailSourceContext = .taskList) {
         self._task = Bindable(wrappedValue: task)
         self._path = path
         self.onDismissToMain = onDismissToMain
+        self.sourceContext = sourceContext
         
         // Initialize state values from task
         self._selectedTaskType = State(initialValue: task.taskType)
@@ -111,184 +115,224 @@ struct TaskDetailView: View
     
     var body: some View
     {
-        VStack(spacing: 15)
-        {
-                // Project section
-                HStack
-                {
-                    Text("Project:")
-                        .font(.body)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                        .padding(.leading, 15)
-                    
-                    Spacer()
-                    
-                    Picker(Constants.EMPTY_STRING, selection: $selectedProject)
-                    {
-                        Text("No Project").tag(nil as Project?)
-                        
-                        ForEach(projects)
-                        {
-                            project in
-                            
-                            Text(project.title.isEmpty ? "Untitled Project" : project.title)
-                                .tag(project as Project?)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .padding(.trailing, 15)
-                }
+        ZStack {
+            // Solid background to prevent content showing through
+            Color(UIColor.systemBackground)
+                .ignoresSafeArea()
             
-                FloatingPromptTextField(text: $task.taskName, prompt: Text("Task Name:")
-                .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                .floatingPromptScale(1.0)
-                .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                .cornerRadius(10)
-                .padding(.leading, 15)
+            // Modern gradient background overlay
+            AppGradients.mainBackground
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Modern header
+                ModernHeaderView(
+                    icon: "checklist",
+                    title: isNewTask ? "New Task" : "Edit Task",
+                    subtitle: task.project?.title ?? "No Project",
+                    gradientColors: [.orange, .red]
+                )
                 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Comment:")
-                        .foregroundColor(colorScheme == .dark ? .gray : .blue)
-                        .fontWeight(.bold)
-                        .padding(.leading, 15)
-                    
-                    TextEditor(text: $task.taskComment)
-                        .frame(minHeight: 40, maxHeight: 160) // ~8 lines at 20px per line
-                        .scrollContentBackground(.hidden)
-                        .background(colorScheme == .dark ? Color.gray.opacity(0.2) : Color.gray.opacity(0.1))
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                        )
-                        .padding(.horizontal, 15)
+                ScrollView {
+                    VStack(spacing: 12) {
+                        // Project Picker Card
+                        ModernFormCard {
+                            HStack {
+                                Text("Project")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                Spacer()
+                                
+                                Picker("Select Project", selection: $selectedProject)
+                                {
+                                    Text("No Project").tag(nil as Project?)
+                                    
+                                    ForEach(projects)
+                                    {
+                                        project in
+                                        
+                                        Text(project.title.isEmpty ? "Untitled Project" : project.title)
+                                            .tag(project as Project?)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .tint(.blue)
+                            }
+                        }
+                        
+                        // Task Name Card
+                        ModernFormCard {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Task Name")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                TextField("Enter task name", text: $task.taskName)
+                                    .textFieldStyle(.plain)
+                                    .font(.body)
+                            }
+                        }
+                        
+                        // Comment Card
+                        ModernFormCard {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Comment")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                TextEditor(text: $task.taskComment)
+                                    .frame(minHeight: 80)
+                                    .scrollContentBackground(.hidden)
+                                    .font(.body)
+                            }
+                        }
+                        
+                        // Task Details Card
+                        ModernFormCard {
+                            VStack(spacing: 12) {
+                                // Task Type
+                                HStack {
+                                    Text("Type")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    Spacer()
+                                    
+                                    Picker("Type", selection: $selectedTaskType)
+                                    {
+                                        ForEach(TaskTypeEnum.allCases)
+                                        {
+                                            taskType in
+                                            Text(taskType.title).tag(taskType.title)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .tint(.blue)
+                                }
+                                
+                                Divider()
+                                
+                                // Task Status
+                                HStack {
+                                    Text("Status")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    Spacer()
+                                    
+                                    Picker("Status", selection: $selectedTaskStatus)
+                                    {
+                                        ForEach(TaskStatusEnum.allCases)
+                                        {
+                                            taskStatus in
+                                            Text(taskStatus.title).tag(taskStatus.title)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .tint(.blue)
+                                }
+                                
+                                Divider()
+                                
+                                // Task Priority
+                                HStack {
+                                    Text("Priority")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    Spacer()
+                                    
+                                    Picker("Priority", selection: $selectedTaskPriority)
+                                    {
+                                        ForEach(TaskPriorityEnum.allCases)
+                                        {
+                                            taskPriority in
+                                            Text(taskPriority.title).tag(taskPriority.title)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .tint(.blue)
+                                }
+                                
+                                Divider()
+                                
+                                // Assigned User
+                                HStack {
+                                    Text("Assigned To")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    Spacer()
+                                    
+                                    Picker("User", selection: $selectedUser)
+                                    {
+                                        Text("Unassigned").tag(nil as User?)
+                                        
+                                        ForEach(users)
+                                        {
+                                            user in
+                                            Text(user.fullName())
+                                                .tag(user as User?)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .tint(.blue)
+                                }
+                            }
+                        }
+                        
+                        // Save Button
+                        Button(action: {
+                            saveTask()
+                            dismiss()
+                        }) {
+                            Text("Save Task")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(
+                                            validateFields() ?
+                                                LinearGradient(
+                                                    colors: [.orange, .red],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                ) :
+                                                LinearGradient(
+                                                    colors: [.gray.opacity(0.5), .gray.opacity(0.5)],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
+                                        )
+                                        .shadow(color: validateFields() ? .orange.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+                                )
+                        }
+                        .disabled(!validateFields())
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                    }
+                    .padding(.top, 8)
                 }
-                
-                VStack(alignment: .leading, spacing: 8)
-                {
-                    HStack
-                    {
-                        Text("Task Type:")
-                            .font(.body)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                            .padding(.leading, 15)
-                        
-                        Spacer()
-                        
-                        Picker(Constants.EMPTY_STRING, selection: $selectedTaskType)
-                        {
-                            ForEach(TaskTypeEnum.allCases)
-                            {
-                                taskType in
-                                
-                                Text(taskType.title).tag(taskType.title)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .padding(.trailing, 15)
-                    }
-                    
-                    HStack
-                    {
-                        Text("Task Status:")
-                            .font(.body)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                            .padding(.leading, 15)
-                        
-                        Spacer()
-                        
-                        Picker(Constants.EMPTY_STRING, selection: $selectedTaskStatus)
-                        {
-                            ForEach(TaskStatusEnum.allCases)
-                            {
-                                taskStatus in
-                                
-                                Text(taskStatus.title).tag(taskStatus.title)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .padding(.trailing, 15)
-                    }
-                    
-                    HStack
-                    {
-                        Text("Task Priority:")
-                            .font(.body)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                            .padding(.leading, 15)
-                        
-                        Spacer()
-                        
-                        Picker(Constants.EMPTY_STRING, selection: $selectedTaskPriority)
-                        {
-                            ForEach(TaskPriorityEnum.allCases)
-                            {
-                                taskPriority in
-                                
-                                Text(taskPriority.title).tag(taskPriority.title)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .padding(.trailing, 15)
-                    }
-                    
-                    // Assigned User Picker
-                    HStack
-                    {
-                        Text("Assigned User:")
-                            .font(.body)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                            .padding(.leading, 15)
-                        
-                        Spacer()
-                        
-                        Picker(Constants.EMPTY_STRING, selection: $selectedUser)
-                        {
-                            Text("Unassigned").tag(nil as User?)
-                            
-                            ForEach(users)
-                            {
-                                user in
-                                
-                                Text(user.fullName())
-                                    .tag(user as User?)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .padding(.trailing, 15)
-                    }
-                }
-                
-                Button("Save Task")
-                {
-                    saveTask()
-                    dismiss()
-                }
-                .frame(maxWidth: .infinity)
-                .disabled(!validateFields())
-                .padding(10)
-                .background(Color.blue).opacity(!validateFields() ? 0.6 : 1)
-                .foregroundColor(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 10.0, style: .continuous))
-                .shadow(color: .black, radius: 2.0, x: 2.0, y: 2.0)
-                
-                Spacer()
             }
-            .padding()
-            .toolbar {
-                toolbarLeadingContent
-                toolbarTrailingContent
-            }
-            .padding(.horizontal)
-            .onDisappear(perform: validateTask)
-            .navigationTitle(validateFields() ? "Edit Task" : "Add Task")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
+        }
+        .toolbar {
+            toolbarLeadingContent
+            toolbarTrailingContent
+        }
+        .toolbarBackground(.visible, for: .navigationBar)
+        .onDisappear(perform: validateTask)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
     }
     
     // MARK: - Toolbar Components
@@ -306,6 +350,7 @@ struct TaskDetailView: View
             Button("Cancel") {
                 dismiss()
             }
+            .foregroundStyle(AppGradients.taskGradient)
         }
     }
     
@@ -316,7 +361,14 @@ struct TaskDetailView: View
             Button {
                 navigateBackOneLevel()
             } label: {
-                Label("Back To Assigned Tasks", systemImage: "list.bullet.clipboard")
+                switch sourceContext {
+                case .taskList:
+                    Label("Back To Task List", systemImage: "list.bullet.clipboard")
+                case .userTasksList:
+                    Label("Back To Assigned Tasks", systemImage: "person.crop.circle.badge.checkmark")
+                case .projectTasksList:
+                    Label("Back To Project Tasks", systemImage: "folder.badge.gearshape")
+                }
             }
             
             Button {
@@ -331,6 +383,7 @@ struct TaskDetailView: View
                 Image(systemName: "chevron.down")
                     .font(.caption2)
             }
+            .foregroundStyle(AppGradients.taskGradient)
         }
     }
     
@@ -340,7 +393,6 @@ struct TaskDetailView: View
         if !path.isEmpty {
             path.removeLast()
         }
-        dismiss()
     }
     
     private func navigateToMainMenu() {

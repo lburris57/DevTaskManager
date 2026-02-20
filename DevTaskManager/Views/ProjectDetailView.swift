@@ -74,56 +74,99 @@ struct ProjectDetailView: View
     
     var body: some View
     {
-        //NavigationView
-        //{
-            VStack(spacing: 15)
-            {
-                FloatingPromptTextField(text: $project.title, prompt: Text("Title:")
-                .foregroundStyle(colorScheme == .dark ? .gray : .blue).fontWeight(.bold))
-                .floatingPromptScale(1.0)
-                .background(colorScheme == .dark ? .gray.opacity(0.2) : .gray.opacity(0.1))
-                .cornerRadius(10)
-                .padding(.leading, 15)
+        ZStack {
+            // Solid background to prevent content showing through
+            Color(UIColor.systemBackground)
+                .ignoresSafeArea()
+            
+            // Modern gradient background overlay
+            AppGradients.mainBackground
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Modern header
+                ModernHeaderView(
+                    icon: "folder.fill",
+                    title: isNewProject ? "New Project" : "Edit Project",
+                    subtitle: project.tasks.isEmpty ? "No tasks" : "\(project.tasks.count) task\(project.tasks.count == 1 ? "" : "s")",
+                    gradientColors: [.blue, .cyan]
+                )
                 
-                VStack(alignment: .leading, spacing: 5)
-                {
-                    Text(" Description:")
-                        .foregroundColor(colorScheme == .dark ? .gray : .blue)
-                        .fontWeight(.bold)
-                        .padding(.horizontal)
-                    
-                    TextEditor(text: $project.descriptionText)
-                        .lineLimit(6)
-                        .border(.secondary, width: 1)
-                        .padding(.horizontal)
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Title Card
+                        ModernFormCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Project Title")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                TextField("Enter project title", text: $project.title)
+                                    .textFieldStyle(.plain)
+                                    .font(.body)
+                            }
+                        }
+                        
+                        // Description Card
+                        ModernFormCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Description")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                                
+                                TextEditor(text: $project.descriptionText)
+                                    .frame(minHeight: 120)
+                                    .scrollContentBackground(.hidden)
+                                    .font(.body)
+                            }
+                        }
+                        
+                        // Save Button
+                        Button(action: {
+                            saveProject()
+                            dismiss()
+                        }) {
+                            Text("Save Project")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(
+                                            validateFields() ?
+                                                LinearGradient(
+                                                    colors: [.blue, .cyan],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                ) :
+                                                LinearGradient(
+                                                    colors: [.gray.opacity(0.5), .gray.opacity(0.5)],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
+                                        )
+                                        .shadow(color: validateFields() ? .blue.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+                                )
+                        }
+                        .disabled(!validateFields())
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                    }
+                    .padding(.top, 8)
                 }
-                
-                Button("Save Project")
-                {
-                    saveProject()
-                    dismiss()
-                }
-                .frame(maxWidth: .infinity)
-                .disabled(!validateFields())
-                .padding(10)
-                .background(Color.blue).opacity(!validateFields() ? 0.6 : 1)
-                .foregroundColor(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 10.0, style: .continuous))
-                .shadow(color: .black, radius: 2.0, x: 2.0, y: 2.0)
-                
-                Spacer()
-                
-                }.padding()
-            //}
-            .toolbar {
-                toolbarLeadingContent
-                toolbarTrailingContent
             }
-            .padding(.horizontal)
-            .onDisappear(perform: validateProject)
-            .navigationTitle(validateFields() ? "Edit Project" : "Add Project")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
+        }
+        .toolbar {
+            toolbarLeadingContent
+            toolbarTrailingContent
+        }
+        .toolbarBackground(.visible, for: .navigationBar)
+        .onDisappear(perform: validateProject)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
     }
     
     // MARK: - Toolbar Components
@@ -141,6 +184,7 @@ struct ProjectDetailView: View
             Button("Cancel") {
                 dismiss()
             }
+            .foregroundStyle(AppGradients.projectGradient)
         }
     }
     
@@ -166,6 +210,7 @@ struct ProjectDetailView: View
                 Image(systemName: "chevron.down")
                     .font(.caption2)
             }
+            .foregroundStyle(AppGradients.projectGradient)
         }
     }
     

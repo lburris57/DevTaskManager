@@ -157,356 +157,187 @@ struct ProjectTasksView: View
         )
         
         // Don't insert or save yet - let the detail view handle it
-        path.append(.taskDetail(task))
+        path.append(.taskDetail(task, context: .projectTasksList))
     }
 
     var body: some View
     {
-        Group
-        {
-            VStack
-            {
+        ZStack {
+            // Solid background to prevent content showing through
+            Color(UIColor.systemBackground)
+                .ignoresSafeArea()
+            
+            // Modern gradient background overlay
+            AppGradients.mainBackground
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Modern header
+                ModernHeaderView(
+                    icon: "folder.fill",
+                    title: project.title.isEmpty ? "Untitled Project" : project.title,
+                    subtitle: "\(sortedTasks.count) task\(sortedTasks.count == 1 ? "" : "s")",
+                    gradientColors: [.blue, .cyan]
+                )
+                
                 if !project.tasks.isEmpty
                 {
-                    List
-                    {
-                        ForEach(sortedTasks)
-                        {
-                            task in
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(sortedTasks) { task in
+                                NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .projectTasksList)) {
+                                    ModernListRow {
+                                        VStack(alignment: .leading, spacing: 8)
+                                        {
+                                            // Task Name with Priority
+                                            HStack(spacing: 8) {
+                                                Image(systemName: priorityIcon(for: task.taskPriority))
+                                                    .font(.headline)
+                                                    .foregroundStyle(priorityColor(for: task.taskPriority))
+                                                
+                                                Text(task.taskName.isEmpty ? "Untitled Task" : task.taskName)
+                                                    .font(.headline)
+                                            }
+                                            
+                                            // Assigned User (if any)
+                                            if let assignedUser = task.assignedUser {
+                                                HStack {
+                                                    Image(systemName: "person.fill")
+                                                        .font(.caption)
+                                                        .foregroundStyle(.green)
+                                                    if let dateAssigned = task.dateAssigned {
+                                                        Text("Assigned to \(assignedUser.fullName()) on \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
+                                                            .font(.caption)
+                                                            .foregroundStyle(.green)
+                                                    } else {
+                                                        Text("Assigned to \(assignedUser.fullName())")
+                                                            .font(.caption)
+                                                            .foregroundStyle(.green)
+                                                    }
+                                                }
+                                            }
 
-                            NavigationLink(value: AppNavigationDestination.taskDetail(task))
-                            {
-                                VStack(alignment: .leading, spacing: 8)
-                                {
-                                    // Task Name with Priority
-                                    HStack(spacing: 8) {
-                                        Image(systemName: priorityIcon(for: task.taskPriority))
-                                            .font(.headline)
-                                            .foregroundStyle(priorityColor(for: task.taskPriority))
-                                        
-                                        Text(task.taskName.isEmpty ? "Untitled Task" : task.taskName)
-                                            .font(.headline)
-                                    }
-                                    
-                                    // Assigned User (if any)
-                                    if let assignedUser = task.assignedUser {
-                                        HStack {
-                                            Image(systemName: "person.fill")
-                                                .font(.caption)
-                                                .foregroundStyle(.green)
-                                            if let dateAssigned = task.dateAssigned {
-                                                Text("Assigned to \(assignedUser.fullName()) on \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
+                                            // Task Details
+                                            HStack(spacing: 12)
+                                            {
+                                                Label(task.taskType, systemImage: "hammer.fill")
                                                     .font(.caption)
-                                                    .foregroundStyle(.green)
-                                            } else {
-                                                Text("Assigned to \(assignedUser.fullName())")
+                                                    .foregroundStyle(.secondary)
+                                                
+                                                Spacer()
+
+                                                Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
                                                     .font(.caption)
-                                                    .foregroundStyle(.green)
+                                                    .foregroundStyle(statusColor(for: task.taskStatus))
+                                                    .labelStyle(.titleAndIcon)
+                                            }
+
+                                            // Date Created
+                                            HStack
+                                            {
+                                                Image(systemName: "calendar")
+                                                    .font(.caption2)
+                                                    .foregroundStyle(.secondary)
+                                                Text(task.dateCreated.formatted(date: .abbreviated, time: .omitted))
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
                                             }
                                         }
                                     }
-
-                                    // Task Details
-                                    HStack(spacing: 12)
-                                    {
-                                        Label(task.taskType, systemImage: "hammer.fill")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                        
-                                        Spacer()
-
-                                        Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
-                                            .font(.caption)
-                                            .foregroundStyle(statusColor(for: task.taskStatus))
-                                            .labelStyle(.titleAndIcon)
-                                    }
-
-                                    // Date Created
-                                    HStack
-                                    {
-                                        Image(systemName: "calendar")
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
-                                        Text(task.dateCreated.formatted(date: .abbreviated, time: .omitted))
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        if let index = sortedTasks.firstIndex(where: { $0.id == task.id }) {
+                                            deleteTasks(at: IndexSet(integer: index))
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
                                 }
-                                .padding(.vertical, 4)
                             }
                         }
-                        .onDelete(perform: deleteTasks)
+                        .padding(.top, 8)
                     }
-                    .listStyle(.plain)
                 }
                 else
                 {
-                    // No tasks
-                    ContentUnavailableView
-                    {
-                        Label("No tasks yet", systemImage: "checkmark.circle.badge.plus")
-                    } description: {
-                        Text("Add tasks to \(project.title.isEmpty ? "this project" : project.title)")
-                    } actions: {
-                        Button("Add Task")
-                        {
-                            createNewTask()
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
+                    Spacer()
+                    EmptyStateCard(
+                        icon: "checklist.unchecked",
+                        title: "No Tasks Yet",
+                        message: "Add tasks to \(project.title.isEmpty ? "this project" : project.title)",
+                        buttonTitle: "Add Task",
+                        buttonAction: createNewTask
+                    )
+                    Spacer()
                 }
             }
         }
         .toolbar
         {
-            ToolbarItem(placement: .principal)
-            {
-                VStack(spacing: 2)
-                {
-                    Text(project.title.isEmpty ? "Untitled Project" : project.title)
-                        .font(.headline)
-                        .lineLimit(1)
-                    Text("Task List")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                }
-            }
-
-            ToolbarItem(placement: .topBarTrailing)
+            ToolbarItemGroup(placement: .topBarTrailing)
             {
                 Menu
                 {
-                    // Task Name submenu
-                    Menu("Task Name")
+                    Picker("Sort by", selection: $sortOrder)
                     {
-                        Button(action: { sortOrder = .taskNameAscending })
-                        {
-                            HStack {
-                                if sortOrder == .taskNameAscending {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("A-Z")
-                            }
-                        }
-                        
-                        Button(action: { sortOrder = .taskNameDescending })
-                        {
-                            HStack {
-                                if sortOrder == .taskNameDescending {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Z-A")
-                            }
-                        }
+                        Text("Task Name A-Z").tag(SortOrder.taskNameAscending)
+                        Text("Task Name Z-A").tag(SortOrder.taskNameDescending)
+                        Text("Newest First").tag(SortOrder.dateNewest)
+                        Text("Oldest First").tag(SortOrder.dateOldest)
+                    }
+                    .pickerStyle(.inline)
+                    
+                    Divider()
+                    
+                    Menu("Filter by Task Type") {
+                        Button("Development") { sortOrder = .taskTypeDevelopment }
+                        Button("Requirements") { sortOrder = .taskTypeRequirements }
+                        Button("Design") { sortOrder = .taskTypeDesign }
+                        Button("Use Cases") { sortOrder = .taskTypeUseCases }
+                        Button("Testing") { sortOrder = .taskTypeTesting }
+                        Button("Documentation") { sortOrder = .taskTypeDocumentation }
+                        Button("Database") { sortOrder = .taskTypeDatabase }
+                        Button("Defect Correction") { sortOrder = .taskTypeDefectCorrection }
                     }
                     
-                    // Task Type submenu
-                    Menu("Task Type")
-                    {
-                        Button(action: { sortOrder = .taskTypeDevelopment })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeDevelopment {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Development")
-                            }
-                        }
-                        Button(action: { sortOrder = .taskTypeRequirements })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeRequirements {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Requirements")
-                            }
-                        }
-                        Button(action: { sortOrder = .taskTypeDesign })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeDesign {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Design")
-                            }
-                        }
-                        Button(action: { sortOrder = .taskTypeUseCases })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeUseCases {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Use Cases")
-                            }
-                        }
-                        Button(action: { sortOrder = .taskTypeTesting })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeTesting {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Testing")
-                            }
-                        }
-                        Button(action: { sortOrder = .taskTypeDocumentation })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeDocumentation {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Documentation")
-                            }
-                        }
-                        Button(action: { sortOrder = .taskTypeDatabase })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeDatabase {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Database")
-                            }
-                        }
-                        Button(action: { sortOrder = .taskTypeDefectCorrection })
-                        {
-                            HStack {
-                                if sortOrder == .taskTypeDefectCorrection {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Defect Correction")
-                            }
-                        }
+                    Menu("Filter by Priority") {
+                        Button("High") { sortOrder = .priorityHigh }
+                        Button("Medium") { sortOrder = .priorityMedium }
+                        Button("Low") { sortOrder = .priorityLow }
+                        Button("Enhancement") { sortOrder = .priorityEnhancement }
                     }
                     
-                    // Priority submenu
-                    Menu("Priority")
-                    {
-                        Button(action: { sortOrder = .priorityHigh })
-                        {
-                            HStack {
-                                if sortOrder == .priorityHigh {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("High")
-                            }
-                        }
-                        Button(action: { sortOrder = .priorityMedium })
-                        {
-                            HStack {
-                                if sortOrder == .priorityMedium {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Medium")
-                            }
-                        }
-                        Button(action: { sortOrder = .priorityLow })
-                        {
-                            HStack {
-                                if sortOrder == .priorityLow {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Low")
-                            }
-                        }
-                        Button(action: { sortOrder = .priorityEnhancement })
-                        {
-                            HStack {
-                                if sortOrder == .priorityEnhancement {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Enhancement")
-                            }
-                        }
-                    }
-                    
-                    // Status submenu
-                    Menu("Status")
-                    {
-                        Button(action: { sortOrder = .statusUnassigned })
-                        {
-                            HStack {
-                                if sortOrder == .statusUnassigned {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Unassigned")
-                            }
-                        }
-                        Button(action: { sortOrder = .statusInProgress })
-                        {
-                            HStack {
-                                if sortOrder == .statusInProgress {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("In Progress")
-                            }
-                        }
-                        Button(action: { sortOrder = .statusCompleted })
-                        {
-                            HStack {
-                                if sortOrder == .statusCompleted {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Completed")
-                            }
-                        }
-                        Button(action: { sortOrder = .statusDeferred })
-                        {
-                            HStack {
-                                if sortOrder == .statusDeferred {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Deferred")
-                            }
-                        }
-                    }
-                    
-                    // Date Created submenu
-                    Menu("Date Created")
-                    {
-                        Button(action: { sortOrder = .dateNewest })
-                        {
-                            HStack {
-                                if sortOrder == .dateNewest {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Newest First")
-                            }
-                        }
-                        
-                        Button(action: { sortOrder = .dateOldest })
-                        {
-                            HStack {
-                                if sortOrder == .dateOldest {
-                                    Image(systemName: "checkmark")
-                                }
-                                Text("Oldest First")
-                            }
-                        }
+                    Menu("Filter by Status") {
+                        Button("Unassigned") { sortOrder = .statusUnassigned }
+                        Button("In Progress") { sortOrder = .statusInProgress }
+                        Button("Completed") { sortOrder = .statusCompleted }
+                        Button("Deferred") { sortOrder = .statusDeferred }
                     }
                     
                     Divider()
                     
-                    // Edit project button
                     Button(action: {
                         path.append(.projectDetail(project))
                     })
                     {
                         Label("Edit Project", systemImage: "pencil")
                     }
-
-                    Divider()
-
-                    // Add task button
-                    Button(action: createNewTask)
-                    {
-                        Label("Add Task", systemImage: "plus")
-                    }
-                }
-                label:
-                {
+                } label: {
                     Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(AppGradients.projectGradient)
+                }
+                
+                Button(action: createNewTask)
+                {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(AppGradients.projectGradient)
                 }
             }
         }
+        .toolbarBackground(.visible, for: .navigationBar)
         .successToast(
             isShowing: $showDeleteToast,
             message: "'\(deletedTaskName)' deleted"
