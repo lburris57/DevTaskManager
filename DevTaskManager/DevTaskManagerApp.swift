@@ -4,9 +4,9 @@
 //
 //  Created by Larry Burris on 4/12/25.
 //
+import Inject
 import SwiftData
 import SwiftUI
-import Inject
 
 /*
  Just 3 steps to enable injection in your SwiftUI Views
@@ -20,7 +20,7 @@ import Inject
 struct DevTaskManagerApp: App
 {
     @Environment(\.modelContext) var modelContext
-    
+
     var body: some Scene
     {
         WindowGroup
@@ -29,13 +29,13 @@ struct DevTaskManagerApp: App
         }
         .modelContainer(for: [Project.self, User.self, Role.self, Task.self, TaskItem.self])
     }
-    
+
     init()
     {
         print(URL.applicationSupportDirectory.path(percentEncoded: false))
     }
 }
-    
+
 extension ModelContext
 {
     var sqliteCommand: String
@@ -50,4 +50,3 @@ extension ModelContext
         }
     }
 }
-

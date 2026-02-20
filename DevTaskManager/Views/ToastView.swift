@@ -7,23 +7,27 @@
 import SwiftUI
 
 /// A reusable toast notification component
-struct ToastView: View {
+struct ToastView: View
+{
     let message: String
     let icon: String
     let iconColor: Color
-    
-    init(message: String, icon: String = "checkmark.circle.fill", iconColor: Color = .green) {
+
+    init(message: String, icon: String = "checkmark.circle.fill", iconColor: Color = .green)
+    {
         self.message = message
         self.icon = icon
         self.iconColor = iconColor
     }
-    
-    var body: some View {
-        HStack(spacing: 12) {
+
+    var body: some View
+    {
+        HStack(spacing: 12)
+        {
             Image(systemName: icon)
                 .foregroundStyle(iconColor)
                 .font(.title2)
-            
+
             Text(message)
                 .font(.body)
                 .fontWeight(.medium)
@@ -38,26 +42,34 @@ struct ToastView: View {
 }
 
 /// View modifier for showing toast notifications
-struct ToastModifier: ViewModifier {
+struct ToastModifier: ViewModifier
+{
     @Binding var isShowing: Bool
     let message: String
     let icon: String
     let iconColor: Color
     let duration: TimeInterval
-    
-    func body(content: Content) -> some View {
+
+    func body(content: Content) -> some View
+    {
         content
-            .overlay(alignment: .top) {
-                if isShowing {
+            .overlay(alignment: .top)
+            {
+                if isShowing
+                {
                     ToastView(message: message, icon: icon, iconColor: iconColor)
                         .padding(.top, 60)
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isShowing)
-                        .onAppear {
-                            _Concurrency.Task {
+                        .onAppear
+                        {
+                            _Concurrency.Task
+                            {
                                 try? await _Concurrency.Task.sleep(for: .seconds(duration))
-                                await MainActor.run {
-                                    withAnimation {
+                                await MainActor.run
+                                {
+                                    withAnimation
+                                    {
                                         isShowing = false
                                     }
                                 }
@@ -68,7 +80,8 @@ struct ToastModifier: ViewModifier {
     }
 }
 
-extension View {
+extension View
+{
     /// Shows a toast notification that auto-dismisses
     /// - Parameters:
     ///   - isShowing: Binding to control visibility
@@ -82,7 +95,8 @@ extension View {
         icon: String = "checkmark.circle.fill",
         iconColor: Color = .green,
         duration: TimeInterval = 1.5
-    ) -> some View {
+    ) -> some View
+    {
         modifier(ToastModifier(
             isShowing: isShowing,
             message: message,
@@ -95,9 +109,11 @@ extension View {
 
 // MARK: - Convenience Methods
 
-extension View {
+extension View
+{
     /// Shows a success toast
-    func successToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+    func successToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View
+    {
         toast(
             isShowing: isShowing,
             message: message,
@@ -106,9 +122,10 @@ extension View {
             duration: duration
         )
     }
-    
+
     /// Shows an error toast
-    func errorToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+    func errorToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View
+    {
         toast(
             isShowing: isShowing,
             message: message,
@@ -117,9 +134,10 @@ extension View {
             duration: duration
         )
     }
-    
+
     /// Shows an info toast
-    func infoToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+    func infoToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View
+    {
         toast(
             isShowing: isShowing,
             message: message,
@@ -128,9 +146,10 @@ extension View {
             duration: duration
         )
     }
-    
+
     /// Shows a warning toast
-    func warningToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View {
+    func warningToast(isShowing: Binding<Bool>, message: String, duration: TimeInterval = 1.5) -> some View
+    {
         toast(
             isShowing: isShowing,
             message: message,
@@ -141,12 +160,16 @@ extension View {
     }
 }
 
-#Preview("Success Toast") {
-    struct PreviewWrapper: View {
+#Preview("Success Toast")
+{
+    struct PreviewWrapper: View
+    {
         @State private var showToast = true
-        
-        var body: some View {
-            VStack {
+
+        var body: some View
+        {
+            VStack
+            {
                 Text("Content Below Toast")
                     .font(.title)
             }
@@ -154,16 +177,20 @@ extension View {
             .successToast(isShowing: $showToast, message: "Sample data loaded successfully!")
         }
     }
-    
+
     return PreviewWrapper()
 }
 
-#Preview("Error Toast") {
-    struct PreviewWrapper: View {
+#Preview("Error Toast")
+{
+    struct PreviewWrapper: View
+    {
         @State private var showToast = true
-        
-        var body: some View {
-            VStack {
+
+        var body: some View
+        {
+            VStack
+            {
                 Text("Content Below Toast")
                     .font(.title)
             }
@@ -171,16 +198,20 @@ extension View {
             .errorToast(isShowing: $showToast, message: "Failed to load data")
         }
     }
-    
+
     return PreviewWrapper()
 }
 
-#Preview("Info Toast") {
-    struct PreviewWrapper: View {
+#Preview("Info Toast")
+{
+    struct PreviewWrapper: View
+    {
         @State private var showToast = true
-        
-        var body: some View {
-            VStack {
+
+        var body: some View
+        {
+            VStack
+            {
                 Text("Content Below Toast")
                     .font(.title)
             }
@@ -188,16 +219,20 @@ extension View {
             .infoToast(isShowing: $showToast, message: "New feature available")
         }
     }
-    
+
     return PreviewWrapper()
 }
 
-#Preview("Warning Toast") {
-    struct PreviewWrapper: View {
+#Preview("Warning Toast")
+{
+    struct PreviewWrapper: View
+    {
         @State private var showToast = true
-        
-        var body: some View {
-            VStack {
+
+        var body: some View
+        {
+            VStack
+            {
                 Text("Content Below Toast")
                     .font(.title)
             }
@@ -205,6 +240,6 @@ extension View {
             .warningToast(isShowing: $showToast, message: "Low storage space")
         }
     }
-    
+
     return PreviewWrapper()
 }

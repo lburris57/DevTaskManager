@@ -17,13 +17,13 @@ struct TaskListView: View
     @State private var deletedTaskName = ""
     @State private var sortOrder = SortOrder.dateNewest
     @State private var searchText = ""
-    
+
     @Query(sort: \Task.taskName) var tasks: [Task]
-    
+
     @Query(sort: \User.lastName) var users: [User]
-    
+
     @Query(sort: \Role.roleName) var roles: [Role]
-    
+
     // Sort order options
     enum SortOrder: String, CaseIterable
     {
@@ -33,7 +33,7 @@ struct TaskListView: View
         case projectDescending = "Project Z-A"
         case projectNewest = "Project Newest First"
         case projectOldest = "Project Oldest First"
-        
+
         // Task Type options
         case taskTypeDevelopment = "Development"
         case taskTypeRequirements = "Requirements"
@@ -43,23 +43,23 @@ struct TaskListView: View
         case taskTypeDocumentation = "Documentation"
         case taskTypeDatabase = "Database"
         case taskTypeDefectCorrection = "Defect Correction"
-        
+
         // Priority options
         case priorityHigh = "High"
         case priorityMedium = "Medium"
         case priorityLow = "Low"
         case priorityEnhancement = "Enhancement"
-        
+
         // Status options
         case statusUnassigned = "Unassigned"
         case statusInProgress = "In Progress"
         case statusCompleted = "Completed"
         case statusDeferred = "Deferred"
-        
+
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
-    
+
     // Computed property for sorted and filtered tasks
     private var sortedTasks: [Task]
     {
@@ -71,13 +71,14 @@ struct TaskListView: View
         }
         else
         {
-            filteredTasks = tasks.filter {
+            filteredTasks = tasks.filter
+            {
                 $0.taskName.localizedCaseInsensitiveContains(searchText) ||
-                $0.taskComment.localizedCaseInsensitiveContains(searchText) ||
-                ($0.project?.title ?? "").localizedCaseInsensitiveContains(searchText)
+                    $0.taskComment.localizedCaseInsensitiveContains(searchText) ||
+                    ($0.project?.title ?? "").localizedCaseInsensitiveContains(searchText)
             }
         }
-        
+
         // Then apply sorting/filtering based on sort order
         switch sortOrder
         {
@@ -93,7 +94,7 @@ struct TaskListView: View
             return filteredTasks.sorted { ($0.project?.dateCreated ?? Date.distantPast) > ($1.project?.dateCreated ?? Date.distantPast) }
         case .projectOldest:
             return filteredTasks.sorted { ($0.project?.dateCreated ?? Date.distantPast) < ($1.project?.dateCreated ?? Date.distantPast) }
-            
+
         // Task Type filtering and sorting
         case .taskTypeDevelopment:
             return filteredTasks.filter { $0.taskType == "Development" }.sorted { $0.taskName < $1.taskName }
@@ -111,7 +112,7 @@ struct TaskListView: View
             return filteredTasks.filter { $0.taskType == "Database" }.sorted { $0.taskName < $1.taskName }
         case .taskTypeDefectCorrection:
             return filteredTasks.filter { $0.taskType == "Defect Correction" }.sorted { $0.taskName < $1.taskName }
-            
+
         // Priority filtering and sorting
         case .priorityHigh:
             return filteredTasks.filter { $0.taskPriority == "High" }.sorted { $0.taskName < $1.taskName }
@@ -121,7 +122,7 @@ struct TaskListView: View
             return filteredTasks.filter { $0.taskPriority == "Low" }.sorted { $0.taskName < $1.taskName }
         case .priorityEnhancement:
             return filteredTasks.filter { $0.taskPriority == "Enhancement" }.sorted { $0.taskName < $1.taskName }
-            
+
         // Status filtering and sorting
         case .statusUnassigned:
             return filteredTasks.filter { $0.taskStatus == "Unassigned" }.sorted { $0.taskName < $1.taskName }
@@ -131,14 +132,14 @@ struct TaskListView: View
             return filteredTasks.filter { $0.taskStatus == "Completed" }.sorted { $0.taskName < $1.taskName }
         case .statusDeferred:
             return filteredTasks.filter { $0.taskStatus == "Deferred" }.sorted { $0.taskName < $1.taskName }
-            
+
         case .dateNewest:
             return filteredTasks.sorted { $0.dateCreated > $1.dateCreated }
         case .dateOldest:
             return filteredTasks.sorted { $0.dateCreated < $1.dateCreated }
         }
     }
-    
+
     // Helper function to assign numeric values to priorities for sorting
     private func priorityValue(for priority: String) -> Int
     {
@@ -154,7 +155,7 @@ struct TaskListView: View
             return 0
         }
     }
-    
+
     // Delete tasks
     func deleteTasks(at offsets: IndexSet)
     {
@@ -164,11 +165,12 @@ struct TaskListView: View
             deletedTaskName = task.taskName.isEmpty ? "Untitled Task" : task.taskName
             modelContext.delete(task)
         }
-        
+
         do
         {
             try modelContext.save()
-            withAnimation {
+            withAnimation
+            {
                 showDeleteToast = true
             }
         }
@@ -182,16 +184,18 @@ struct TaskListView: View
     {
         NavigationStack(path: $path)
         {
-            ZStack {
+            ZStack
+            {
                 // Solid background to prevent content showing through
                 Color(UIColor.systemBackground)
                     .ignoresSafeArea()
-                
+
                 // Modern gradient background overlay
                 AppGradients.mainBackground
                     .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
+
+                VStack(spacing: 0)
+                {
                     // Modern header
                     ModernHeaderView(
                         icon: "checklist",
@@ -199,16 +203,19 @@ struct TaskListView: View
                         subtitle: "\(sortedTasks.count) total",
                         gradientColors: [.orange, .red]
                     )
-                    
+
                     // Modern search bar
-                    HStack {
+                    HStack
+                    {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.secondary)
                         TextField("Search tasks", text: $searchText)
                             .textFieldStyle(.plain)
-                        
-                        if !searchText.isEmpty {
-                            Button(action: { searchText = "" }) {
+
+                        if !searchText.isEmpty
+                        {
+                            Button(action: { searchText = "" })
+                            {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(.secondary)
                             }
@@ -222,21 +229,29 @@ struct TaskListView: View
                     )
                     .padding(.horizontal, 16)
                     .padding(.bottom, 12)
-                    
+
                     if !tasks.isEmpty
                     {
-                        ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(sortedTasks) { task in
-                                    NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .taskList)) {
-                                        ModernListRow {
+                        ScrollView
+                        {
+                            LazyVStack(spacing: 8)
+                            {
+                                ForEach(sortedTasks)
+                                { task in
+                                    NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .taskList))
+                                    {
+                                        ModernListRow
+                                        {
                                             taskRowContent(for: task)
                                         }
                                     }
                                     .buttonStyle(.plain)
-                                    .contextMenu {
-                                        Button(role: .destructive) {
-                                            if let index = sortedTasks.firstIndex(where: { $0.id == task.id }) {
+                                    .contextMenu
+                                    {
+                                        Button(role: .destructive)
+                                        {
+                                            if let index = sortedTasks.firstIndex(where: { $0.id == task.id })
+                                            {
                                                 deleteTasks(at: IndexSet(integer: index))
                                             }
                                         } label: {
@@ -272,8 +287,10 @@ struct TaskListView: View
                 {
                     Button(action: {
                         dismiss()
-                    }) {
-                        HStack(spacing: 4) {
+                    })
+                    {
+                        HStack(spacing: 4)
+                        {
                             Image(systemName: "chevron.left")
                                 .font(.body.weight(.semibold))
                             Text("Back")
@@ -282,7 +299,7 @@ struct TaskListView: View
                         .foregroundStyle(AppGradients.taskGradient)
                     }
                 }
-                
+
                 ToolbarItemGroup(placement: .topBarTrailing)
                 {
                     Menu
@@ -297,10 +314,11 @@ struct TaskListView: View
                             Text("Oldest First").tag(SortOrder.dateOldest)
                         }
                         .pickerStyle(.inline)
-                        
+
                         Divider()
-                        
-                        Menu("Filter by Task Type") {
+
+                        Menu("Filter by Task Type")
+                        {
                             Button("Development") { sortOrder = .taskTypeDevelopment }
                             Button("Requirements") { sortOrder = .taskTypeRequirements }
                             Button("Design") { sortOrder = .taskTypeDesign }
@@ -310,15 +328,17 @@ struct TaskListView: View
                             Button("Database") { sortOrder = .taskTypeDatabase }
                             Button("Defect Correction") { sortOrder = .taskTypeDefectCorrection }
                         }
-                        
-                        Menu("Filter by Priority") {
+
+                        Menu("Filter by Priority")
+                        {
                             Button("High") { sortOrder = .priorityHigh }
                             Button("Medium") { sortOrder = .priorityMedium }
                             Button("Low") { sortOrder = .priorityLow }
                             Button("Enhancement") { sortOrder = .priorityEnhancement }
                         }
-                        
-                        Menu("Filter by Status") {
+
+                        Menu("Filter by Status")
+                        {
                             Button("Unassigned") { sortOrder = .statusUnassigned }
                             Button("In Progress") { sortOrder = .statusInProgress }
                             Button("Completed") { sortOrder = .statusCompleted }
@@ -328,14 +348,14 @@ struct TaskListView: View
                         Image(systemName: "arrow.up.arrow.down")
                             .foregroundStyle(AppGradients.taskGradient)
                     }
-                    
-                    Button(action:
-                    {
-                        let task = Task(taskName: Constants.EMPTY_STRING)
 
-                        // Don't insert or save yet - let the detail view handle it
-                        path.append(.taskDetail(task, context: .taskList))
-                    })
+                    Button(action:
+                        {
+                            let task = Task(taskName: Constants.EMPTY_STRING)
+
+                            // Don't insert or save yet - let the detail view handle it
+                            path.append(.taskDetail(task, context: .taskList))
+                        })
                     {
                         Image(systemName: "plus.circle.fill")
                             .font(.title3)
@@ -344,7 +364,9 @@ struct TaskListView: View
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
-            .navigationDestination(for: AppNavigationDestination.self) { destination in
+            .navigationDestination(for: AppNavigationDestination.self)
+            {
+                destination in
                 destinationView(for: destination)
             }
         }
@@ -353,33 +375,39 @@ struct TaskListView: View
             message: "'\(deletedTaskName)' deleted"
         )
     }
-    
+
     // MARK: - Navigation
-    
+
     @ViewBuilder
-    private func destinationView(for destination: AppNavigationDestination) -> some View {
-        switch destination {
-        case .taskDetail(let task, let context):
+    private func destinationView(for destination: AppNavigationDestination) -> some View
+    {
+        switch destination
+        {
+        case let .taskDetail(task, context):
             TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
-        case .projectDetail(let project):
+        case let .projectDetail(project):
             ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-        case .userDetail(let user):
+        case let .userDetail(user):
             UserDetailView(user: user, path: $path)
-        case .projectTasks(let project):
+        case let .projectTasks(project):
             ProjectTasksView(project: project, path: $path)
-        case .userTasks(let user):
+        case let .userTasks(user):
             UserTasksView(user: user, path: $path)
         }
     }
-    
+
     // MARK: - Task Row Content
-    
+
     @ViewBuilder
-    private func taskRowContent(for task: Task) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func taskRowContent(for task: Task) -> some View
+    {
+        VStack(alignment: .leading, spacing: 8)
+        {
             // Project name at the top
-            if let project = task.project {
-                HStack {
+            if let project = task.project
+            {
+                HStack
+                {
                     Image(systemName: "folder.fill")
                         .font(.caption)
                         .foregroundStyle(.blue)
@@ -388,38 +416,42 @@ struct TaskListView: View
                         .foregroundStyle(.blue)
                 }
             }
-            
+
             // Task Name with Priority
-            HStack(spacing: 8) {
+            HStack(spacing: 8)
+            {
                 Image(systemName: priorityIcon(for: task.taskPriority))
                     .font(.headline)
                     .foregroundStyle(priorityColor(for: task.taskPriority))
-                
+
                 Text(task.taskName.isEmpty ? "Untitled Task" : task.taskName)
                     .font(.headline)
             }
-            
+
             // Assigned User (if any)
-            if let assignedUser = task.assignedUser {
+            if let assignedUser = task.assignedUser
+            {
                 assignedUserRow(for: task, user: assignedUser)
             }
-            
+
             // Task Details
-            HStack(spacing: 12) {
+            HStack(spacing: 12)
+            {
                 Label(task.taskType, systemImage: "hammer.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                
+
                 Spacer()
-                
+
                 Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
                     .font(.caption)
                     .foregroundStyle(statusColor(for: task.taskStatus))
                     .labelStyle(.titleAndIcon)
             }
-            
+
             // Date Created
-            HStack {
+            HStack
+            {
                 Image(systemName: "calendar")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -429,29 +461,36 @@ struct TaskListView: View
             }
         }
     }
-    
+
     @ViewBuilder
-    private func assignedUserRow(for task: Task, user: User) -> some View {
-        HStack {
+    private func assignedUserRow(for task: Task, user: User) -> some View
+    {
+        HStack
+        {
             Image(systemName: "person.fill")
                 .font(.caption)
                 .foregroundStyle(.green)
-            if let dateAssigned = task.dateAssigned {
+            if let dateAssigned = task.dateAssigned
+            {
                 Text("Assigned to \(user.fullName()) on \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
                     .foregroundStyle(.green)
-            } else {
+            }
+            else
+            {
                 Text("Assigned to \(user.fullName())")
                     .font(.caption)
                     .foregroundStyle(.green)
             }
         }
     }
-    
+
     // MARK: - Helper Functions
-    
-    private func priorityIcon(for priority: String) -> String {
-        switch priority.lowercased() {
+
+    private func priorityIcon(for priority: String) -> String
+    {
+        switch priority.lowercased()
+        {
         case "high":
             return "exclamationmark.circle.fill"
         case "medium":
@@ -462,9 +501,11 @@ struct TaskListView: View
             return "circle.fill"
         }
     }
-    
-    private func priorityColor(for priority: String) -> Color {
-        switch priority.lowercased() {
+
+    private func priorityColor(for priority: String) -> Color
+    {
+        switch priority.lowercased()
+        {
         case "high":
             return .red
         case "medium":
@@ -475,9 +516,11 @@ struct TaskListView: View
             return .gray
         }
     }
-    
-    private func statusIcon(for status: String) -> String {
-        switch status.lowercased() {
+
+    private func statusIcon(for status: String) -> String
+    {
+        switch status.lowercased()
+        {
         case "completed":
             return "checkmark.circle.fill"
         case "in progress", "inprogress":
@@ -488,9 +531,11 @@ struct TaskListView: View
             return "circle"
         }
     }
-    
-    private func statusColor(for status: String) -> Color {
-        switch status.lowercased() {
+
+    private func statusColor(for status: String) -> Color
+    {
+        switch status.lowercased()
+        {
         case "unassigned":
             return .orange.opacity(0.8) // Light orange
         case "completed":
@@ -503,10 +548,12 @@ struct TaskListView: View
     }
 }
 
-#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier())) {
+#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier()))
+{
     TaskListView()
 }
 
-#Preview("Empty State", traits: .modifier(EmptyDataPreviewModifier())) {
+#Preview("Empty State", traits: .modifier(EmptyDataPreviewModifier()))
+{
     TaskListView()
 }

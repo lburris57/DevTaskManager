@@ -19,12 +19,12 @@ extension ModelContainer
             for: Project.self, Task.self, User.self, Role.self,
             configurations: config
         )
-        
+
         SampleData.createSampleData(in: container.mainContext)
-        
+
         return container
     }
-    
+
     /// Creates a model container with sample data for testing specific scenarios
     /// - Parameter includeEmptyProject: Whether to include an empty project for testing
     /// - Returns: A ModelContainer with customized sample data
@@ -36,9 +36,9 @@ extension ModelContainer
             for: Project.self, Task.self, User.self, Role.self,
             configurations: config
         )
-        
+
         SampleData.createSampleData(in: container.mainContext)
-        
+
         return container
     }
 }

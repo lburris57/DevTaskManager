@@ -16,28 +16,28 @@ struct UserListView: View
     @State private var showDeleteToast = false
     @State private var deletedUserName = ""
     @State private var sortOrder = SortOrder.nameAscending
-    
+
     @Query(sort: \User.lastName) var users: [User]
-    
+
     @Query(sort: \Role.roleName) var roles: [Role]
-    
+
     // Sort order options
     enum SortOrder: String, CaseIterable
     {
         case nameAscending = "Name A-Z"
         case nameDescending = "Name Z-A"
-        
+
         // Role options
         case roleAdministrator = "Administrator"
         case roleDeveloper = "Developer"
         case roleBusinessAnalyst = "Business Analyst"
         case roleValidator = "Validator"
-        
+
         // Date Created options
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
-    
+
     // Computed property for sorted users
     private var sortedUsers: [User]
     {
@@ -47,7 +47,7 @@ struct UserListView: View
             return users.sorted { $0.fullName() < $1.fullName() }
         case .nameDescending:
             return users.sorted { $0.fullName() > $1.fullName() }
-            
+
         // Role filtering and sorting
         case .roleAdministrator:
             return users.filter { $0.roles.contains(where: { $0.roleName == "Administrator" }) }.sorted { $0.fullName() < $1.fullName() }
@@ -57,7 +57,7 @@ struct UserListView: View
             return users.filter { $0.roles.contains(where: { $0.roleName == "Business Analyst" }) }.sorted { $0.fullName() < $1.fullName() }
         case .roleValidator:
             return users.filter { $0.roles.contains(where: { $0.roleName == "Validator" }) }.sorted { $0.fullName() < $1.fullName() }
-            
+
         // Date Created sorting
         case .dateNewest:
             return users.sorted { $0.dateCreated > $1.dateCreated }
@@ -65,7 +65,7 @@ struct UserListView: View
             return users.sorted { $0.dateCreated < $1.dateCreated }
         }
     }
-    
+
     // Delete users
     func deleteUsers(at offsets: IndexSet)
     {
@@ -75,11 +75,12 @@ struct UserListView: View
             deletedUserName = user.fullName()
             modelContext.delete(user)
         }
-        
+
         do
         {
             try modelContext.save()
-            withAnimation {
+            withAnimation
+            {
                 showDeleteToast = true
             }
         }
@@ -93,16 +94,18 @@ struct UserListView: View
     {
         NavigationStack(path: $path)
         {
-            ZStack {
+            ZStack
+            {
                 // Solid background to prevent content showing through
                 Color(UIColor.systemBackground)
                     .ignoresSafeArea()
-                
+
                 // Modern gradient background overlay
                 AppGradients.mainBackground
                     .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
+
+                VStack(spacing: 0)
+                {
                     // Modern header
                     ModernHeaderView(
                         icon: "person.3.fill",
@@ -110,13 +113,17 @@ struct UserListView: View
                         subtitle: "\(sortedUsers.count) team members",
                         gradientColors: [.purple, .pink]
                     )
-                    
+
                     if !users.isEmpty
                     {
-                        ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(sortedUsers) { user in
-                                    ModernListRow {
+                        ScrollView
+                        {
+                            LazyVStack(spacing: 8)
+                            {
+                                ForEach(sortedUsers)
+                                { user in
+                                    ModernListRow
+                                    {
                                         userRow(for: user)
                                     }
                                 }
@@ -143,8 +150,10 @@ struct UserListView: View
                 {
                     Button(action: {
                         dismiss()
-                    }) {
-                        HStack(spacing: 4) {
+                    })
+                    {
+                        HStack(spacing: 4)
+                        {
                             Image(systemName: "chevron.left")
                                 .font(.body.weight(.semibold))
                             Text("Back")
@@ -153,21 +162,23 @@ struct UserListView: View
                         .foregroundStyle(AppGradients.userGradient)
                     }
                 }
-                
+
                 toolbarContent
             }
             .toolbarBackground(.visible, for: .navigationBar)
-            .navigationDestination(for: AppNavigationDestination.self) { destination in
-                switch destination {
-                case .userDetail(let user):
+            .navigationDestination(for: AppNavigationDestination.self)
+            { destination in
+                switch destination
+                {
+                case let .userDetail(user):
                     UserDetailView(user: user, path: $path)
-                case .userTasks(let user):
+                case let .userTasks(user):
                     UserTasksView(user: user, onDismissToMain: { dismiss() }, path: $path)
-                case .taskDetail(let task, let context):
+                case let .taskDetail(task, context):
                     TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
-                case .projectDetail(let project):
+                case let .projectDetail(project):
                     ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-                case .projectTasks(let project):
+                case let .projectTasks(project):
                     ProjectTasksView(project: project, path: $path)
                 }
             }
@@ -177,10 +188,11 @@ struct UserListView: View
             message: "'\(deletedUserName)' deleted"
         )
     }
-    
+
     // MARK: - View Components
-    
-    private func userRow(for user: User) -> some View {
+
+    private func userRow(for user: User) -> some View
+    {
         VStack(alignment: .leading, spacing: 8)
         {
             // User info section with edit navigation
@@ -189,13 +201,14 @@ struct UserListView: View
                 userInfoView(for: user)
             }
             .buttonStyle(.plain)
-            
+
             // Assigned tasks section - separate navigation
             assignedTasksButton(for: user)
         }
     }
-    
-    private func userInfoView(for user: User) -> some View {
+
+    private func userInfoView(for user: User) -> some View
+    {
         VStack(alignment: .leading, spacing: 5)
         {
             HStack
@@ -204,14 +217,14 @@ struct UserListView: View
                 Spacer()
                 Text(user.firstName + " " + user.lastName)
             }
-            
+
             HStack
             {
                 Text("Role:").bold()
                 Spacer()
                 Text(user.roles.map(\.self).first?.roleName ?? roles[0].roleName)
             }
-            
+
             HStack
             {
                 Text("Date Created:").bold()
@@ -220,12 +233,16 @@ struct UserListView: View
             }
         }
     }
-    
+
     @ViewBuilder
-    private func assignedTasksButton(for user: User) -> some View {
-        if user.tasks.count > 0 {
-            NavigationLink(value: AppNavigationDestination.userTasks(user)) {
-                HStack {
+    private func assignedTasksButton(for user: User) -> some View
+    {
+        if user.tasks.count > 0
+        {
+            NavigationLink(value: AppNavigationDestination.userTasks(user))
+            {
+                HStack
+                {
                     Image(systemName: "list.bullet.clipboard")
                         .foregroundStyle(.green)
                     Text("View \(user.tasks.count) Assigned Task\(user.tasks.count == 1 ? "" : "s")")
@@ -242,8 +259,11 @@ struct UserListView: View
                 .cornerRadius(8)
             }
             .buttonStyle(.plain)
-        } else {
-            HStack {
+        }
+        else
+        {
+            HStack
+            {
                 Image(systemName: "checkmark.circle")
                     .foregroundStyle(.secondary)
                 Text("No tasks assigned")
@@ -254,8 +274,9 @@ struct UserListView: View
             .padding(.horizontal, 8)
         }
     }
-    
-    private var emptyStateView: some View {
+
+    private var emptyStateView: some View
+    {
         ContentUnavailableView
         {
             Label("No users were found for display.", systemImage: "calendar.badge.clock")
@@ -265,8 +286,9 @@ struct UserListView: View
             Text("\nPlease click the 'Add User' button to create your first user record.")
         }
     }
-    
-    private var toolbarContent: some ToolbarContent {
+
+    private var toolbarContent: some ToolbarContent
+    {
         ToolbarItemGroup(placement: .topBarTrailing)
         {
             Menu
@@ -278,13 +300,13 @@ struct UserListView: View
                     {
                         Label("A-Z", systemImage: sortOrder == .nameAscending ? "checkmark" : "")
                     }
-                    
+
                     Button(action: { sortOrder = .nameDescending })
                     {
                         Label("Z-A", systemImage: sortOrder == .nameDescending ? "checkmark" : "")
                     }
                 }
-                
+
                 // Role submenu
                 Menu("Role")
                 {
@@ -292,23 +314,23 @@ struct UserListView: View
                     {
                         Label("Administrator", systemImage: sortOrder == .roleAdministrator ? "checkmark" : "")
                     }
-                    
+
                     Button(action: { sortOrder = .roleDeveloper })
                     {
                         Label("Developer", systemImage: sortOrder == .roleDeveloper ? "checkmark" : "")
                     }
-                    
+
                     Button(action: { sortOrder = .roleBusinessAnalyst })
                     {
                         Label("Business Analyst", systemImage: sortOrder == .roleBusinessAnalyst ? "checkmark" : "")
                     }
-                    
+
                     Button(action: { sortOrder = .roleValidator })
                     {
                         Label("Validator", systemImage: sortOrder == .roleValidator ? "checkmark" : "")
                     }
                 }
-                
+
                 // Date Created submenu
                 Menu("Date Created")
                 {
@@ -316,7 +338,7 @@ struct UserListView: View
                     {
                         Label("Newest First", systemImage: sortOrder == .dateNewest ? "checkmark" : "")
                     }
-                    
+
                     Button(action: { sortOrder = .dateOldest })
                     {
                         Label("Oldest First", systemImage: sortOrder == .dateOldest ? "checkmark" : "")
@@ -326,15 +348,15 @@ struct UserListView: View
                 Image(systemName: "arrow.up.arrow.down")
                     .foregroundStyle(AppGradients.userGradient)
             }
-            
-            Button(action:
-            {
-                let user = User(firstName: Constants.EMPTY_STRING,
-                                lastName: Constants.EMPTY_STRING)
 
-                // Don't insert or save yet - let the detail view handle it
-                path.append(.userDetail(user))
-            })
+            Button(action:
+                {
+                    let user = User(firstName: Constants.EMPTY_STRING,
+                                    lastName: Constants.EMPTY_STRING)
+
+                    // Don't insert or save yet - let the detail view handle it
+                    path.append(.userDetail(user))
+                })
             {
                 Image(systemName: "plus.circle.fill")
                     .font(.title3)
@@ -348,4 +370,3 @@ struct UserListView: View
 {
     UserListView()
 }
-

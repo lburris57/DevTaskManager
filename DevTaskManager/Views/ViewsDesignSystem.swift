@@ -8,27 +8,27 @@
 import SwiftUI
 
 // MARK: - App Colors and Gradients
-
-struct AppGradients {
+struct AppGradients
+{
     // Background gradients
     static let mainBackground = LinearGradient(
         colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.05)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
     static let projectGradient = LinearGradient(
         colors: [Color.blue, Color.cyan],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
     static let userGradient = LinearGradient(
         colors: [Color.purple, Color.pink],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
     static let taskGradient = LinearGradient(
         colors: [Color.orange, Color.red],
         startPoint: .topLeading,
@@ -37,15 +37,17 @@ struct AppGradients {
 }
 
 // MARK: - Modern List Row Card
-
-struct ModernListRow<Content: View>: View {
+struct ModernListRow<Content: View>: View
+{
     let content: Content
-    
-    init(@ViewBuilder content: () -> Content) {
+
+    init(@ViewBuilder content: () -> Content)
+    {
         self.content = content()
     }
-    
-    var body: some View {
+
+    var body: some View
+    {
         content
             .padding(16)
             .background(
@@ -59,15 +61,17 @@ struct ModernListRow<Content: View>: View {
 }
 
 // MARK: - Modern Form Card
-
-struct ModernFormCard<Content: View>: View {
+struct ModernFormCard<Content: View>: View
+{
     let content: Content
-    
-    init(@ViewBuilder content: () -> Content) {
+
+    init(@ViewBuilder content: () -> Content)
+    {
         self.content = content()
     }
-    
-    var body: some View {
+
+    var body: some View
+    {
         content
             .padding(16)
             .background(
@@ -80,14 +84,17 @@ struct ModernFormCard<Content: View>: View {
 }
 
 // MARK: - Modern Navigation Bar
-
-struct ModernNavigationBar: ViewModifier {
+struct ModernNavigationBar: ViewModifier
+{
     let gradient: LinearGradient
-    
-    func body(content: Content) -> some View {
+
+    func body(content: Content) -> some View
+    {
         content
-            .toolbar {
-                ToolbarItem(placement: .principal) {
+            .toolbar
+            {
+                ToolbarItem(placement: .principal)
+                {
                     // Custom title styling if needed
                     EmptyView()
                 }
@@ -96,50 +103,60 @@ struct ModernNavigationBar: ViewModifier {
     }
 }
 
-extension View {
-    func modernNavigationBar(gradient: LinearGradient) -> some View {
+extension View
+{
+    func modernNavigationBar(gradient: LinearGradient) -> some View
+    {
         modifier(ModernNavigationBar(gradient: gradient))
     }
 }
 
 // MARK: - Gradient Background
-
-struct GradientBackground: ViewModifier {
-    func body(content: Content) -> some View {
-        ZStack {
+struct GradientBackground: ViewModifier
+{
+    func body(content: Content) -> some View
+    {
+        ZStack
+        {
             AppGradients.mainBackground
                 .ignoresSafeArea()
-            
+
             content
         }
     }
 }
 
-extension View {
-    func gradientBackground() -> some View {
+extension View
+{
+    func gradientBackground() -> some View
+    {
         modifier(GradientBackground())
     }
 }
 
 // MARK: - Modern Header View
-
-struct ModernHeaderView: View {
+struct ModernHeaderView: View
+{
     let icon: String
     let title: String
     let subtitle: String?
     let gradientColors: [Color]
-    
-    init(icon: String, title: String, subtitle: String? = nil, gradientColors: [Color]) {
+
+    init(icon: String, title: String, subtitle: String? = nil, gradientColors: [Color])
+    {
         self.icon = icon
         self.title = title
         self.subtitle = subtitle
         self.gradientColors = gradientColors
     }
-    
-    var body: some View {
-        HStack(spacing: 12) {
+
+    var body: some View
+    {
+        HStack(spacing: 12)
+        {
             // Icon with gradient
-            ZStack {
+            ZStack
+            {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(
                         LinearGradient(
@@ -150,24 +167,26 @@ struct ModernHeaderView: View {
                     )
                     .frame(width: 44, height: 44)
                     .shadow(color: gradientColors.first?.opacity(0.3) ?? .clear, radius: 6, x: 0, y: 3)
-                
+
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.white)
             }
-            
-            VStack(alignment: .leading, spacing: 2) {
+
+            VStack(alignment: .leading, spacing: 2)
+            {
                 Text(title)
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
-                
-                if let subtitle = subtitle {
+
+                if let subtitle = subtitle
+                {
                     Text(subtitle)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
-            
+
             Spacer()
         }
         .padding(.horizontal, 20)
@@ -176,47 +195,53 @@ struct ModernHeaderView: View {
 }
 
 // MARK: - Empty State Card
-
-struct EmptyStateCard: View {
+struct EmptyStateCard: View
+{
     let icon: String
     let title: String
     let message: String
     let buttonTitle: String?
     let buttonAction: (() -> Void)?
-    
+
     init(
         icon: String,
         title: String,
         message: String,
         buttonTitle: String? = nil,
         buttonAction: (() -> Void)? = nil
-    ) {
+    )
+    {
         self.icon = icon
         self.title = title
         self.message = message
         self.buttonTitle = buttonTitle
         self.buttonAction = buttonAction
     }
-    
-    var body: some View {
-        VStack(spacing: 20) {
+
+    var body: some View
+    {
+        VStack(spacing: 20)
+        {
             Image(systemName: icon)
                 .font(.system(size: 60))
                 .foregroundStyle(.secondary.opacity(0.5))
-            
-            VStack(spacing: 8) {
+
+            VStack(spacing: 8)
+            {
                 Text(title)
                     .font(.title2)
                     .fontWeight(.bold)
-                
+
                 Text(message)
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
-            if let buttonTitle = buttonTitle, let buttonAction = buttonAction {
-                Button(action: buttonAction) {
+
+            if let buttonTitle = buttonTitle, let buttonAction = buttonAction
+            {
+                Button(action: buttonAction)
+                {
                     Text(buttonTitle)
                         .font(.headline)
                         .foregroundColor(.white)

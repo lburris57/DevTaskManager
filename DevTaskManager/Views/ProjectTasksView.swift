@@ -18,13 +18,13 @@ struct ProjectTasksView: View
     @State private var showDeleteToast = false
     @State private var deletedTaskName = ""
     @State private var sortOrder = SortOrder.dateNewest
-    
+
     // Sort order options
     enum SortOrder: String, CaseIterable
     {
         case taskNameAscending = "Task Name A-Z"
         case taskNameDescending = "Task Name Z-A"
-        
+
         // Task Type options
         case taskTypeDevelopment = "Development"
         case taskTypeRequirements = "Requirements"
@@ -34,19 +34,19 @@ struct ProjectTasksView: View
         case taskTypeDocumentation = "Documentation"
         case taskTypeDatabase = "Database"
         case taskTypeDefectCorrection = "Defect Correction"
-        
+
         // Priority options
         case priorityHigh = "High"
         case priorityMedium = "Medium"
         case priorityLow = "Low"
         case priorityEnhancement = "Enhancement"
-        
+
         // Status options
         case statusUnassigned = "Unassigned"
         case statusInProgress = "In Progress"
         case statusCompleted = "Completed"
         case statusDeferred = "Deferred"
-        
+
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
@@ -55,14 +55,14 @@ struct ProjectTasksView: View
     private var sortedTasks: [Task]
     {
         let tasks = project.tasks
-        
+
         switch sortOrder
         {
         case .taskNameAscending:
             return tasks.sorted { $0.taskName < $1.taskName }
         case .taskNameDescending:
             return tasks.sorted { $0.taskName > $1.taskName }
-            
+
         // Task Type filtering and sorting
         case .taskTypeDevelopment:
             return tasks.filter { $0.taskType == "Development" }.sorted { $0.taskName < $1.taskName }
@@ -80,7 +80,7 @@ struct ProjectTasksView: View
             return tasks.filter { $0.taskType == "Database" }.sorted { $0.taskName < $1.taskName }
         case .taskTypeDefectCorrection:
             return tasks.filter { $0.taskType == "Defect Correction" }.sorted { $0.taskName < $1.taskName }
-            
+
         // Priority filtering and sorting
         case .priorityHigh:
             return tasks.filter { $0.taskPriority == "High" }.sorted { $0.taskName < $1.taskName }
@@ -90,7 +90,7 @@ struct ProjectTasksView: View
             return tasks.filter { $0.taskPriority == "Low" }.sorted { $0.taskName < $1.taskName }
         case .priorityEnhancement:
             return tasks.filter { $0.taskPriority == "Enhancement" }.sorted { $0.taskName < $1.taskName }
-            
+
         // Status filtering and sorting
         case .statusUnassigned:
             return tasks.filter { $0.taskStatus == "Unassigned" }.sorted { $0.taskName < $1.taskName }
@@ -100,14 +100,14 @@ struct ProjectTasksView: View
             return tasks.filter { $0.taskStatus == "Completed" }.sorted { $0.taskName < $1.taskName }
         case .statusDeferred:
             return tasks.filter { $0.taskStatus == "Deferred" }.sorted { $0.taskName < $1.taskName }
-            
+
         case .dateNewest:
             return tasks.sorted { $0.dateCreated > $1.dateCreated }
         case .dateOldest:
             return tasks.sorted { $0.dateCreated < $1.dateCreated }
         }
     }
-    
+
     // Helper function to assign numeric values to priorities for sorting
     private func priorityValue(for priority: String) -> Int
     {
@@ -155,23 +155,25 @@ struct ProjectTasksView: View
             taskName: Constants.EMPTY_STRING,
             project: project
         )
-        
+
         // Don't insert or save yet - let the detail view handle it
         path.append(.taskDetail(task, context: .projectTasksList))
     }
 
     var body: some View
     {
-        ZStack {
+        ZStack
+        {
             // Solid background to prevent content showing through
             Color(UIColor.systemBackground)
                 .ignoresSafeArea()
-            
+
             // Modern gradient background overlay
             AppGradients.mainBackground
                 .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
+
+            VStack(spacing: 0)
+            {
                 // Modern header
                 ModernHeaderView(
                     icon: "folder.fill",
@@ -179,37 +181,48 @@ struct ProjectTasksView: View
                     subtitle: "\(sortedTasks.count) task\(sortedTasks.count == 1 ? "" : "s")",
                     gradientColors: [.blue, .cyan]
                 )
-                
+
                 if !project.tasks.isEmpty
                 {
-                    ScrollView {
-                        LazyVStack(spacing: 8) {
-                            ForEach(sortedTasks) { task in
-                                NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .projectTasksList)) {
-                                    ModernListRow {
+                    ScrollView
+                    {
+                        LazyVStack(spacing: 8)
+                        {
+                            ForEach(sortedTasks)
+                            { task in
+                                NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .projectTasksList))
+                                {
+                                    ModernListRow
+                                    {
                                         VStack(alignment: .leading, spacing: 8)
                                         {
                                             // Task Name with Priority
-                                            HStack(spacing: 8) {
+                                            HStack(spacing: 8)
+                                            {
                                                 Image(systemName: priorityIcon(for: task.taskPriority))
                                                     .font(.headline)
                                                     .foregroundStyle(priorityColor(for: task.taskPriority))
-                                                
+
                                                 Text(task.taskName.isEmpty ? "Untitled Task" : task.taskName)
                                                     .font(.headline)
                                             }
-                                            
+
                                             // Assigned User (if any)
-                                            if let assignedUser = task.assignedUser {
-                                                HStack {
+                                            if let assignedUser = task.assignedUser
+                                            {
+                                                HStack
+                                                {
                                                     Image(systemName: "person.fill")
                                                         .font(.caption)
                                                         .foregroundStyle(.green)
-                                                    if let dateAssigned = task.dateAssigned {
+                                                    if let dateAssigned = task.dateAssigned
+                                                    {
                                                         Text("Assigned to \(assignedUser.fullName()) on \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
                                                             .font(.caption)
                                                             .foregroundStyle(.green)
-                                                    } else {
+                                                    }
+                                                    else
+                                                    {
                                                         Text("Assigned to \(assignedUser.fullName())")
                                                             .font(.caption)
                                                             .foregroundStyle(.green)
@@ -223,7 +236,7 @@ struct ProjectTasksView: View
                                                 Label(task.taskType, systemImage: "hammer.fill")
                                                     .font(.caption)
                                                     .foregroundStyle(.secondary)
-                                                
+
                                                 Spacer()
 
                                                 Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
@@ -246,9 +259,12 @@ struct ProjectTasksView: View
                                     }
                                 }
                                 .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        if let index = sortedTasks.firstIndex(where: { $0.id == task.id }) {
+                                .contextMenu
+                                {
+                                    Button(role: .destructive)
+                                    {
+                                        if let index = sortedTasks.firstIndex(where: { $0.id == task.id })
+                                        {
                                             deleteTasks(at: IndexSet(integer: index))
                                         }
                                     } label: {
@@ -288,10 +304,11 @@ struct ProjectTasksView: View
                         Text("Oldest First").tag(SortOrder.dateOldest)
                     }
                     .pickerStyle(.inline)
-                    
+
                     Divider()
-                    
-                    Menu("Filter by Task Type") {
+
+                    Menu("Filter by Task Type")
+                    {
                         Button("Development") { sortOrder = .taskTypeDevelopment }
                         Button("Requirements") { sortOrder = .taskTypeRequirements }
                         Button("Design") { sortOrder = .taskTypeDesign }
@@ -301,23 +318,25 @@ struct ProjectTasksView: View
                         Button("Database") { sortOrder = .taskTypeDatabase }
                         Button("Defect Correction") { sortOrder = .taskTypeDefectCorrection }
                     }
-                    
-                    Menu("Filter by Priority") {
+
+                    Menu("Filter by Priority")
+                    {
                         Button("High") { sortOrder = .priorityHigh }
                         Button("Medium") { sortOrder = .priorityMedium }
                         Button("Low") { sortOrder = .priorityLow }
                         Button("Enhancement") { sortOrder = .priorityEnhancement }
                     }
-                    
-                    Menu("Filter by Status") {
+
+                    Menu("Filter by Status")
+                    {
                         Button("Unassigned") { sortOrder = .statusUnassigned }
                         Button("In Progress") { sortOrder = .statusInProgress }
                         Button("Completed") { sortOrder = .statusCompleted }
                         Button("Deferred") { sortOrder = .statusDeferred }
                     }
-                    
+
                     Divider()
-                    
+
                     Button(action: {
                         path.append(.projectDetail(project))
                     })
@@ -328,7 +347,7 @@ struct ProjectTasksView: View
                     Image(systemName: "ellipsis.circle")
                         .foregroundStyle(AppGradients.projectGradient)
                 }
-                
+
                 Button(action: createNewTask)
                 {
                     Image(systemName: "plus.circle.fill")
@@ -390,7 +409,7 @@ struct ProjectTasksView: View
             return "circle"
         }
     }
-    
+
     private func statusColor(for status: String) -> Color
     {
         switch status.lowercased()

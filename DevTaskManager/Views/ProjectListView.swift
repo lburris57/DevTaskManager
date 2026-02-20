@@ -100,7 +100,7 @@ struct ProjectListView: View
     {
         let project = Project(title: Constants.EMPTY_STRING,
                               descriptionText: Constants.EMPTY_STRING)
-        
+
         // Don't insert or save yet - let the detail view handle it
         path.append(.projectDetail(project))
     }
@@ -133,16 +133,18 @@ struct ProjectListView: View
     {
         NavigationStack(path: $path)
         {
-            ZStack {
+            ZStack
+            {
                 // Solid background to prevent content showing through
                 Color(UIColor.systemBackground)
                     .ignoresSafeArea()
-                
+
                 // Modern gradient background overlay
                 AppGradients.mainBackground
                     .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
+
+                VStack(spacing: 0)
+                {
                     // Modern header
                     ModernHeaderView(
                         icon: "folder.fill",
@@ -150,16 +152,19 @@ struct ProjectListView: View
                         subtitle: "\(filteredProjects.count) total",
                         gradientColors: [.blue, .cyan]
                     )
-                    
+
                     // Modern search bar
-                    HStack {
+                    HStack
+                    {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.secondary)
                         TextField("Search projects", text: $searchText)
                             .textFieldStyle(.plain)
-                        
-                        if !searchText.isEmpty {
-                            Button(action: { searchText = "" }) {
+
+                        if !searchText.isEmpty
+                        {
+                            Button(action: { searchText = "" })
+                            {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(.secondary)
                             }
@@ -173,21 +178,29 @@ struct ProjectListView: View
                     )
                     .padding(.horizontal, 16)
                     .padding(.bottom, 12)
-                    
+
                     if !projects.isEmpty
                     {
-                        ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(filteredProjects) { project in
-                                    NavigationLink(value: AppNavigationDestination.projectDetail(project)) {
-                                        ModernListRow {
+                        ScrollView
+                        {
+                            LazyVStack(spacing: 8)
+                            {
+                                ForEach(filteredProjects)
+                                { project in
+                                    NavigationLink(value: AppNavigationDestination.projectDetail(project))
+                                    {
+                                        ModernListRow
+                                        {
                                             ProjectRowView(project: project, path: $path)
                                         }
                                     }
                                     .buttonStyle(.plain)
-                                    .contextMenu {
-                                        Button(role: .destructive) {
-                                            if let index = filteredProjects.firstIndex(where: { $0.id == project.id }) {
+                                    .contextMenu
+                                    {
+                                        Button(role: .destructive)
+                                        {
+                                            if let index = filteredProjects.firstIndex(where: { $0.id == project.id })
+                                            {
                                                 deleteProjects(at: IndexSet(integer: index))
                                             }
                                         } label: {
@@ -220,8 +233,10 @@ struct ProjectListView: View
                 {
                     Button(action: {
                         dismiss()
-                    }) {
-                        HStack(spacing: 4) {
+                    })
+                    {
+                        HStack(spacing: 4)
+                        {
                             Image(systemName: "chevron.left")
                                 .font(.body.weight(.semibold))
                             Text("Back")
@@ -230,7 +245,7 @@ struct ProjectListView: View
                         .foregroundStyle(AppGradients.projectGradient)
                     }
                 }
-                
+
                 ToolbarItemGroup(placement: .topBarTrailing)
                 {
                     Menu
@@ -247,7 +262,7 @@ struct ProjectListView: View
                         Image(systemName: "arrow.up.arrow.down")
                             .foregroundStyle(AppGradients.projectGradient)
                     }
-                    
+
                     Button(action: createNewProject)
                     {
                         Image(systemName: "plus.circle.fill")
@@ -257,17 +272,19 @@ struct ProjectListView: View
                 }
             }
             .toolbarBackground(.visible, for: .navigationBar)
-            .navigationDestination(for: AppNavigationDestination.self) { destination in
-                switch destination {
-                case .projectTasks(let project):
+            .navigationDestination(for: AppNavigationDestination.self)
+            { destination in
+                switch destination
+                {
+                case let .projectTasks(project):
                     ProjectTasksView(project: project, path: $path)
-                case .projectDetail(let project):
+                case let .projectDetail(project):
                     ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-                case .taskDetail(let task, let context):
+                case let .taskDetail(task, context):
                     TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
-                case .userDetail(let user):
+                case let .userDetail(user):
                     UserDetailView(user: user, path: $path)
-                case .userTasks(let user):
+                case let .userTasks(user):
                     UserTasksView(user: user, path: $path)
                 }
             }
@@ -289,15 +306,17 @@ struct ProjectRowView: View
 
     var body: some View
     {
-        NavigationLink(value: AppNavigationDestination.projectTasks(project)) {
+        NavigationLink(value: AppNavigationDestination.projectTasks(project))
+        {
             VStack(alignment: .leading, spacing: 8)
             {
-                HStack {
+                HStack
+                {
                     Text(project.title.isEmpty ? "Untitled Project" : project.title)
                         .font(.headline)
-                    
+
                     Spacer()
-                    
+
                     Button(action: {
                         path.append(.projectDetail(project))
                     })

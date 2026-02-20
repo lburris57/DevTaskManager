@@ -4,20 +4,21 @@
 //
 //  Created by Larry Burris on 4/20/25.
 //
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct MainMenuView: View
 {
     @Environment(\.modelContext) var modelContext
     @State private var showSuccessToast = false
     @State private var selectedView: MenuDestination?
-    
-    enum MenuDestination: Hashable, Identifiable {
+
+    enum MenuDestination: Hashable, Identifiable
+    {
         case projectList
         case userList
         case taskList
-        
+
         var id: Self { self }
     }
 
@@ -25,7 +26,8 @@ struct MainMenuView: View
     {
         NavigationStack
         {
-            ZStack {
+            ZStack
+            {
                 // Background gradient
                 LinearGradient(
                     colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.05)],
@@ -33,10 +35,12 @@ struct MainMenuView: View
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
+
+                VStack(spacing: 0)
+                {
                     // Header section with app title and subtitle
-                    VStack(spacing: 8) {
+                    VStack(spacing: 8)
+                    {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 60))
                             .foregroundStyle(
@@ -47,21 +51,23 @@ struct MainMenuView: View
                                 )
                             )
                             .padding(.top, 20)
-                        
+
                         Text("Dev Task Manager")
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(.primary)
-                        
+
                         Text("Organize your development workflow")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .padding(.bottom, 10)
                     }
                     .padding(.vertical, 20)
-                    
+
                     // Main menu cards
-                    ScrollView {
-                        VStack(spacing: 16) {
+                    ScrollView
+                    {
+                        VStack(spacing: 16)
+                        {
                             // Projects Card
                             MenuCard(
                                 icon: "folder.fill",
@@ -70,7 +76,7 @@ struct MainMenuView: View
                                 gradientColors: [.blue, .cyan],
                                 action: { selectedView = .projectList }
                             )
-                            
+
                             // Users Card
                             MenuCard(
                                 icon: "person.3.fill",
@@ -79,7 +85,7 @@ struct MainMenuView: View
                                 gradientColors: [.purple, .pink],
                                 action: { selectedView = .userList }
                             )
-                            
+
                             // Tasks Card
                             MenuCard(
                                 icon: "checklist",
@@ -88,28 +94,30 @@ struct MainMenuView: View
                                 gradientColors: [.orange, .red],
                                 action: { selectedView = .taskList }
                             )
-                            
+
                             #if DEBUG
-                            // Developer Tools Card (Debug only)
-                            MenuCard(
-                                icon: "hammer.fill",
-                                title: "Developer Tools",
-                                subtitle: "Load sample data",
-                                gradientColors: [.green, .mint],
-                                action: loadSampleData
-                            )
+                                // Developer Tools Card (Debug only)
+                                MenuCard(
+                                    icon: "hammer.fill",
+                                    title: "Developer Tools",
+                                    subtitle: "Load sample data",
+                                    gradientColors: [.green, .mint],
+                                    action: loadSampleData
+                                )
                             #endif
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
                     }
-                    
+
                     Spacer()
                 }
             }
             .navigationBarHidden(true)
-            .fullScreenCover(item: $selectedView) { destination in
-                switch destination {
+            .fullScreenCover(item: $selectedView)
+            { destination in
+                switch destination
+                {
                 case .projectList:
                     ProjectListView()
                 case .userList:
@@ -124,13 +132,15 @@ struct MainMenuView: View
             )
         }
     }
-    
+
     // Load sample data with visual feedback
-    private func loadSampleData() {
+    private func loadSampleData()
+    {
         SampleData.createSampleData(in: modelContext)
-        
+
         // Show success toast (auto-dismisses after 3 seconds)
-        withAnimation {
+        withAnimation
+        {
             showSuccessToast = true
         }
     }
@@ -138,20 +148,25 @@ struct MainMenuView: View
 
 // MARK: - MenuCard Component
 
-struct MenuCard: View {
+struct MenuCard: View
+{
     let icon: String
     let title: String
     let subtitle: String
     let gradientColors: [Color]
     let action: () -> Void
-    
+
     @State private var isPressed = false
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
+
+    var body: some View
+    {
+        Button(action: action)
+        {
+            HStack(spacing: 16)
+            {
                 // Icon with gradient background
-                ZStack {
+                ZStack
+                {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(
                             LinearGradient(
@@ -162,25 +177,26 @@ struct MenuCard: View {
                         )
                         .frame(width: 60, height: 60)
                         .shadow(color: gradientColors.first?.opacity(0.3) ?? .clear, radius: 8, x: 0, y: 4)
-                    
+
                     Image(systemName: icon)
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(.white)
                 }
-                
+
                 // Title and subtitle
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 4)
+                {
                     Text(title)
                         .font(.system(size: 20, weight: .semibold, design: .rounded))
                         .foregroundColor(.primary)
-                    
+
                     Text(subtitle)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 // Chevron
                 Image(systemName: "chevron.right")
                     .font(.system(size: 16, weight: .semibold))
@@ -197,13 +213,17 @@ struct MenuCard: View {
         .buttonStyle(.plain)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    withAnimation(.easeInOut(duration: 0.1)) {
+                .onChanged
+                { _ in
+                    withAnimation(.easeInOut(duration: 0.1))
+                    {
                         isPressed = true
                     }
                 }
-                .onEnded { _ in
-                    withAnimation(.easeInOut(duration: 0.1)) {
+                .onEnded
+                { _ in
+                    withAnimation(.easeInOut(duration: 0.1))
+                    {
                         isPressed = false
                     }
                 }
@@ -211,6 +231,7 @@ struct MenuCard: View {
     }
 }
 
-#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier())) {
+#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier()))
+{
     MainMenuView()
 }
