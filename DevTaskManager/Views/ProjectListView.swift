@@ -18,6 +18,9 @@ struct ProjectListView: View
     @State private var sortOrder = SortOrder.titleAscending
     @State private var showDeleteToast = false
     @State private var deletedProjectName = ""
+    
+    // Filter states (for future filtering)
+    @State private var selectedStatus: String? = nil
 
     @Query var projects: [Project]
 
@@ -29,12 +32,29 @@ struct ProjectListView: View
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
+    
+    // Computed property for active filter badges
+    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge] {
+        var badges: [FilterBadgesContainer.FilterBadge] = []
+        
+        // Add badge for status filter if active
+        if let status = selectedStatus {
+            badges.append(.init(
+                text: "Status: \(status)",
+                icon: "checkmark.circle",
+                onClear: { selectedStatus = nil }
+            ))
+        }
+        
+        return badges
+    }
 
     // Filtered and sorted projects
     var filteredProjects: [Project]
     {
-        let filtered: [Project]
+        var filtered: [Project]
 
+        // Apply search filter
         if searchText.isEmpty
         {
             filtered = projects
@@ -42,6 +62,13 @@ struct ProjectListView: View
         else
         {
             filtered = projects.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        }
+        
+        // Apply status filter if selected (example - customize based on your needs)
+        if let status = selectedStatus {
+            // Example: You could filter by completion percentage, task count, etc.
+            // For now, this is a placeholder for when you add actual status filtering
+            // filtered = filtered.filter { /* your filter logic */ }
         }
 
         // Apply sorting
@@ -152,6 +179,9 @@ struct ProjectListView: View
                         subtitle: "\(filteredProjects.count) total",
                         gradientColors: [.blue, .cyan]
                     )
+                    
+                    // Filter badges - shows active filters
+                    FilterBadgesContainer(badges: activeFilterBadges)
 
                     // Modern search bar
                     HStack

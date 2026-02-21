@@ -37,6 +37,43 @@ struct UserListView: View
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
+    
+    // Computed property for active filter badges
+    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge] {
+        var badges: [FilterBadgesContainer.FilterBadge] = []
+        
+        // Add badge for role filters (not sort options)
+        switch sortOrder {
+        case .roleAdministrator:
+            badges.append(.init(
+                text: "Role: Administrator",
+                icon: "person.badge.key",
+                onClear: { sortOrder = .nameAscending }
+            ))
+        case .roleDeveloper:
+            badges.append(.init(
+                text: "Role: Developer",
+                icon: "person.badge.key",
+                onClear: { sortOrder = .nameAscending }
+            ))
+        case .roleBusinessAnalyst:
+            badges.append(.init(
+                text: "Role: Business Analyst",
+                icon: "person.badge.key",
+                onClear: { sortOrder = .nameAscending }
+            ))
+        case .roleValidator:
+            badges.append(.init(
+                text: "Role: Validator",
+                icon: "person.badge.key",
+                onClear: { sortOrder = .nameAscending }
+            ))
+        default:
+            break // No badge for sort-only options
+        }
+        
+        return badges
+    }
 
     // Computed property for sorted users
     private var sortedUsers: [User]
@@ -113,6 +150,9 @@ struct UserListView: View
                         subtitle: "\(sortedUsers.count) team members",
                         gradientColors: [.purple, .pink]
                     )
+                    
+                    // Filter badges - shows active role filters
+                    FilterBadgesContainer(badges: activeFilterBadges)
 
                     if !users.isEmpty
                     {
