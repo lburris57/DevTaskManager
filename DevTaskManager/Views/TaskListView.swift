@@ -524,13 +524,13 @@ struct TaskListView: View
         switch destination
         {
             case let .taskDetail(task, context):
-                TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
+                TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context, detailSelection: detailSelection)
             case let .projectDetail(project):
-                ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
+                ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() }, detailSelection: detailSelection)
             case let .userDetail(user):
-                UserDetailView(user: user, path: $path)
+                UserDetailView(user: user, path: $path, detailSelection: detailSelection)
             case let .projectTasks(project):
-                ProjectTasksView(project: project, path: $path)
+                ProjectTasksView(project: project, path: $path, detailSelection: detailSelection)
             case let .userTasks(user):
                 UserTasksView(user: user, path: $path)
         }

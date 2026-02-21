@@ -14,6 +14,9 @@ struct UserDetailView: View
 
     //  This is the navigation path sent from the list view
     @Binding var path: [AppNavigationDestination]
+    
+    // Optional binding for macOS NavigationSplitView detail column
+    var detailSelection: Binding<AppNavigationDestination?>?
 
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
@@ -26,31 +29,28 @@ struct UserDetailView: View
     @Query(sort: \Role.roleName) var roles: [Role]
 
     // Initialize state from user
-    init(user: User, path: Binding<[AppNavigationDestination]>)
+    init(user: User, path: Binding<[AppNavigationDestination]>, detailSelection: Binding<AppNavigationDestination?>? = nil)
     {
         _user = Bindable(wrappedValue: user)
         _path = path
+        self.detailSelection = detailSelection
         _isNewUser = State(initialValue: user.firstName == Constants.EMPTY_STRING && user.lastName == Constants.EMPTY_STRING)
-    }
-
-    //  Populate role from passed in User
-    func populateInitialSelectedRoleValue()
-    {
-        print("🔄 Populating initial role for: \(user.fullName())")
-        print("   Current roles in user object: \(user.roles.map { $0.roleName })")
-
+        
+        // Initialize selectedRole immediately to avoid picker warnings
+        let initialRole: String
         if let userRole = user.roles.first?.roleName, !userRole.isEmpty, userRole != RoleNamesEnum.all.title
         {
-            selectedRole = userRole
-            print("   ✅ Set selectedRole to existing role: \(selectedRole)")
+            initialRole = userRole
         }
         else
         {
             // Set default role to first valid option (excluding "All")
-            selectedRole = RoleNamesEnum.allCases.first(where: { $0 != .all })?.title ?? Constants.EMPTY_STRING
-            print("   ⚠️ No valid role found, defaulting to: \(selectedRole)")
+            initialRole = RoleNamesEnum.allCases.first(where: { $0 != .all })?.title ?? Constants.EMPTY_STRING
         }
+        _selectedRole = State(initialValue: initialRole)
     }
+
+
 
     //  Check whether to enable/disable Save button
     func validateFields() -> Bool
@@ -67,11 +67,16 @@ struct UserDetailView: View
     //  Clean up if needed - delete unsaved new users
     func validateUser()
     {
-        // If this is a new user that wasn't saved, delete it
+        // If this is a new user that was never saved, we need to ensure it's not in the context
+        // This handles the case where user cancels or navigates away without saving
         if isNewUser && !userSaved
         {
-            modelContext.delete(user)
-            try? modelContext.save()
+            // Check if user is in the model context and remove it
+            if modelContext.model(for: user.id) != nil
+            {
+                modelContext.delete(user)
+                try? modelContext.save()
+            }
         }
     }
 
@@ -240,7 +245,17 @@ struct UserDetailView: View
             ToolbarItem(placement: .navigation)
             {
                 Button(action: {
+                    validateUser() // Clean up unsaved users before navigating back
+                    #if os(macOS)
+                    // On macOS with NavigationSplitView, clear the detail selection
+                    if let detailSelection = detailSelection {
+                        detailSelection.wrappedValue = nil
+                    } else {
+                        dismiss()
+                    }
+                    #else
                     dismiss()
+                    #endif
                 })
                 {
                     HStack(spacing: 4)
@@ -258,7 +273,17 @@ struct UserDetailView: View
             {
                 Button("Cancel")
                 {
+                    validateUser() // Clean up unsaved users before dismissing
+                    #if os(macOS)
+                    // On macOS with NavigationSplitView, clear the detail selection
+                    if let detailSelection = detailSelection {
+                        detailSelection.wrappedValue = nil
+                    } else {
+                        dismiss()
+                    }
+                    #else
                     dismiss()
+                    #endif
                 }
                 .foregroundStyle(AppGradients.userGradient)
             }
@@ -268,7 +293,6 @@ struct UserDetailView: View
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         #endif
-        .onAppear(perform: populateInitialSelectedRoleValue)
         .onDisappear(perform: validateUser)
     }
 }

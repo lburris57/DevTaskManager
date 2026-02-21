@@ -14,6 +14,9 @@ struct ProjectTasksView: View
 
     @Bindable var project: Project
     @Binding var path: [AppNavigationDestination]
+    
+    // Optional binding for macOS NavigationSplitView detail column
+    var detailSelection: Binding<AppNavigationDestination?>?
 
     @State private var showDeleteToast = false
     @State private var deletedTaskName = ""
@@ -273,7 +276,31 @@ struct ProjectTasksView: View
         )
 
         // Don't insert or save yet - let the detail view handle it
+        #if os(macOS)
+        if let detailSelection = detailSelection {
+            // On macOS with NavigationSplitView, update the detail selection
+            detailSelection.wrappedValue = .taskDetail(task, context: .projectTasksList)
+        } else {
+            path.append(.taskDetail(task, context: .projectTasksList))
+        }
+        #else
         path.append(.taskDetail(task, context: .projectTasksList))
+        #endif
+    }
+    
+    // Navigate to task detail
+    func navigateToTask(_ task: Task)
+    {
+        #if os(macOS)
+        if let detailSelection = detailSelection {
+            // On macOS with NavigationSplitView, update the detail selection
+            detailSelection.wrappedValue = .taskDetail(task, context: .projectTasksList)
+        } else {
+            path.append(.taskDetail(task, context: .projectTasksList))
+        }
+        #else
+        path.append(.taskDetail(task, context: .projectTasksList))
+        #endif
     }
 
     var body: some View
@@ -309,73 +336,12 @@ struct ProjectTasksView: View
                         {
                             ForEach(sortedTasks)
                             { task in
-                                NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .projectTasksList))
-                                {
-                                    ModernListRow
-                                    {
-                                        VStack(alignment: .leading, spacing: 8)
-                                        {
-                                            // Task Name with Priority
-                                            HStack(spacing: 8)
-                                            {
-                                                Image(systemName: priorityIcon(for: task.taskPriority))
-                                                    .font(.headline)
-                                                    .foregroundStyle(priorityColor(for: task.taskPriority))
-
-                                                Text(task.taskName.isEmpty ? "Untitled Task" : task.taskName)
-                                                    .font(.headline)
-                                            }
-
-                                            // Assigned User (if any)
-                                            if let assignedUser = task.assignedUser
-                                            {
-                                                HStack
-                                                {
-                                                    Image(systemName: "person.fill")
-                                                        .font(.caption)
-                                                        .foregroundStyle(.green)
-                                                    if let dateAssigned = task.dateAssigned
-                                                    {
-                                                        Text("Assigned to \(assignedUser.fullName()) on \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
-                                                            .font(.caption)
-                                                            .foregroundStyle(.green)
-                                                    }
-                                                    else
-                                                    {
-                                                        Text("Assigned to \(assignedUser.fullName())")
-                                                            .font(.caption)
-                                                            .foregroundStyle(.green)
-                                                    }
-                                                }
-                                            }
-
-                                            // Task Details
-                                            HStack(spacing: 12)
-                                            {
-                                                Label(task.taskType, systemImage: "hammer.fill")
-                                                    .font(.caption)
-                                                    .foregroundStyle(.secondary)
-
-                                                Spacer()
-
-                                                Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
-                                                    .font(.caption)
-                                                    .foregroundStyle(statusColor(for: task.taskStatus))
-                                                    .labelStyle(.titleAndIcon)
-                                            }
-
-                                            // Date Created
-                                            HStack
-                                            {
-                                                Image(systemName: "calendar")
-                                                    .font(.caption2)
-                                                    .foregroundStyle(.secondary)
-                                                Text(task.dateCreated.formatted(date: .abbreviated, time: .omitted))
-                                                    .font(.caption)
-                                                    .foregroundStyle(.secondary)
-                                            }
-                                        }
-                                    }
+                                #if os(macOS)
+                                // macOS: Use button with detail selection for NavigationSplitView
+                                Button(action: {
+                                    navigateToTask(task)
+                                }) {
+                                    taskRow(for: task)
                                 }
                                 .buttonStyle(.plain)
                                 .contextMenu
@@ -390,6 +356,26 @@ struct ProjectTasksView: View
                                         Label("Delete", systemImage: "trash")
                                     }
                                 }
+                                #else
+                                // iOS: Use NavigationLink for full-screen presentation
+                                NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .projectTasksList))
+                                {
+                                    taskRow(for: task)
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu
+                                {
+                                    Button(role: .destructive)
+                                    {
+                                        if let index = sortedTasks.firstIndex(where: { $0.id == task.id })
+                                        {
+                                            deleteTasks(at: IndexSet(integer: index))
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                #endif
                             }
                         }
                         .padding(.top, 8)
@@ -1014,6 +1000,77 @@ struct ProjectTasksView: View
     }
 
     // MARK: - Helper Functions
+    
+    // Helper function to create task row
+    @ViewBuilder
+    private func taskRow(for task: Task) -> some View
+    {
+        ModernListRow
+        {
+            VStack(alignment: .leading, spacing: 8)
+            {
+                // Task Name with Priority
+                HStack(spacing: 8)
+                {
+                    Image(systemName: priorityIcon(for: task.taskPriority))
+                        .font(.headline)
+                        .foregroundStyle(priorityColor(for: task.taskPriority))
+
+                    Text(task.taskName.isEmpty ? "Untitled Task" : task.taskName)
+                        .font(.headline)
+                }
+
+                // Assigned User (if any)
+                if let assignedUser = task.assignedUser
+                {
+                    HStack
+                    {
+                        Image(systemName: "person.fill")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                        if let dateAssigned = task.dateAssigned
+                        {
+                            Text("Assigned to \(assignedUser.fullName()) on \(dateAssigned.formatted(date: .abbreviated, time: .omitted))")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                        }
+                        else
+                        {
+                            Text("Assigned to \(assignedUser.fullName())")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                        }
+                    }
+                }
+
+                // Task Details
+                HStack(spacing: 12)
+                {
+                    Label(task.taskType, systemImage: "hammer.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Label(task.taskStatus, systemImage: statusIcon(for: task.taskStatus))
+                        .font(.caption)
+                        .foregroundStyle(statusColor(for: task.taskStatus))
+                        .labelStyle(.titleAndIcon)
+                }
+
+                // Date Created
+                HStack
+                {
+                    Image(systemName: "calendar")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(task.dateCreated.formatted(date: .abbreviated, time: .omitted))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
 
     private func priorityIcon(for priority: String) -> String
     {

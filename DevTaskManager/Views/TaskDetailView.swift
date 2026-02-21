@@ -20,6 +20,9 @@ struct TaskDetailView: View
 
     // Track where we came from for proper navigation
     var sourceContext: TaskDetailSourceContext = .taskList
+    
+    // Optional binding for macOS NavigationSplitView detail column
+    var detailSelection: Binding<AppNavigationDestination?>?
 
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
@@ -39,18 +42,19 @@ struct TaskDetailView: View
     @State private var taskSaved = false
 
     // Initialize state from task
-    init(task: Task, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil, sourceContext: TaskDetailSourceContext = .taskList)
+    init(task: Task, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil, sourceContext: TaskDetailSourceContext = .taskList, detailSelection: Binding<AppNavigationDestination?>? = nil)
     {
         _task = Bindable(wrappedValue: task)
         _path = path
         
         self.onDismissToMain = onDismissToMain
         self.sourceContext = sourceContext
+        self.detailSelection = detailSelection
 
-        // Initialize state values from task
-        _selectedTaskType = State(initialValue: task.taskType)
-        _selectedTaskStatus = State(initialValue: task.taskStatus)
-        _selectedTaskPriority = State(initialValue: task.taskPriority)
+        // Initialize state values from task (with defaults for empty strings)
+        _selectedTaskType = State(initialValue: task.taskType.isEmpty ? TaskTypeEnum.development.title : task.taskType)
+        _selectedTaskStatus = State(initialValue: task.taskStatus.isEmpty ? TaskStatusEnum.unassigned.title : task.taskStatus)
+        _selectedTaskPriority = State(initialValue: task.taskPriority.isEmpty ? TaskPriorityEnum.medium.title : task.taskPriority)
         _selectedProject = State(initialValue: task.project)
         _selectedUser = State(initialValue: task.assignedUser)
         _isNewTask = State(initialValue: task.taskName == Constants.EMPTY_STRING)
@@ -72,10 +76,20 @@ struct TaskDetailView: View
         return true
     }
 
-    //  Clean up if needed (no-op now since task isn't inserted until saved)
+    //  Clean up if needed - delete unsaved new tasks
     func validateTask()
     {
-        // Task is only inserted when saved, so no cleanup needed
+        // If this is a new task that was never saved, we need to ensure it's not in the context
+        // This handles the case where user cancels or navigates away without saving
+        if isNewTask && !taskSaved
+        {
+            // Check if task is in the model context and remove it
+            if modelContext.model(for: task.id) != nil
+            {
+                modelContext.delete(task)
+                try? modelContext.save()
+            }
+        }
     }
 
     //  Set the last updated date value when saving changes
@@ -113,6 +127,9 @@ struct TaskDetailView: View
         }
 
         try? modelContext.save()
+        
+        // Mark task as saved so validateTask won't delete it
+        taskSaved = true
     }
 
     var body: some View
@@ -375,7 +392,37 @@ struct TaskDetailView: View
         {
             Button("Cancel")
             {
+                validateTask() // Clean up unsaved tasks before dismissing
+                
+                #if os(macOS)
+                // On macOS with NavigationSplitView
+                if let detailSelection = detailSelection {
+                    // Navigate back to the appropriate list view based on context
+                    switch sourceContext {
+                    case .projectTasksList:
+                        // Return to project tasks view
+                        if let project = task.project {
+                            detailSelection.wrappedValue = .projectTasks(project)
+                        } else {
+                            detailSelection.wrappedValue = nil
+                        }
+                    case .userTasksList:
+                        // Return to user tasks view
+                        if let user = task.assignedUser {
+                            detailSelection.wrappedValue = .userTasks(user)
+                        } else {
+                            detailSelection.wrappedValue = nil
+                        }
+                    case .taskList:
+                        // For general task list, clear selection
+                        detailSelection.wrappedValue = nil
+                    }
+                } else {
+                    dismiss()
+                }
+                #else
                 dismiss()
+                #endif
             }
             .foregroundStyle(AppGradients.taskGradient)
         }
@@ -424,23 +471,66 @@ struct TaskDetailView: View
 
     private func navigateBackOneLevel()
     {
-        if !path.isEmpty
-        {
+        validateTask() // Clean up unsaved tasks before navigating
+        #if os(macOS)
+        // On macOS with NavigationSplitView
+        if let detailSelection = detailSelection {
+            // Navigate back to the appropriate list view based on context
+            switch sourceContext {
+            case .projectTasksList:
+                // Return to project tasks view
+                if let project = task.project {
+                    detailSelection.wrappedValue = .projectTasks(project)
+                } else {
+                    detailSelection.wrappedValue = nil
+                }
+            case .userTasksList:
+                // Return to user tasks view
+                if let user = task.assignedUser {
+                    detailSelection.wrappedValue = .userTasks(user)
+                } else {
+                    detailSelection.wrappedValue = nil
+                }
+            case .taskList:
+                // For general task list, clear selection
+                detailSelection.wrappedValue = nil
+            }
+        } else {
+            if !path.isEmpty {
+                path.removeLast()
+            }
+            dismiss()
+        }
+        #else
+        if !path.isEmpty {
             path.removeLast()
         }
+        dismiss()
+        #endif
     }
 
     private func navigateToMainMenu()
     {
-        path.removeAll()
-        
-        if let onDismissToMain = onDismissToMain
-        {
-            onDismissToMain()
+        validateTask() // Clean up unsaved tasks before navigating
+        #if os(macOS)
+        // On macOS with NavigationSplitView, clear the detail selection
+        if let detailSelection = detailSelection {
+            detailSelection.wrappedValue = nil
+        } else {
+            path.removeAll()
+            if let onDismissToMain = onDismissToMain {
+                onDismissToMain()
+            } else {
+                dismiss()
+            }
         }
-        else
-        {
+        #else
+        path.removeAll()
+        if let onDismissToMain = onDismissToMain {
+            onDismissToMain()
+        } else {
             dismiss()
         }
+        #endif
     }
 }

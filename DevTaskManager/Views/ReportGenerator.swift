@@ -94,8 +94,6 @@ class ReportGenerator
 {
     static func generateReport(context: ModelContext, startDate: Date? = nil, endDate: Date? = nil) throws -> ReportData
     {
-        print("🔍 ========== GENERATING REPORT ==========")
-
         // Fetch all data with relationships
         var projectDescriptor = FetchDescriptor<Project>()
         projectDescriptor.relationshipKeyPathsForPrefetching = [\.tasks, \.users]
@@ -133,8 +131,6 @@ class ReportGenerator
         let projects = try context.fetch(projectDescriptor)
         let users = try context.fetch(userDescriptor)
         let tasks = try context.fetch(taskDescriptor)
-
-        print("✅ Fetched \(users.count) users from database")
 
         // Generate project summaries (filter tasks by date range)
         let projectSummaries = projects.map
@@ -200,20 +196,6 @@ class ReportGenerator
 
             // Force access to roles to ensure they're loaded
             _ = user.roles.count
-
-            // Debug: Log role information
-            print("📊 Report - User: \(user.fullName()), Roles count: \(user.roles.count)")
-            if !user.roles.isEmpty
-            {
-                for role in user.roles
-                {
-                    print("   Role: \(role.roleName)")
-                }
-            }
-            else
-            {
-                print("   ⚠️ NO ROLES FOUND for \(user.fullName())!")
-            }
 
             // Get role names - join multiple roles if present, or show "No Role"
             let roleNames: String

@@ -420,13 +420,13 @@ struct MainMenuView: View
         switch destination
         {
         case let .taskDetail(task, context):
-            TaskDetailView(task: task, path: .constant([]), onDismissToMain: {}, sourceContext: context)
+            TaskDetailView(task: task, path: .constant([]), onDismissToMain: {}, sourceContext: context, detailSelection: $selectedDetailItem)
         case let .projectDetail(project):
-            ProjectDetailView(project: project, path: .constant([]), onDismissToMain: {})
+            ProjectDetailView(project: project, path: .constant([]), onDismissToMain: {}, detailSelection: $selectedDetailItem)
         case let .userDetail(user):
-            UserDetailView(user: user, path: .constant([]))
+            UserDetailView(user: user, path: .constant([]), detailSelection: $selectedDetailItem)
         case let .projectTasks(project):
-            ProjectTasksView(project: project, path: .constant([]))
+            ProjectTasksView(project: project, path: .constant([]), detailSelection: $selectedDetailItem)
         case let .userTasks(user):
             UserTasksView(user: user, path: .constant([]))
         }
@@ -472,16 +472,7 @@ struct MenuCard: View
 
     var body: some View
     {
-        #if DEBUG
-        let _ = print("🎯 Platform check:")
-        #if os(macOS)
-        let _ = print("✅ os(macOS) = true - Using macOSLayout")
-        #else
-        let _ = print("❌ os(macOS) = false - Using iOSLayout")
-        #endif
-        #endif
-
-        return Button(action: action)
+        Button(action: action)
         {
             HStack(spacing: 16)
             {

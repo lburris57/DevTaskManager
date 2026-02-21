@@ -17,6 +17,9 @@ struct ProjectDetailView: View
 
     // Optional callback to dismiss to main menu
     var onDismissToMain: (() -> Void)?
+    
+    // Optional binding for macOS NavigationSplitView detail column
+    var detailSelection: Binding<AppNavigationDestination?>?
 
     @Environment(\.modelContext) var modelContext
     @Environment(\.colorScheme) var colorScheme
@@ -26,11 +29,12 @@ struct ProjectDetailView: View
     @State private var projectSaved = false
 
     // Initialize state from project
-    init(project: Project, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil)
+    init(project: Project, path: Binding<[AppNavigationDestination]>, onDismissToMain: (() -> Void)? = nil, detailSelection: Binding<AppNavigationDestination?>? = nil)
     {
         _project = Bindable(wrappedValue: project)
         _path = path
         self.onDismissToMain = onDismissToMain
+        self.detailSelection = detailSelection
         _isNewProject = State(initialValue: project.title == Constants.EMPTY_STRING && project.descriptionText == Constants.EMPTY_STRING)
     }
 
@@ -197,7 +201,23 @@ struct ProjectDetailView: View
         {
             Button("Cancel")
             {
+                Log.info("Cancel button pressed")
+                Log.info("detailSelection exists: \(detailSelection != nil)")
+                
+                validateProject() // Clean up unsaved projects before dismissing
+                
+                #if os(macOS)
+                // On macOS with NavigationSplitView, clear the detail selection
+                if let detailSelection = detailSelection {
+                    Log.info("Clearing detailSelection on macOS")
+                    detailSelection.wrappedValue = nil
+                } else {
+                    Log.info("No detailSelection, calling dismiss()")
+                    dismiss()
+                }
+                #else
                 dismiss()
+                #endif
             }
             .foregroundStyle(AppGradients.projectGradient)
         }
@@ -238,23 +258,47 @@ struct ProjectDetailView: View
 
     private func navigateBackOneLevel()
     {
-        if !path.isEmpty
-        {
+        validateProject() // Clean up unsaved projects before navigating
+        #if os(macOS)
+        // On macOS with NavigationSplitView, clear the detail selection
+        if let detailSelection = detailSelection {
+            detailSelection.wrappedValue = nil
+        } else {
+            if !path.isEmpty {
+                path.removeLast()
+            }
+            dismiss()
+        }
+        #else
+        if !path.isEmpty {
             path.removeLast()
         }
         dismiss()
+        #endif
     }
 
     private func navigateToMainMenu()
     {
-        path.removeAll()
-        if let onDismissToMain = onDismissToMain
-        {
-            onDismissToMain()
+        validateProject() // Clean up unsaved projects before navigating
+        #if os(macOS)
+        // On macOS with NavigationSplitView, clear the detail selection
+        if let detailSelection = detailSelection {
+            detailSelection.wrappedValue = nil
+        } else {
+            path.removeAll()
+            if let onDismissToMain = onDismissToMain {
+                onDismissToMain()
+            } else {
+                dismiss()
+            }
         }
-        else
-        {
+        #else
+        path.removeAll()
+        if let onDismissToMain = onDismissToMain {
+            onDismissToMain()
+        } else {
             dismiss()
         }
+        #endif
     }
 }
