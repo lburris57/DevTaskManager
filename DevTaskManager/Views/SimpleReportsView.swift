@@ -611,89 +611,61 @@ struct SimpleReportsView: View
             {
                 sectionHeader(icon: "person.2.fill", title: "Team Productivity")
                 
-                // Custom Legend
-                HStack(spacing: 20) {
-                    // Assigned Tasks Legend
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(.orange.gradient)
-                            .frame(width: 12, height: 12)
-                        Text("Assigned")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    // Completed Tasks Legend
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(.green.gradient)
-                            .frame(width: 12, height: 12)
-                        Text("Completed")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.horizontal, 16)
-                
-                ModernFormCard
-                {
-                    VStack(alignment: .leading, spacing: 16)
+                ForEach(topUsers) { user in
+                    ModernFormCard
                     {
-                        Chart(topUsers) { user in
-                            BarMark(
-                                x: .value("Assigned", user.assignedTaskCount),
-                                y: .value("User", user.name),
-                                stacking: .standard
-                            )
-                            .foregroundStyle(.orange.gradient)
-                            .position(by: .value("Type", "Assigned"))
-                            .annotation(position: .trailing, alignment: .leading) {
-                                Text("\(user.assignedTaskCount)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                        VStack(alignment: .leading, spacing: 16)
+                        {
+                            // User name and role as subsection header
+                            Text("\(user.name) - \(user.roleName)")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
                             
-                            BarMark(
-                                x: .value("Completed", user.completedTaskCount),
-                                y: .value("User", user.name),
-                                stacking: .standard
-                            )
-                            .foregroundStyle(.green.gradient)
-                            .position(by: .value("Type", "Completed"))
-                            .annotation(position: .trailing, alignment: .leading) {
-                                if user.completedTaskCount > 0 {
+                            Chart {
+                                // Assigned tasks bar
+                                BarMark(
+                                    x: .value("Count", user.assignedTaskCount),
+                                    y: .value("Type", "Assigned")
+                                )
+                                .foregroundStyle(.orange.gradient)
+                                .annotation(position: .trailing) {
+                                    Text("\(user.assignedTaskCount)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                // Completed tasks bar
+                                BarMark(
+                                    x: .value("Count", user.completedTaskCount),
+                                    y: .value("Type", "Completed")
+                                )
+                                .foregroundStyle(.green.gradient)
+                                .annotation(position: .trailing) {
                                     Text("\(user.completedTaskCount)")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
                             }
-                        }
-                        .frame(height: CGFloat(topUsers.count * 50 + 100))
-                        .chartXAxis {
-                            AxisMarks(position: .bottom)
-                        }
-                        .chartYAxis {
-                            AxisMarks(position: .leading) { value in
-                                AxisValueLabel {
-                                    if let userName = value.as(String.self) {
-                                        Text(userName)
-                                            .font(.caption)
-                                            .lineLimit(1)
-                                    }
-                                }
+                            .frame(height: 80)
+                            .chartXAxis {
+                                AxisMarks(position: .bottom)
+                            }
+                            .chartYAxis {
+                                AxisMarks(position: .leading)
                             }
                         }
-                        .chartLegend(.hidden) // Hide built-in legend since we have custom one
-                        
-                        if usersWithTasks.count > 10
-                        {
-                            Text("Showing top 10 of \(usersWithTasks.count) users with tasks")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .padding(.top, 4)
-                        }
+                        .padding(.vertical, 8)
                     }
-                    .padding(.vertical, 8)
+                }
+                
+                if usersWithTasks.count > 10
+                {
+                    Text("Showing top 10 of \(usersWithTasks.count) users with tasks")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
                 }
             }
         }
