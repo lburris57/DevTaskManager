@@ -230,10 +230,97 @@ struct ProjectListView: View
 
     var body: some View
     {
+        #if os(macOS)
+        // macOS: Plain view without NavigationStack (participates in NavigationSplitView)
+        projectListContent
+        #else
+        // iOS: Wrapped in NavigationStack for full-screen presentation
         NavigationStack(path: $path)
         {
-            ZStack
-            {
+            projectListContent
+                .navigationBarBackButtonHidden(true)
+                .toolbar
+                {
+                    ToolbarItem(placement: .navigationBarLeading)
+                    {
+                        Button(action: {
+                            dismiss()
+                        })
+                        {
+                            HStack(spacing: 4)
+                            {
+                                Image(systemName: "chevron.left")
+                                    .font(.body.weight(.semibold))
+                                Text("Back")
+                                    .font(.body)
+                            }
+                            .foregroundStyle(AppGradients.projectGradient)
+                        }
+                    }
+
+                    ToolbarItemGroup(placement: .primaryAction)
+                    {
+                        // Only show sort menu when there are projects
+                        if !projects.isEmpty
+                        {
+                            Menu
+                            {
+                                Picker("Sort by", selection: $sortOrder)
+                                {
+                                    ForEach(SortOrder.allCases, id: \.self)
+                                    {
+                                        order in
+                                        Text(order.rawValue).tag(order)
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "arrow.up.arrow.down")
+                                    .foregroundStyle(AppGradients.projectGradient)
+                            }
+                        }
+
+                        Button(action: createNewProject)
+                        {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(AppGradients.projectGradient)
+                        }
+                    }
+                }
+                .platformNavigationBar()
+                .navigationDestination(for: AppNavigationDestination.self)
+                {
+                    destination in
+                    
+                    switch destination
+                    {
+                        case let .projectTasks(project):
+                            ProjectTasksView(project: project, path: $path)
+                        case let .projectDetail(project):
+                            ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
+                        case let .taskDetail(task, context):
+                            TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
+                        case let .userDetail(user):
+                            UserDetailView(user: user, path: $path)
+                        case let .userTasks(user):
+                            UserTasksView(user: user, path: $path)
+                    }
+                }
+        }
+        .successToast(
+            isShowing: $showDeleteToast,
+            message: "'\(deletedProjectName)' deleted"
+        )
+        #endif
+    }
+    
+    // MARK: - Project List Content
+    
+    @ViewBuilder
+    private var projectListContent: some View
+    {
+        ZStack
+        {
                 // Solid background to prevent content showing through
                 Color.systemBackground
                     .platformIgnoreSafeArea()
@@ -309,80 +396,59 @@ struct ProjectListView: View
                     }
                 }
             }
-            .navigationBarBackButtonHidden(true)
-            .toolbar
+        #if os(macOS)
+        .toolbar
+        {
+            ToolbarItemGroup(placement: .automatic)
             {
-                ToolbarItem(placement: .navigation)
+                // Only show sort menu when there are projects
+                if !projects.isEmpty
                 {
-                    Button(action: {
-                        dismiss()
-                    })
+                    Menu
                     {
-                        HStack(spacing: 4)
+                        Picker("Sort by", selection: $sortOrder)
                         {
-                            Image(systemName: "chevron.left")
-                                .font(.body.weight(.semibold))
-                            Text("Back")
-                                .font(.body)
-                        }
-                        .foregroundStyle(AppGradients.projectGradient)
-                    }
-                }
-
-                ToolbarItemGroup(placement: .primaryAction)
-                {
-                    // Only show sort menu when there are projects
-                    if !projects.isEmpty
-                    {
-                        Menu
-                        {
-                            Picker("Sort by", selection: $sortOrder)
+                            ForEach(SortOrder.allCases, id: \.self)
                             {
-                                ForEach(SortOrder.allCases, id: \.self)
-                                {
-                                    order in
-                                    Text(order.rawValue).tag(order)
-                                }
+                                order in
+                                Text(order.rawValue).tag(order)
                             }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .foregroundStyle(AppGradients.projectGradient)
                         }
+                    } label: {
+                        Label("Sort", systemImage: "arrow.up.arrow.down")
                     }
+                }
 
-                    Button(action: createNewProject)
-                    {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(AppGradients.projectGradient)
-                    }
-                }
-            }
-            .platformNavigationBar()
-            .navigationDestination(for: AppNavigationDestination.self)
-            {
-                destination in
-                
-                switch destination
+                Button(action: createNewProject)
                 {
-                    case let .projectTasks(project):
-                        ProjectTasksView(project: project, path: $path)
-                    case let .projectDetail(project):
-                        ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-                    case let .taskDetail(task, context):
-                        TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
-                    case let .userDetail(user):
-                        UserDetailView(user: user, path: $path)
-                    case let .userTasks(user):
-                        UserTasksView(user: user, path: $path)
+                    Label("Add Project", systemImage: "plus.circle.fill")
                 }
             }
-            .onAppear(perform: saveRoles)
+        }
+        .navigationDestination(for: AppNavigationDestination.self)
+        {
+            destination in
+            
+            switch destination
+            {
+                case let .projectTasks(project):
+                    ProjectTasksView(project: project, path: $path)
+                case let .projectDetail(project):
+                    ProjectDetailView(project: project, path: $path, onDismissToMain: {})
+                case let .taskDetail(task, context):
+                    TaskDetailView(task: task, path: $path, onDismissToMain: {}, sourceContext: context)
+                case let .userDetail(user):
+                    UserDetailView(user: user, path: $path)
+                case let .userTasks(user):
+                    UserTasksView(user: user, path: $path)
+            }
         }
         .successToast(
             isShowing: $showDeleteToast,
             message: "'\(deletedProjectName)' deleted"
         )
+        .onAppear(perform: saveRoles)
+        #endif
     }
 }
 

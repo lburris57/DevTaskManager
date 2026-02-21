@@ -93,10 +93,12 @@ struct MainMenuView: View
             {
                 ToolbarItem(placement: .navigation)
                 {
+                    #if os(macOS)
                     Button(action: toggleSidebar)
                     {
                         Label("Toggle Sidebar", systemImage: "sidebar.left")
                     }
+                    #endif
                 }
             }
             .onChange(of: selectedView) { oldValue, newValue in

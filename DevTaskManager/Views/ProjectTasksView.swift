@@ -409,10 +409,28 @@ struct ProjectTasksView: View
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)
         .toolbar
         {
             #if canImport(UIKit)
-                ToolbarItemGroup(placement: .topBarTrailing)
+                ToolbarItem(placement: .navigationBarLeading)
+                {
+                    Button(action: {
+                        dismiss()
+                    })
+                    {
+                        HStack(spacing: 4)
+                        {
+                            Image(systemName: "chevron.left")
+                                .font(.body.weight(.semibold))
+                            Text("Back")
+                                .font(.body)
+                        }
+                        .foregroundStyle(AppGradients.projectGradient)
+                    }
+                }
+                
+                ToolbarItemGroup(placement: .primaryAction)
                 {
                     // Only show sort/filter menu when there are tasks
                     if !project.tasks.isEmpty
