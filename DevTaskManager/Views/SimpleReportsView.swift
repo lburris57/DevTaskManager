@@ -319,51 +319,52 @@ struct SimpleReportsView: View
                 // Summary Statistics
                 VStack(spacing: 16)
                 {
+                    // 1. Overview Statistics
                     statisticsSection(data: data)
 
-                    // Task Status Chart
-                    taskStatusChartSection(data: data)
+                    // 2. Task Analysis
+                    if !data.tasksList.isEmpty
+                    {
+                        tasksBreakdownSection(data: data)
+                    }
 
-                    // Task Type Distribution Chart
+                    // 3. Tasks by Type
                     if !data.tasksByType.isEmpty
                     {
                         taskTypeChartSection(data: data)
                     }
 
-                    // Task Priority Chart
+                    // 4. Tasks by Priority
                     if !data.tasksByPriority.isEmpty
                     {
                         taskPriorityChartSection(data: data)
                     }
 
-                    // Project Completion Chart
-                    if !data.projectsList.isEmpty
-                    {
-                        projectCompletionChartSection(projects: data.projectsList)
-                    }
-
-                    // User Productivity Chart
-                    if !data.usersList.isEmpty
-                    {
-                        userProductivityChartSection(users: data.usersList)
-                    }
-
-                    // Projects Section
-                    if !data.projectsList.isEmpty
-                    {
-                        projectsSection(projects: data.projectsList)
-                    }
-
-                    // Users Section
+                    // 5. Team Members
                     if !data.usersList.isEmpty
                     {
                         usersSection(users: data.usersList)
                     }
 
-                    // Tasks Breakdown
-                    if !data.tasksList.isEmpty
+                    // 6. Projects
+                    if !data.projectsList.isEmpty
                     {
-                        tasksBreakdownSection(data: data)
+                        projectsSection(projects: data.projectsList)
+                    }
+
+                    // 7. Project Completion Rates
+                    if !data.projectsList.isEmpty
+                    {
+                        projectCompletionChartSection(projects: data.projectsList)
+                    }
+
+                    // 8. Task Status Distribution
+                    taskStatusChartSection(data: data)
+
+                    // 9. Team Productivity
+                    if !data.usersList.isEmpty
+                    {
+                        userProductivityChartSection(users: data.usersList)
                     }
                 }
                 .padding(.bottom, 20)
@@ -378,26 +379,44 @@ struct SimpleReportsView: View
         {
             sectionHeader(icon: "chart.pie.fill", title: "Overview Statistics")
 
-            ModernFormCard
+            #if os(macOS)
+            // On macOS, limit width for better readability and left-align
+            HStack(alignment: .top, spacing: 0)
             {
-                VStack(spacing: 12)
-                {
-                    statRow(label: "Total Projects", value: "\(data.totalProjects)", color: .blue)
-                    Divider()
-                    statRow(label: "Total Users", value: "\(data.totalUsers)", color: .purple)
-                    Divider()
-                    statRow(label: "Total Tasks", value: "\(data.totalTasks)", color: .orange)
-                    Divider()
-                    statRow(label: "Completed Tasks", value: "\(data.completedTasks)", color: .green)
-                    Divider()
-                    statRow(label: "In Progress", value: "\(data.inProgressTasks)", color: .blue)
-                    Divider()
-                    statRow(label: "Unassigned", value: "\(data.unassignedTasks)", color: .orange)
-                    Divider()
-                    statRow(label: "Deferred", value: "\(data.deferredTasks)", color: .gray)
-                    Divider()
-                    statRow(label: "Completion Rate", value: String(format: "%.1f%%", data.completionRate), color: .green)
-                }
+                statsCard(data: data)
+                    .frame(maxWidth: 450)
+                
+                Spacer(minLength: 0)
+            }
+            #else
+            // On iOS, use full width
+            statsCard(data: data)
+            #endif
+        }
+    }
+    
+    @ViewBuilder
+    private func statsCard(data: ReportData) -> some View
+    {
+        ModernFormCard
+        {
+            VStack(spacing: 12)
+            {
+                statRow(label: "Total Projects", value: "\(data.totalProjects)", color: .blue)
+                Divider()
+                statRow(label: "Total Users", value: "\(data.totalUsers)", color: .purple)
+                Divider()
+                statRow(label: "Total Tasks", value: "\(data.totalTasks)", color: .orange)
+                Divider()
+                statRow(label: "Completed Tasks", value: "\(data.completedTasks)", color: .green)
+                Divider()
+                statRow(label: "In Progress", value: "\(data.inProgressTasks)", color: .blue)
+                Divider()
+                statRow(label: "Unassigned", value: "\(data.unassignedTasks)", color: .orange)
+                Divider()
+                statRow(label: "Deferred", value: "\(data.deferredTasks)", color: .gray)
+                Divider()
+                statRow(label: "Completion Rate", value: String(format: "%.1f%%", data.completionRate), color: .green)
             }
         }
     }
@@ -489,6 +508,59 @@ struct SimpleReportsView: View
         {
             sectionHeader(icon: "square.stack.3d.up.fill", title: "Tasks by Type")
 
+            #if os(macOS)
+            // On macOS, limit width for better readability and left-align
+            HStack(alignment: .top, spacing: 0)
+            {
+                ModernFormCard
+                {
+                    VStack(alignment: .leading, spacing: 16)
+                    {
+                        Chart(sortedTypes, id: \.key)
+                        {
+                            item in
+                            
+                            SectorMark(
+                                angle: .value("Count", item.value),
+                                innerRadius: .ratio(0.5),
+                                angularInset: 2
+                            )
+                            .foregroundStyle(by: .value("Type", item.key))
+                            .cornerRadius(4)
+                        }
+                        .frame(height: 250)
+                        .chartLegend(position: .bottom, alignment: .center, spacing: 16)
+
+                        // Legend with counts
+                        VStack(alignment: .leading, spacing: 8)
+                        {
+                            ForEach(sortedTypes, id: \.key)
+                            {
+                                type, count in
+                                
+                                HStack
+                                {
+                                    Text(type)
+                                        .font(.caption)
+                                    Spacer()
+                                    Text("\(count)")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                    Text(String(format: "(%.1f%%)", Double(count) / Double(data.totalTasks) * 100))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                .frame(maxWidth: 450)
+                
+                Spacer(minLength: 0)
+            }
+            #else
+            // On iOS, use full width
             ModernFormCard
             {
                 VStack(alignment: .leading, spacing: 16)
@@ -506,7 +578,7 @@ struct SimpleReportsView: View
                         .cornerRadius(4)
                     }
                     .frame(height: 250)
-                    .chartLegend(position: .bottom, alignment: .center)
+                    .chartLegend(position: .bottom, alignment: .center, spacing: 16)
 
                     // Legend with counts
                     VStack(alignment: .leading, spacing: 8)
@@ -529,10 +601,10 @@ struct SimpleReportsView: View
                             }
                         }
                     }
-                    .padding(.top, 8)
                 }
                 .padding(.vertical, 8)
             }
+            #endif
         }
     }
 
@@ -805,6 +877,53 @@ struct SimpleReportsView: View
         {
             sectionHeader(icon: "folder.fill", title: "Projects (\(projects.count))")
 
+            #if os(macOS)
+            // On macOS, limit width for better readability and left-align
+            HStack(alignment: .top, spacing: 0)
+            {
+                VStack(spacing: 8)
+                {
+                    ForEach(projects)
+                    {
+                        project in
+                        
+                        ModernListRow
+                        {
+                            VStack(alignment: .leading, spacing: 8)
+                            {
+                                Text(project.title)
+                                    .font(.headline)
+
+                                if !project.description.isEmpty
+                                {
+                                    Text(project.description)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+
+                                HStack
+                                {
+                                    Label("\(project.taskCount) tasks", systemImage: "checklist")
+                                        .font(.caption)
+                                        .foregroundStyle(.blue)
+
+                                    Spacer()
+
+                                    Text(String(format: "%.0f%% complete", project.completionRate))
+                                        .font(.caption)
+                                        .foregroundStyle(.green)
+                                }
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: 450)
+                
+                Spacer(minLength: 0)
+            }
+            #else
+            // On iOS, use full width
             ForEach(projects)
             {
                 project in
@@ -839,6 +958,7 @@ struct SimpleReportsView: View
                     }
                 }
             }
+            #endif
         }
     }
 
@@ -849,6 +969,49 @@ struct SimpleReportsView: View
         {
             sectionHeader(icon: "person.3.fill", title: "Team Members (\(users.count))")
 
+            #if os(macOS)
+            // On macOS, limit width for better readability and left-align
+            HStack(alignment: .top, spacing: 0)
+            {
+                VStack(spacing: 8)
+                {
+                    ForEach(users)
+                    {
+                        user in
+                        
+                        ModernListRow
+                        {
+                            VStack(alignment: .leading, spacing: 8)
+                            {
+                                Text(user.name)
+                                    .font(.headline)
+
+                                Text(user.roleName)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+
+                                HStack
+                                {
+                                    Label("\(user.assignedTaskCount) tasks", systemImage: "list.bullet")
+                                        .font(.caption)
+                                        .foregroundStyle(.orange)
+
+                                    Spacer()
+
+                                    Label("\(user.completedTaskCount) completed", systemImage: "checkmark.circle")
+                                        .font(.caption)
+                                        .foregroundStyle(.green)
+                                }
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: 450)
+                
+                Spacer(minLength: 0)
+            }
+            #else
+            // On iOS, use full width
             ForEach(users)
             {
                 user in
@@ -879,6 +1042,7 @@ struct SimpleReportsView: View
                     }
                 }
             }
+            #endif
         }
     }
 
@@ -889,6 +1053,62 @@ struct SimpleReportsView: View
         {
             sectionHeader(icon: "chart.bar.fill", title: "Task Analysis")
 
+            #if os(macOS)
+            // On macOS, limit width for better readability and left-align
+            HStack(alignment: .top, spacing: 0)
+            {
+                ModernFormCard
+                {
+                    VStack(alignment: .leading, spacing: 12)
+                    {
+                        Text("By Type")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        ForEach(data.tasksByType.sorted(by: { $0.value > $1.value }), id: \.key)
+                        {
+                            type, count in
+                            
+                            HStack
+                            {
+                                Text(type)
+                                    .font(.caption)
+                                Spacer()
+                                Text("\(count)")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        Text("By Priority")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        ForEach(data.tasksByPriority.sorted(by: { $0.value > $1.value }), id: \.key)
+                        {
+                            priority, count in
+                            
+                            HStack
+                            {
+                                Text(priority)
+                                    .font(.caption)
+                                Spacer()
+                                Text("\(count)")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: 450)
+                
+                Spacer(minLength: 0)
+            }
+            #else
+            // On iOS, use full width
             ModernFormCard
             {
                 VStack(alignment: .leading, spacing: 12)
@@ -935,6 +1155,7 @@ struct SimpleReportsView: View
                     }
                 }
             }
+            #endif
         }
     }
 

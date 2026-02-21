@@ -30,83 +30,75 @@ struct MainMenuView: View
     {
         #if os(macOS)
             macOSLayout
+                .onAppear {
+                    // Set dashboard as default view on macOS if nothing is selected
+                    if selectedView == nil {
+                        selectedView = .dashboard
+                    }
+                }
         #else
             iOSLayout
         #endif
     }
 
-    // MARK: - macOS Layout (Three-Column Navigation)
+    // MARK: - macOS Layout (Two or Three-Column Navigation)
 
     @ViewBuilder
     private var macOSLayout: some View
     {
+        // Check if the selected view needs three columns (list views) or two columns (dashboard/reports)
+        if selectedView == .dashboard || selectedView == .reports {
+            // Two-column layout for Dashboard and Reports
+            twoColumnLayout
+        } else {
+            // Three-column layout for list views (Projects, Users, Tasks)
+            threeColumnLayout
+        }
+    }
+    
+    // MARK: - Two-Column Layout (Dashboard & Reports)
+    
+    @ViewBuilder
+    private var twoColumnLayout: some View
+    {
         NavigationSplitView
         {
             // Sidebar (Column 1)
-            List(selection: $selectedView)
+            sidebarContent
+        } detail: {
+            // Content view (Column 2) - Full width for Dashboard/Reports
+            if let destination = selectedView
             {
-                Section("Analytics")
-                {
-                    NavigationLink(value: MenuDestination.dashboard)
-                    {
-                        Label("Dashboard", systemImage: "chart.bar.fill")
-                    }
-
-                    NavigationLink(value: MenuDestination.reports)
-                    {
-                        Label("Reports", systemImage: "chart.bar.doc.horizontal.fill")
-                    }
-                }
-
-                Section("Management")
-                {
-                    NavigationLink(value: MenuDestination.projectList)
-                    {
-                        Label("Projects", systemImage: "folder.fill")
-                    }
-
-                    NavigationLink(value: MenuDestination.userList)
-                    {
-                        Label("Users", systemImage: "person.3.fill")
-                    }
-
-                    NavigationLink(value: MenuDestination.taskList)
-                    {
-                        Label("Tasks", systemImage: "checklist")
-                    }
-                }
-
-                #if DEBUG
-                    Section("Development")
-                    {
-                        Button(action: loadSampleData)
-                        {
-                            Label("Load Sample Data", systemImage: "hammer.fill")
-                        }
-                    }
-                #endif
+                destinationView(for: destination)
+                    .navigationSplitViewColumnWidth(min: 600, ideal: 900)
             }
-            .listStyle(.sidebar)
-            .navigationTitle("Dev Task Manager")
-            .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 300)
-            .toolbar
+            else
             {
-                ToolbarItem(placement: .navigation)
-                {
-                    #if os(macOS)
-                    Button(action: toggleSidebar)
-                    {
-                        Label("Toggle Sidebar", systemImage: "sidebar.left")
-                    }
-                    #endif
-                }
+                // Placeholder for when no section is selected
+                ContentUnavailableView(
+                    "No Selection",
+                    systemImage: "sidebar.left",
+                    description: Text("Select a section from the sidebar")
+                )
+                .navigationSplitViewColumnWidth(min: 600, ideal: 900)
             }
-            .onChange(of: selectedView) { oldValue, newValue in
-                // Clear the detail selection when switching menu sections
-                if oldValue != newValue {
-                    selectedDetailItem = nil
-                }
-            }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .successToast(
+            isShowing: $showSuccessToast,
+            message: "Sample data loaded successfully! 🎉"
+        )
+    }
+    
+    // MARK: - Three-Column Layout (Projects, Users, Tasks)
+    
+    @ViewBuilder
+    private var threeColumnLayout: some View
+    {
+        NavigationSplitView
+        {
+            // Sidebar (Column 1)
+            sidebarContent
         } content: {
             // Content/List view (Column 2)
             if let destination = selectedView
@@ -143,6 +135,77 @@ struct MainMenuView: View
             isShowing: $showSuccessToast,
             message: "Sample data loaded successfully! 🎉"
         )
+    }
+    
+    // MARK: - Shared Sidebar Content
+    
+    @ViewBuilder
+    private var sidebarContent: some View
+    {
+        List(selection: $selectedView)
+        {
+            Section("Analytics")
+            {
+                NavigationLink(value: MenuDestination.dashboard)
+                {
+                    Label("Dashboard", systemImage: "chart.bar.fill")
+                }
+
+                NavigationLink(value: MenuDestination.reports)
+                {
+                    Label("Reports", systemImage: "chart.bar.doc.horizontal.fill")
+                }
+            }
+
+            Section("Management")
+            {
+                NavigationLink(value: MenuDestination.projectList)
+                {
+                    Label("Projects", systemImage: "folder.fill")
+                }
+
+                NavigationLink(value: MenuDestination.userList)
+                {
+                    Label("Users", systemImage: "person.3.fill")
+                }
+
+                NavigationLink(value: MenuDestination.taskList)
+                {
+                    Label("Tasks", systemImage: "checklist")
+                }
+            }
+
+            #if DEBUG
+                Section("Development")
+                {
+                    Button(action: loadSampleData)
+                    {
+                        Label("Load Sample Data", systemImage: "hammer.fill")
+                    }
+                }
+            #endif
+        }
+        .listStyle(.sidebar)
+        .navigationTitle("Dev Task Manager")
+        .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 300)
+        .toolbar
+        {
+            ToolbarItem(placement: .navigation)
+            {
+                #if os(macOS)
+                Button(action: toggleSidebar)
+                {
+                    Label("Toggle Sidebar", systemImage: "sidebar.left")
+                }
+                #endif
+            }
+        }
+        .onChange(of: selectedView) { oldValue, newValue in
+            // Clear the detail selection when switching menu sections
+            if oldValue != newValue {
+                selectedDetailItem = nil
+            }
+        }
     }
 
     // MARK: - iOS Layout (Card Menu)
