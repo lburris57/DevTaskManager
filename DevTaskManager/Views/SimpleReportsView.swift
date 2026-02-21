@@ -359,7 +359,9 @@ struct SimpleReportsView: View
                     Divider()
                     statRow(label: "In Progress", value: "\(data.inProgressTasks)", color: .blue)
                     Divider()
-                    statRow(label: "Unassigned", value: "\(data.unassignedTasks)", color: .gray)
+                    statRow(label: "Unassigned", value: "\(data.unassignedTasks)", color: .orange)
+                    Divider()
+                    statRow(label: "Deferred", value: "\(data.deferredTasks)", color: .gray)
                     Divider()
                     statRow(label: "Completion Rate", value: String(format: "%.1f%%", data.completionRate), color: .green)
                 }
@@ -415,18 +417,15 @@ struct SimpleReportsView: View
                                 .foregroundStyle(.secondary)
                         }
                         
-                        if data.deferredTasks > 0
-                        {
-                            BarMark(
-                                x: .value("Count", data.deferredTasks),
-                                y: .value("Status", "Deferred")
-                            )
-                            .foregroundStyle(.gray.gradient)
-                            .annotation(position: .trailing) {
-                                Text("\(data.deferredTasks)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                        BarMark(
+                            x: .value("Count", data.deferredTasks),
+                            y: .value("Status", "Deferred")
+                        )
+                        .foregroundStyle(.gray.gradient)
+                        .annotation(position: .trailing) {
+                            Text("\(data.deferredTasks)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .frame(height: 200)
@@ -602,54 +601,100 @@ struct SimpleReportsView: View
     @ViewBuilder
     private func userProductivityChartSection(users: [UserSummary]) -> some View
     {
-        let topUsers = Array(users.sorted { $0.assignedTaskCount > $1.assignedTaskCount }.prefix(10))
+        // Filter out users with zero tasks, then get top 10
+        let usersWithTasks = users.filter { $0.assignedTaskCount > 0 }
+        let topUsers = Array(usersWithTasks.sorted { $0.assignedTaskCount > $1.assignedTaskCount }.prefix(10))
         
-        VStack(alignment: .leading, spacing: 16)
-        {
-            sectionHeader(icon: "person.2.fill", title: "Team Productivity")
-            
-            ModernFormCard
+        // Only show chart if there are users with tasks
+        if !topUsers.isEmpty {
+            VStack(alignment: .leading, spacing: 16)
             {
-                VStack(alignment: .leading, spacing: 16)
-                {
-                    Chart(topUsers) { user in
-                        BarMark(
-                            x: .value("User", user.name),
-                            y: .value("Assigned", user.assignedTaskCount),
-                            stacking: .standard
-                        )
-                        .foregroundStyle(.orange.gradient)
-                        .position(by: .value("Type", "Assigned"))
-                        
-                        BarMark(
-                            x: .value("User", user.name),
-                            y: .value("Completed", user.completedTaskCount),
-                            stacking: .standard
-                        )
-                        .foregroundStyle(.green.gradient)
-                        .position(by: .value("Type", "Completed"))
-                    }
-                    .frame(height: 250)
-                    .chartXAxis {
-                        AxisMarks(position: .bottom) { _ in
-                            AxisValueLabel()
-                                .font(.caption2)
-                        }
-                    }
-                    .chartYAxis {
-                        AxisMarks(position: .leading)
-                    }
-                    .chartLegend(position: .top, alignment: .leading)
-                    
-                    if users.count > 10
-                    {
-                        Text("Showing top 10 of \(users.count) users by task count")
-                            .font(.caption2)
+                sectionHeader(icon: "person.2.fill", title: "Team Productivity")
+                
+                // Custom Legend
+                HStack(spacing: 20) {
+                    // Assigned Tasks Legend
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(.orange.gradient)
+                            .frame(width: 12, height: 12)
+                        Text("Assigned")
+                            .font(.caption)
                             .foregroundStyle(.secondary)
-                            .padding(.top, 4)
+                    }
+                    
+                    // Completed Tasks Legend
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(.green.gradient)
+                            .frame(width: 12, height: 12)
+                        Text("Completed")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                
+                ModernFormCard
+                {
+                    VStack(alignment: .leading, spacing: 16)
+                    {
+                        Chart(topUsers) { user in
+                            BarMark(
+                                x: .value("Assigned", user.assignedTaskCount),
+                                y: .value("User", user.name),
+                                stacking: .standard
+                            )
+                            .foregroundStyle(.orange.gradient)
+                            .position(by: .value("Type", "Assigned"))
+                            .annotation(position: .trailing, alignment: .leading) {
+                                Text("\(user.assignedTaskCount)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            BarMark(
+                                x: .value("Completed", user.completedTaskCount),
+                                y: .value("User", user.name),
+                                stacking: .standard
+                            )
+                            .foregroundStyle(.green.gradient)
+                            .position(by: .value("Type", "Completed"))
+                            .annotation(position: .trailing, alignment: .leading) {
+                                if user.completedTaskCount > 0 {
+                                    Text("\(user.completedTaskCount)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .frame(height: CGFloat(topUsers.count * 50 + 100))
+                        .chartXAxis {
+                            AxisMarks(position: .bottom)
+                        }
+                        .chartYAxis {
+                            AxisMarks(position: .leading) { value in
+                                AxisValueLabel {
+                                    if let userName = value.as(String.self) {
+                                        Text(userName)
+                                            .font(.caption)
+                                            .lineLimit(1)
+                                    }
+                                }
+                            }
+                        }
+                        .chartLegend(.hidden) // Hide built-in legend since we have custom one
+                        
+                        if usersWithTasks.count > 10
+                        {
+                            Text("Showing top 10 of \(usersWithTasks.count) users with tasks")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .padding(.top, 4)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
             }
         }
     }
@@ -961,6 +1006,7 @@ struct SimpleReportsView: View
         Completed Tasks: \(data.completedTasks)
         In Progress: \(data.inProgressTasks)
         Unassigned: \(data.unassignedTasks)
+        Deferred: \(data.deferredTasks)
         Completion Rate: \(String(format: "%.1f%%", data.completionRate))
         
         """
@@ -1045,6 +1091,7 @@ struct SimpleReportsView: View
         csv += "Completed Tasks,\(data.completedTasks)\n"
         csv += "In Progress Tasks,\(data.inProgressTasks)\n"
         csv += "Unassigned Tasks,\(data.unassignedTasks)\n"
+        csv += "Deferred Tasks,\(data.deferredTasks)\n"
         csv += "Completion Rate,\(String(format: "%.1f%%", data.completionRate))\n\n"
         
         csv += "PROJECTS\n"

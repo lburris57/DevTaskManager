@@ -569,7 +569,13 @@ class PDFReportGenerator
     @MainActor
     static func renderUserProductivityChart(users: [UserReport]) -> UIImage?
     {
-        let topUsers = Array(users.sorted { $0.totalTasksAssigned > $1.totalTasksAssigned }.prefix(10))
+        // Filter out users with zero tasks, then get top 10
+        let usersWithTasks = users.filter { $0.totalTasksAssigned > 0 }
+        
+        // Only render if there are users with tasks
+        guard !usersWithTasks.isEmpty else { return nil }
+        
+        let topUsers = Array(usersWithTasks.sorted { $0.totalTasksAssigned > $1.totalTasksAssigned }.prefix(10))
         let chartView = UserProductivityChartView(users: topUsers)
         let renderer = ImageRenderer(content: chartView)
         renderer.scale = 3.0
@@ -604,13 +610,11 @@ struct TaskStatusChartView: View
             )
             .foregroundStyle(.orange.gradient)
             
-            if summary.deferredTasks > 0 {
-                BarMark(
-                    x: .value("Count", summary.deferredTasks),
-                    y: .value("Status", "Deferred")
-                )
-                .foregroundStyle(.gray.gradient)
-            }
+            BarMark(
+                x: .value("Count", summary.deferredTasks),
+                y: .value("Status", "Deferred")
+            )
+            .foregroundStyle(.gray.gradient)
         }
         .chartXAxis {
             AxisMarks(position: .bottom)

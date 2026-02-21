@@ -8,6 +8,7 @@
 import SwiftUI
 
 // MARK: - App Colors and Gradients
+
 struct AppGradients
 {
     // Background gradients
@@ -37,6 +38,7 @@ struct AppGradients
 }
 
 // MARK: - Modern List Row Card
+
 struct ModernListRow<Content: View>: View
 {
     let content: Content
@@ -61,6 +63,7 @@ struct ModernListRow<Content: View>: View
 }
 
 // MARK: - Modern Form Card
+
 struct ModernFormCard<Content: View>: View
 {
     let content: Content
@@ -84,6 +87,7 @@ struct ModernFormCard<Content: View>: View
 }
 
 // MARK: - Modern Navigation Bar
+
 struct ModernNavigationBar: ViewModifier
 {
     let gradient: LinearGradient
@@ -112,6 +116,7 @@ extension View
 }
 
 // MARK: - Gradient Background
+
 struct GradientBackground: ViewModifier
 {
     func body(content: Content) -> some View
@@ -135,6 +140,7 @@ extension View
 }
 
 // MARK: - Modern Header View
+
 struct ModernHeaderView: View
 {
     let icon: String
@@ -195,6 +201,7 @@ struct ModernHeaderView: View
 }
 
 // MARK: - Empty State Card
+
 struct EmptyStateCard: View
 {
     let icon: String

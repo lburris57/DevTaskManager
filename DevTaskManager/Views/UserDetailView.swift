@@ -37,14 +37,19 @@ struct UserDetailView: View
     //  Populate role from passed in User
     func populateInitialSelectedRoleValue()
     {
-        if let userRole = user.roles.first?.roleName, !userRole.isEmpty
+        print("🔄 Populating initial role for: \(user.fullName())")
+        print("   Current roles in user object: \(user.roles.map { $0.roleName })")
+        
+        if let userRole = user.roles.first?.roleName, !userRole.isEmpty, userRole != RoleNamesEnum.all.title
         {
             selectedRole = userRole
+            print("   ✅ Set selectedRole to existing role: \(selectedRole)")
         }
         else
         {
-            // Set default role if none exists
-            selectedRole = RoleNamesEnum.allCases.first?.title ?? Constants.EMPTY_STRING
+            // Set default role to first valid option (excluding "All")
+            selectedRole = RoleNamesEnum.allCases.first(where: { $0 != .all })?.title ?? Constants.EMPTY_STRING
+            print("   ⚠️ No valid role found, defaulting to: \(selectedRole)")
         }
     }
 
@@ -74,14 +79,18 @@ struct UserDetailView: View
     //  Set the role and last updated date values when saving changes
     func saveUser()
     {
-        // Clear existing roles first to avoid duplicates
+        print("💾 ========== SAVING USER ==========")
+        print("   Name: \(user.fullName())")
+        print("   Selected Role: \(selectedRole)")
+        
+        // Clear existing roles
         user.roles.removeAll()
 
-        // Find and set the selected role
-        if let role = roles.first(where: { $0.roleName == selectedRole })
-        {
-            user.roles.append(role)
-        }
+        // Create a new Role instance for this user (not shared)
+        let newRole = Role(roleName: selectedRole, permissions: [])
+        user.roles.append(newRole)
+        
+        print("   ✅ Assigned role: \(selectedRole)")
 
         user.lastUpdated = Date()
 
@@ -89,12 +98,20 @@ struct UserDetailView: View
         if isNewUser
         {
             modelContext.insert(user)
+            print("   📝 Inserted new user")
         }
 
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+            print("   ✅ Context saved successfully")
+        } catch {
+            print("   ❌ Error saving context: \(error)")
+        }
 
         // Mark as saved so validateUser doesn't delete it
         userSaved = true
+        
+        dismiss()
     }
 
     var body: some View
@@ -169,7 +186,7 @@ struct UserDetailView: View
 
                                 Picker("Select Role", selection: $selectedRole)
                                 {
-                                    ForEach(RoleNamesEnum.allCases)
+                                    ForEach(RoleNamesEnum.allCases.filter { $0 != .all })
                                     {
                                         role in
                                         Text(role.title).tag(role.title)
@@ -183,7 +200,6 @@ struct UserDetailView: View
                         // Save Button
                         Button(action: {
                             saveUser()
-                            dismiss()
                         })
                         {
                             Text("Save User")

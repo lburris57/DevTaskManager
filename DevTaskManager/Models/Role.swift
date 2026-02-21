@@ -10,7 +10,7 @@ import SwiftData
 @Model
 class Role
 {
-    @Attribute(.unique) var roleName: String = Constants.EMPTY_STRING
+    var roleName: String = Constants.EMPTY_STRING
     var permissions: [String] = []
     var dateCreated: Date = Date()
     var lastUpdated: Date?

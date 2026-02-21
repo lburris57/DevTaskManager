@@ -90,9 +90,15 @@ class ReportGenerator
 {
     static func generateReport(context: ModelContext, startDate: Date? = nil, endDate: Date? = nil) throws -> ReportData
     {
-        // Fetch all data
+        print("🔍 ========== GENERATING REPORT ==========")
+        
+        // Fetch all data with relationships
         var projectDescriptor = FetchDescriptor<Project>()
+        projectDescriptor.relationshipKeyPathsForPrefetching = [\.tasks, \.users]
+        
         var userDescriptor = FetchDescriptor<User>()
+        userDescriptor.relationshipKeyPathsForPrefetching = [\.roles, \.tasks]
+        
         var taskDescriptor = FetchDescriptor<Task>()
         
         // Apply date filter to tasks if provided
@@ -113,6 +119,8 @@ class ReportGenerator
         let projects = try context.fetch(projectDescriptor)
         let users = try context.fetch(userDescriptor)
         let tasks = try context.fetch(taskDescriptor)
+        
+        print("✅ Fetched \(users.count) users from database")
         
         // Generate project summaries (filter tasks by date range)
         let projectSummaries = projects.map { project in
@@ -150,10 +158,34 @@ class ReportGenerator
                 return true
             }
             let completedTasks = filteredTasks.filter { $0.taskStatus.lowercased() == "completed" }.count
+            
+            // Force access to roles to ensure they're loaded
+            _ = user.roles.count
+            
+            // Debug: Log role information
+            print("📊 Report - User: \(user.fullName()), Roles count: \(user.roles.count)")
+            if !user.roles.isEmpty {
+                for role in user.roles {
+                    print("   Role: \(role.roleName)")
+                }
+            } else {
+                print("   ⚠️ NO ROLES FOUND for \(user.fullName())!")
+            }
+            
+            // Get role names - join multiple roles if present, or show "No Role"
+            let roleNames: String
+            if user.roles.isEmpty {
+                roleNames = "No Role"
+            } else if user.roles.count == 1 {
+                roleNames = user.roles[0].roleName
+            } else {
+                roleNames = user.roles.map { $0.roleName }.joined(separator: ", ")
+            }
+            
             return UserSummary(
                 id: user.userId,
                 name: user.fullName(),
-                roleName: user.roles.first?.roleName ?? "No Role",
+                roleName: roleNames,
                 dateCreated: user.dateCreated,
                 assignedTaskCount: filteredTasks.count,
                 completedTaskCount: completedTasks
@@ -323,19 +355,22 @@ extension ReportGenerator
     
     private static func fetchProjects(context: ModelContext) throws -> [Project]
     {
-        let descriptor = FetchDescriptor<Project>(sortBy: [SortDescriptor(\.title)])
+        var descriptor = FetchDescriptor<Project>(sortBy: [SortDescriptor(\.title)])
+        descriptor.relationshipKeyPathsForPrefetching = [\.tasks, \.users]
         return try context.fetch(descriptor)
     }
     
     private static func fetchUsers(context: ModelContext) throws -> [User]
     {
-        let descriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.lastName)])
+        var descriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.lastName)])
+        descriptor.relationshipKeyPathsForPrefetching = [\.roles, \.tasks]
         return try context.fetch(descriptor)
     }
     
     private static func fetchTasks(context: ModelContext) throws -> [Task]
     {
-        let descriptor = FetchDescriptor<Task>(sortBy: [SortDescriptor(\.dateCreated)])
+        var descriptor = FetchDescriptor<Task>(sortBy: [SortDescriptor(\.dateCreated)])
+        descriptor.relationshipKeyPathsForPrefetching = [\.project, \.assignedUser]
         return try context.fetch(descriptor)
     }
     
