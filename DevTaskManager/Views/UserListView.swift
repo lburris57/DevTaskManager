@@ -12,6 +12,9 @@ struct UserListView: View
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
 
+    // Optional binding for macOS NavigationSplitView detail column
+    var detailSelection: Binding<AppNavigationDestination?>?
+    
     @State private var path: [AppNavigationDestination] = []
     @State private var showDeleteToast = false
     @State private var deletedUserName = ""
@@ -132,66 +135,17 @@ struct UserListView: View
 
     var body: some View
     {
+        #if os(macOS)
+        // macOS: Plain view without NavigationStack (participates in NavigationSplitView)
+        userListContent
+        #else
+        // iOS: Wrapped in NavigationStack for full-screen presentation
         NavigationStack(path: $path)
         {
-            ZStack
-            {
-                // Solid background to prevent content showing through
-                Color.systemBackground
-                    .platformIgnoreSafeArea()
-
-                // Modern gradient background overlay
-                AppGradients.mainBackground
-                    .platformIgnoreSafeArea()
-
-                VStack(spacing: 0)
+            userListContent
+                .navigationBarBackButtonHidden(true)
+                .toolbar
                 {
-                    // Modern header
-                    ModernHeaderView(
-                        icon: "person.3.fill",
-                        title: "Users",
-                        subtitle: "\(sortedUsers.count) team members",
-                        gradientColors: [.purple, .pink]
-                    )
-
-                    // Filter badges - shows active role filters
-                    FilterBadgesContainer(badges: activeFilterBadges)
-
-                    if !users.isEmpty
-                    {
-                        ScrollView
-                        {
-                            LazyVStack(spacing: 8)
-                            {
-                                ForEach(sortedUsers)
-                                {
-                                    user in
-                                    
-                                    ModernListRow
-                                    {
-                                        userRow(for: user)
-                                    }
-                                }
-                            }
-                            .padding(.top, 8)
-                        }
-                    }
-                    else
-                    {
-                        Spacer()
-                        EmptyStateCard(
-                            icon: "person.badge.plus",
-                            title: "No Users Yet",
-                            message: "Add team members to start assigning tasks and collaborating"
-                        )
-                        Spacer()
-                    }
-                }
-            }
-            .navigationBarBackButtonHidden(true)
-            .toolbar
-            {
-                #if canImport(UIKit)
                     ToolbarItem(placement: .navigationBarLeading)
                     {
                         Button(action: {
@@ -208,27 +162,14 @@ struct UserListView: View
                             .foregroundStyle(AppGradients.userGradient)
                         }
                     }
-                #elseif canImport(AppKit)
-                    ToolbarItem(placement: .navigation)
-                    {
-                        Button(action: {
-                            dismiss()
-                        })
-                        {
-                            Label("Back", systemImage: "chevron.left")
-                        }
-                    }
-                #endif
 
-                toolbarContent
-            }
-            .platformNavigationBar()
-            .navigationDestination(for: AppNavigationDestination.self)
-            {
-                destination in
-                
-                switch destination
-                {
+                    toolbarContent
+                }
+                .platformNavigationBar()
+                .navigationDestination(for: AppNavigationDestination.self)
+                { destination in
+                    switch destination
+                    {
                     case let .userDetail(user):
                         UserDetailView(user: user, path: $path)
                     case let .userTasks(user):
@@ -239,13 +180,101 @@ struct UserListView: View
                         ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
                     case let .projectTasks(project):
                         ProjectTasksView(project: project, path: $path)
+                    }
                 }
+        }
+        .successToast(
+            isShowing: $showDeleteToast,
+            message: "'\(deletedUserName)' deleted"
+        )
+        #endif
+    }
+    
+    // MARK: - User List Content
+    
+    @ViewBuilder
+    private var userListContent: some View
+    {
+        ZStack
+        {
+            // Solid background to prevent content showing through
+            Color.systemBackground
+                .platformIgnoreSafeArea()
+
+            // Modern gradient background overlay
+            AppGradients.mainBackground
+                .platformIgnoreSafeArea()
+
+            VStack(spacing: 0)
+            {
+                // Modern header
+                ModernHeaderView(
+                    icon: "person.3.fill",
+                    title: "Users",
+                    subtitle: "\(sortedUsers.count) team members",
+                    gradientColors: [.purple, .pink]
+                )
+
+                // Filter badges - shows active role filters
+                FilterBadgesContainer(badges: activeFilterBadges)
+
+                if !users.isEmpty
+                {
+                    ScrollView
+                    {
+                        LazyVStack(spacing: 8)
+                        {
+                            ForEach(sortedUsers)
+                            {
+                                user in
+                                
+                                ModernListRow
+                                {
+                                    userRow(for: user)
+                                }
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+                }
+                else
+                {
+                    Spacer()
+                    EmptyStateCard(
+                        icon: "person.badge.plus",
+                        title: "No Users Yet",
+                        message: "Add team members to start assigning tasks and collaborating"
+                    )
+                    Spacer()
+                }
+            }
+        }
+        #if os(macOS)
+        .toolbar
+        {
+            toolbarContent
+        }
+        .navigationDestination(for: AppNavigationDestination.self)
+        { destination in
+            switch destination
+            {
+            case let .userDetail(user):
+                UserDetailView(user: user, path: $path)
+            case let .userTasks(user):
+                UserTasksView(user: user, onDismissToMain: { dismiss() }, path: $path)
+            case let .taskDetail(task, context):
+                TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
+            case let .projectDetail(project):
+                ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
+            case let .projectTasks(project):
+                ProjectTasksView(project: project, path: $path)
             }
         }
         .successToast(
             isShowing: $showDeleteToast,
             message: "'\(deletedUserName)' deleted"
         )
+        #endif
     }
 
     // MARK: - View Components
@@ -255,11 +284,24 @@ struct UserListView: View
         VStack(alignment: .leading, spacing: 8)
         {
             // User info section with edit navigation
+            #if os(macOS)
+            Button(action: {
+                if let detailSelection = detailSelection {
+                    detailSelection.wrappedValue = .userDetail(user)
+                } else {
+                    path.append(.userDetail(user))
+                }
+            }) {
+                userInfoView(for: user)
+            }
+            .buttonStyle(.plain)
+            #else
             NavigationLink(value: AppNavigationDestination.userDetail(user))
             {
                 userInfoView(for: user)
             }
             .buttonStyle(.plain)
+            #endif
 
             // Assigned tasks section - separate navigation
             assignedTasksButton(for: user)
@@ -298,6 +340,33 @@ struct UserListView: View
     {
         if user.tasks.count > 0
         {
+            #if os(macOS)
+            Button(action: {
+                if let detailSelection = detailSelection {
+                    detailSelection.wrappedValue = .userTasks(user)
+                } else {
+                    path.append(.userTasks(user))
+                }
+            }) {
+                HStack
+                {
+                    Image(systemName: "list.bullet.clipboard")
+                        .foregroundStyle(.green)
+                    Text("View \(user.tasks.count) Assigned Task\(user.tasks.count == 1 ? "" : "s")")
+                        .foregroundStyle(.green)
+                        .font(.subheadline)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                }
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(8)
+            }
+            .buttonStyle(.plain)
+            #else
             NavigationLink(value: AppNavigationDestination.userTasks(user))
             {
                 HStack
@@ -318,6 +387,7 @@ struct UserListView: View
                 .cornerRadius(8)
             }
             .buttonStyle(.plain)
+            #endif
         }
         else
         {
@@ -609,7 +679,11 @@ struct UserListView: View
                                         lastName: Constants.EMPTY_STRING)
 
                         // Don't insert or save yet - let the detail view handle it
-                        path.append(.userDetail(user))
+                        if let detailSelection = detailSelection {
+                            detailSelection.wrappedValue = .userDetail(user)
+                        } else {
+                            path.append(.userDetail(user))
+                        }
                     })
                 {
                     Label("Add User", systemImage: "plus.circle.fill")

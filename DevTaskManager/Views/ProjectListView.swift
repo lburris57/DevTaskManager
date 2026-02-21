@@ -12,6 +12,9 @@ struct ProjectListView: View
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
 
+    // Optional binding for macOS NavigationSplitView detail column
+    var detailSelection: Binding<AppNavigationDestination?>?
+    
     @State private var path: [AppNavigationDestination] = []
     @State private var hasLoadedRoles = false
     @State private var searchText = ""
@@ -132,7 +135,15 @@ struct ProjectListView: View
                               descriptionText: Constants.EMPTY_STRING)
 
         // Don't insert or save yet - let the detail view handle it
+        #if os(macOS)
+        if let detailSelection = detailSelection {
+            detailSelection.wrappedValue = .projectDetail(project)
+        } else {
+            path.append(.projectDetail(project))
+        }
+        #else
         path.append(.projectDetail(project))
+        #endif
     }
 
     // Delete projects
@@ -157,6 +168,64 @@ struct ProjectListView: View
         {
             Log.error("Failed to delete project: \(error.localizedDescription)")
         }
+    }
+    
+    // Helper function to create project list row
+    @ViewBuilder
+    private func projectListRow(for project: Project) -> some View
+    {
+        #if os(macOS)
+        // macOS: Use button with selection binding for NavigationSplitView
+        Button(action: {
+            if let detailSelection = detailSelection {
+                detailSelection.wrappedValue = .projectDetail(project)
+            } else {
+                path.append(.projectDetail(project))
+            }
+        }) {
+            ModernListRow
+            {
+                ProjectRowView(project: project, path: $path, detailSelection: detailSelection)
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu
+        {
+            Button(role: .destructive)
+            {
+                if let index = filteredProjects.firstIndex(where: { $0.id == project.id })
+                {
+                    deleteProjects(at: IndexSet(integer: index))
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .id(project.projectId)
+        #else
+        // iOS: Use NavigationLink for full-screen presentation
+        NavigationLink(value: AppNavigationDestination.projectDetail(project))
+        {
+            ModernListRow
+            {
+                ProjectRowView(project: project, path: $path, detailSelection: nil)
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu
+        {
+            Button(role: .destructive)
+            {
+                if let index = filteredProjects.firstIndex(where: { $0.id == project.id })
+                {
+                    deleteProjects(at: IndexSet(integer: index))
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .id(project.projectId)
+        #endif
     }
 
     var body: some View
@@ -220,27 +289,7 @@ struct ProjectListView: View
                             {
                                 ForEach(filteredProjects)
                                 { project in
-                                    NavigationLink(value: AppNavigationDestination.projectDetail(project))
-                                    {
-                                        ModernListRow
-                                        {
-                                            ProjectRowView(project: project, path: $path)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    .contextMenu
-                                    {
-                                        Button(role: .destructive)
-                                        {
-                                            if let index = filteredProjects.firstIndex(where: { $0.id == project.id })
-                                            {
-                                                deleteProjects(at: IndexSet(integer: index))
-                                            }
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                    }
-                                    .id(project.projectId)
+                                    projectListRow(for: project)
                                 }
                             }
                             .padding(.top, 8)
@@ -343,60 +392,91 @@ struct ProjectRowView: View
 {
     let project: Project
     @Binding var path: [AppNavigationDestination]
+    var detailSelection: Binding<AppNavigationDestination?>?
 
     var body: some View
     {
-        NavigationLink(value: AppNavigationDestination.projectTasks(project))
-        {
-            VStack(alignment: .leading, spacing: 8)
-            {
-                HStack
-                {
-                    Text(project.title.isEmpty ? "Untitled Project" : project.title)
-                        .font(.headline)
-
-                    Spacer()
-
-                    Button(action: {
-                        path.append(.projectDetail(project))
-                    })
-                    {
-                        Image(systemName: "pencil.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.blue)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if !project.descriptionText.isEmpty
-                {
-                    Text(project.descriptionText)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                }
-
-                HStack
-                {
-                    Label(project.dateCreated.formatted(date: .abbreviated, time: .omitted),
-                          systemImage: "calendar")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    if !project.tasks.isEmpty
-                    {
-                        Label("\(project.tasks.count)", systemImage: "checkmark.circle")
-                            .font(.caption)
-                            .foregroundStyle(.blue)
-                    }
-                }
+        #if os(macOS)
+        // macOS: Use button for project tasks navigation
+        Button(action: {
+            if let detailSelection = detailSelection {
+                detailSelection.wrappedValue = .projectTasks(project)
+            } else {
+                path.append(.projectTasks(project))
             }
-            .padding(.vertical, 4)
+        }) {
+            projectRowContent
         }
         .accessibilityLabel("Project: \(project.title.isEmpty ? "Untitled" : project.title)")
         .accessibilityHint("Tap to view tasks. Tap edit button to edit project.")
+        #else
+        // iOS: Use NavigationLink
+        NavigationLink(value: AppNavigationDestination.projectTasks(project))
+        {
+            projectRowContent
+        }
+        .accessibilityLabel("Project: \(project.title.isEmpty ? "Untitled" : project.title)")
+        .accessibilityHint("Tap to view tasks. Tap edit button to edit project.")
+        #endif
+    }
+    
+    @ViewBuilder
+    private var projectRowContent: some View
+    {
+        VStack(alignment: .leading, spacing: 8)
+        {
+            HStack
+            {
+                Text(project.title.isEmpty ? "Untitled Project" : project.title)
+                    .font(.headline)
+
+                Spacer()
+
+                Button(action: {
+                    #if os(macOS)
+                    if let detailSelection = detailSelection {
+                        detailSelection.wrappedValue = .projectDetail(project)
+                    } else {
+                        path.append(.projectDetail(project))
+                    }
+                    #else
+                    path.append(.projectDetail(project))
+                    #endif
+                })
+                {
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.blue)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if !project.descriptionText.isEmpty
+            {
+                Text(project.descriptionText)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            HStack
+            {
+                Label(project.dateCreated.formatted(date: .abbreviated, time: .omitted),
+                      systemImage: "calendar")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                if !project.tasks.isEmpty
+                {
+                    Label("\(project.tasks.count)", systemImage: "checkmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

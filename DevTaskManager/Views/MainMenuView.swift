@@ -13,6 +13,7 @@ struct MainMenuView: View
     @Environment(\.modelContext) var modelContext
     @State private var showSuccessToast = false
     @State private var selectedView: MenuDestination?
+    @State private var selectedDetailItem: AppNavigationDestination?
 
     enum MenuDestination: Hashable, Identifiable
     {
@@ -34,14 +35,14 @@ struct MainMenuView: View
         #endif
     }
 
-    // MARK: - macOS Layout (Sidebar Navigation)
+    // MARK: - macOS Layout (Three-Column Navigation)
 
     @ViewBuilder
     private var macOSLayout: some View
     {
         NavigationSplitView
         {
-            // Sidebar
+            // Sidebar (Column 1)
             List(selection: $selectedView)
             {
                 Section("Analytics")
@@ -88,31 +89,54 @@ struct MainMenuView: View
             .listStyle(.sidebar)
             .navigationTitle("Dev Task Manager")
             .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 300)
-            #if os(macOS)
-                .toolbar
+            .toolbar
+            {
+                ToolbarItem(placement: .navigation)
                 {
-                    ToolbarItem(placement: .navigation)
+                    Button(action: toggleSidebar)
                     {
-                        Button(action: toggleSidebar)
-                        {
-                            Label("Toggle Sidebar", systemImage: "sidebar.left")
-                        }
+                        Label("Toggle Sidebar", systemImage: "sidebar.left")
                     }
                 }
-            #endif
-        } detail: {
-            // Detail view
+            }
+            .onChange(of: selectedView) { oldValue, newValue in
+                // Clear the detail selection when switching menu sections
+                if oldValue != newValue {
+                    selectedDetailItem = nil
+                }
+            }
+        } content: {
+            // Content/List view (Column 2)
             if let destination = selectedView
             {
                 destinationView(for: destination)
-                    .frame(minWidth: 600, minHeight: 400)
+                    .navigationSplitViewColumnWidth(min: 300, ideal: 400, max: 500)
             }
             else
             {
-                // Welcome screen
-                welcomeView
+                // Placeholder for when no section is selected
+                ContentUnavailableView(
+                    "No Selection",
+                    systemImage: "sidebar.left",
+                    description: Text("Select a section from the sidebar")
+                )
+                .navigationSplitViewColumnWidth(min: 300, ideal: 400, max: 500)
+            }
+        } detail: {
+            // Detail view (Column 3) - Shows when an item is selected from the list
+            if let detailItem = selectedDetailItem {
+                detailViewForNavigation(detailItem)
+                    .navigationSplitViewColumnWidth(min: 400, ideal: 600)
+            } else {
+                ContentUnavailableView(
+                    "No Item Selected",
+                    systemImage: "doc.text.image",
+                    description: Text("Select an item from the list to view details")
+                )
+                .navigationSplitViewColumnWidth(min: 400, ideal: 600)
             }
         }
+        .navigationSplitViewStyle(.balanced)
         .successToast(
             isShowing: $showSuccessToast,
             message: "Sample data loaded successfully! 🎉"
@@ -303,13 +327,43 @@ struct MainMenuView: View
         case .dashboard:
             DashboardView()
         case .projectList:
+            #if os(macOS)
+            ProjectListView(detailSelection: $selectedDetailItem)
+            #else
             ProjectListView()
+            #endif
         case .userList:
+            #if os(macOS)
+            UserListView(detailSelection: $selectedDetailItem)
+            #else
             UserListView()
+            #endif
         case .taskList:
+            #if os(macOS)
+            TaskListView(detailSelection: $selectedDetailItem)
+            #else
             TaskListView()
+            #endif
         case .reports:
             SimpleReportsView()
+        }
+    }
+    
+    @ViewBuilder
+    private func detailViewForNavigation(_ destination: AppNavigationDestination) -> some View
+    {
+        switch destination
+        {
+        case let .taskDetail(task, context):
+            TaskDetailView(task: task, path: .constant([]), onDismissToMain: {}, sourceContext: context)
+        case let .projectDetail(project):
+            ProjectDetailView(project: project, path: .constant([]), onDismissToMain: {})
+        case let .userDetail(user):
+            UserDetailView(user: user, path: .constant([]))
+        case let .projectTasks(project):
+            ProjectTasksView(project: project, path: .constant([]))
+        case let .userTasks(user):
+            UserTasksView(user: user, path: .constant([]))
         }
     }
 

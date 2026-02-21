@@ -12,6 +12,9 @@ struct TaskListView: View
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
 
+    // Optional binding for macOS NavigationSplitView detail column
+    var detailSelection: Binding<AppNavigationDestination?>?
+    
     @State private var path: [AppNavigationDestination] = []
     @State private var showDeleteToast = false
     @State private var deletedTaskName = ""
@@ -299,153 +302,253 @@ struct TaskListView: View
             Log.error("Failed to delete task: \(error.localizedDescription)")
         }
     }
+    
+    // Helper function to create task list row
+    @ViewBuilder
+    private func taskListRow(for task: Task) -> some View
+    {
+        #if os(macOS)
+        // macOS: Use button with selection binding for NavigationSplitView
+        Button(action: {
+            if let detailSelection = detailSelection {
+                detailSelection.wrappedValue = .taskDetail(task, context: .taskList)
+            } else {
+                path.append(.taskDetail(task, context: .taskList))
+            }
+        }) {
+            ModernListRow
+            {
+                taskRowContent(for: task)
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu
+        {
+            Button(role: .destructive)
+            {
+                if let index = sortedTasks.firstIndex(where: { $0.id == task.id })
+                {
+                    deleteTasks(at: IndexSet(integer: index))
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .id(task.taskId)
+        #else
+        // iOS: Use NavigationLink for full-screen presentation
+        NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .taskList))
+        {
+            ModernListRow
+            {
+                taskRowContent(for: task)
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu
+        {
+            Button(role: .destructive)
+            {
+                if let index = sortedTasks.firstIndex(where: { $0.id == task.id })
+                {
+                    deleteTasks(at: IndexSet(integer: index))
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .id(task.taskId)
+        #endif
+    }
 
     var body: some View
     {
+        #if os(macOS)
+        // macOS: Plain view without NavigationStack (participates in NavigationSplitView)
+        taskListContent
+        #else
+        // iOS: Wrapped in NavigationStack for full-screen presentation
         NavigationStack(path: $path)
         {
-            ZStack
-            {
-                // Solid background to prevent content showing through
-                Color.systemBackground
-                    .platformIgnoreSafeArea()
-
-                // Modern gradient background overlay
-                AppGradients.mainBackground
-                    .platformIgnoreSafeArea()
-
-                VStack(spacing: 0)
+            taskListContent
+                .navigationBarBackButtonHidden(true)
+                .toolbar
                 {
-                    // Modern header
-                    ModernHeaderView(
-                        icon: "checklist",
-                        title: "Tasks",
-                        subtitle: "\(sortedTasks.count) total",
-                        gradientColors: [.orange, .red]
-                    )
-
-                    // Modern search bar
-                    HStack
+                    ToolbarItem(placement: .navigationBarLeading)
                     {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-                        TextField("Search tasks", text: $searchText)
-                            .textFieldStyle(.plain)
-
-                        if !searchText.isEmpty
+                        Button(action: {
+                            dismiss()
+                        })
                         {
-                            Button(action: { searchText = "" })
+                            HStack(spacing: 4)
                             {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
+                                Image(systemName: "chevron.left")
+                                    .font(.body.weight(.semibold))
+                                Text("Back")
+                                    .font(.body)
                             }
+                            .foregroundStyle(AppGradients.taskGradient)
                         }
                     }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.systemBackground)
-                            .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
 
-                    // Filter badges - shows active filters
-                    FilterBadgesContainer(badges: activeFilterBadges)
+                    toolbarContent
+                }
+                .platformNavigationBar()
+                .navigationDestination(for: AppNavigationDestination.self)
+                { destination in
+                    destinationView(for: destination)
+                }
+        }
+        .successToast(
+            isShowing: $showDeleteToast,
+            message: "'\(deletedTaskName)' deleted"
+        )
+        #endif
+    }
+    
+    // MARK: - Task List Content
+    
+    @ViewBuilder
+    private var taskListContent: some View
+    {
+        ZStack
+        {
+            // Solid background to prevent content showing through
+            Color.systemBackground
+                .platformIgnoreSafeArea()
 
-                    if !tasks.isEmpty
+            // Modern gradient background overlay
+            AppGradients.mainBackground
+                .platformIgnoreSafeArea()
+
+            VStack(spacing: 0)
+            {
+                // Modern header
+                ModernHeaderView(
+                    icon: "checklist",
+                    title: "Tasks",
+                    subtitle: "\(sortedTasks.count) total",
+                    gradientColors: [.orange, .red]
+                )
+
+                // Modern search bar
+                HStack
+                {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search tasks", text: $searchText)
+                        .textFieldStyle(.plain)
+
+                    if !searchText.isEmpty
                     {
-                        ScrollView
+                        Button(action: { searchText = "" })
                         {
-                            LazyVStack(spacing: 8)
-                            {
-                                ForEach(sortedTasks)
-                                {
-                                    task in
-                                    
-                                    NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .taskList))
-                                    {
-                                        ModernListRow
-                                        {
-                                            taskRowContent(for: task)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    .contextMenu
-                                    {
-                                        Button(role: .destructive)
-                                        {
-                                            if let index = sortedTasks.firstIndex(where: { $0.id == task.id })
-                                            {
-                                                deleteTasks(at: IndexSet(integer: index))
-                                            }
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                    }
-                                    .id(task.taskId)
-                                }
-                            }
-                            .padding(.top, 8)
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    else
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.systemBackground)
+                        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                )
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+
+                // Filter badges - shows active filters
+                FilterBadgesContainer(badges: activeFilterBadges)
+
+                if !tasks.isEmpty
+                {
+                    ScrollView
                     {
-                        Spacer()
-                        EmptyStateCard(
-                            icon: "checklist.unchecked",
-                            title: "No Tasks Yet",
-                            message: "Create your first task to start tracking your work",
-                            buttonTitle: "Add Task",
-                            buttonAction: {
-                                let task = Task(taskName: Constants.EMPTY_STRING)
+                        LazyVStack(spacing: 8)
+                        {
+                            ForEach(sortedTasks)
+                            {
+                                task in
+                                taskListRow(for: task)
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+                }
+                else
+                {
+                    Spacer()
+                    EmptyStateCard(
+                        icon: "checklist.unchecked",
+                        title: "No Tasks Yet",
+                        message: "Create your first task to start tracking your work",
+                        buttonTitle: "Add Task",
+                        buttonAction: {
+                            let task = Task(taskName: Constants.EMPTY_STRING)
+                            #if os(macOS)
+                            if let detailSelection = detailSelection {
+                                detailSelection.wrappedValue = .taskDetail(task, context: .taskList)
+                            } else {
                                 path.append(.taskDetail(task, context: .taskList))
                             }
-                        )
-                        Spacer()
-                    }
+                            #else
+                            path.append(.taskDetail(task, context: .taskList))
+                            #endif
+                        }
+                    )
+                    Spacer()
                 }
             }
-            .navigationBarBackButtonHidden(true)
-            .toolbar
-            {
-                #if canImport(UIKit)
-                ToolbarItem(placement: .navigationBarLeading)
-                {
-                    Button(action: {
-                        dismiss()
-                    })
-                    {
-                        HStack(spacing: 4)
-                        {
-                            Image(systemName: "chevron.left")
-                                .font(.body.weight(.semibold))
-                            Text("Back")
-                                .font(.body)
-                        }
-                        .foregroundStyle(AppGradients.taskGradient)
-                    }
-                }
-                #elseif canImport(AppKit)
-                ToolbarItem(placement: .navigation)
-                {
-                    Button(action: {
-                        dismiss()
-                    })
-                    {
-                        Label("Back", systemImage: "chevron.left")
-                    }
-                }
-                #endif
+        }
+        #if os(macOS)
+        .toolbar
+        {
+            toolbarContent
+        }
+        .navigationDestination(for: AppNavigationDestination.self)
+        { destination in
+            destinationView(for: destination)
+        }
+        .successToast(
+            isShowing: $showDeleteToast,
+            message: "'\(deletedTaskName)' deleted"
+        )
+        #endif
+    }
 
-                #if canImport(UIKit)
-                ToolbarItemGroup(placement: .topBarTrailing)
+    // MARK: - Navigation
+
+    @ViewBuilder
+    private func destinationView(for destination: AppNavigationDestination) -> some View
+    {
+        switch destination
+        {
+            case let .taskDetail(task, context):
+                TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
+            case let .projectDetail(project):
+                ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
+            case let .userDetail(user):
+                UserDetailView(user: user, path: $path)
+            case let .projectTasks(project):
+                ProjectTasksView(project: project, path: $path)
+            case let .userTasks(user):
+                UserTasksView(user: user, path: $path)
+        }
+    }
+    
+    // MARK: - Toolbar Content
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent
+    {
+        #if canImport(UIKit)
+        ToolbarItemGroup(placement: .topBarTrailing)
+        {
+            // Only show sort/filter menu when there are tasks
+            if !tasks.isEmpty
+            {
+                Menu
                 {
-                    // Only show sort/filter menu when there are tasks
-                    if !tasks.isEmpty
-                    {
-                        Menu
-                        {
                             // Task Name submenu
                             Menu("Task Name")
                             {
@@ -766,9 +869,15 @@ struct TaskListView: View
                     Button(action:
                         {
                             let task = Task(taskName: Constants.EMPTY_STRING)
-
-                            // Don't insert or save yet - let the detail view handle it
+                            #if os(macOS)
+                            if let detailSelection = detailSelection {
+                                detailSelection.wrappedValue = .taskDetail(task, context: .taskList)
+                            } else {
+                                path.append(.taskDetail(task, context: .taskList))
+                            }
+                            #else
                             path.append(.taskDetail(task, context: .taskList))
+                            #endif
                         })
                     {
                         Image(systemName: "plus.circle.fill")
@@ -1031,46 +1140,17 @@ struct TaskListView: View
                     Button(action:
                         {
                             let task = Task(taskName: Constants.EMPTY_STRING)
-                            path.append(.taskDetail(task, context: .taskList))
+                            if let detailSelection = detailSelection {
+                                detailSelection.wrappedValue = .taskDetail(task, context: .taskList)
+                            } else {
+                                path.append(.taskDetail(task, context: .taskList))
+                            }
                         })
                     {
                         Label("Add Task", systemImage: "plus.circle.fill")
                     }
                 }
                 #endif
-            }
-            .platformNavigationBar()
-            .navigationDestination(for: AppNavigationDestination.self)
-            {
-                destination in
-                
-                destinationView(for: destination)
-            }
-        }
-        .successToast(
-            isShowing: $showDeleteToast,
-            message: "'\(deletedTaskName)' deleted"
-        )
-    }
-
-    // MARK: - Navigation
-
-    @ViewBuilder
-    private func destinationView(for destination: AppNavigationDestination) -> some View
-    {
-        switch destination
-        {
-            case let .taskDetail(task, context):
-                TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
-            case let .projectDetail(project):
-                ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-            case let .userDetail(user):
-                UserDetailView(user: user, path: $path)
-            case let .projectTasks(project):
-                ProjectTasksView(project: project, path: $path)
-            case let .userTasks(user):
-                UserTasksView(user: user, path: $path)
-        }
     }
 
     // MARK: - Task Row Content
