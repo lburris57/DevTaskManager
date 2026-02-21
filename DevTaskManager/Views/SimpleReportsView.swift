@@ -7,6 +7,50 @@
 //
 import SwiftData
 import SwiftUI
+import Charts
+
+/// Date range options for filtering reports
+enum DateRangeFilter: String, CaseIterable, Identifiable {
+    case allTime = "All Time"
+    case last7Days = "Last 7 Days"
+    case last30Days = "Last 30 Days"
+    case last90Days = "Last 90 Days"
+    case thisMonth = "This Month"
+    case lastMonth = "Last Month"
+    case thisYear = "This Year"
+    case custom = "Custom Range"
+    
+    var id: String { rawValue }
+    
+    func dateRange() -> (start: Date?, end: Date?) {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch self {
+        case .allTime:
+            return (nil, nil)
+        case .last7Days:
+            return (calendar.date(byAdding: .day, value: -7, to: now), now)
+        case .last30Days:
+            return (calendar.date(byAdding: .day, value: -30, to: now), now)
+        case .last90Days:
+            return (calendar.date(byAdding: .day, value: -90, to: now), now)
+        case .thisMonth:
+            let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))
+            return (startOfMonth, now)
+        case .lastMonth:
+            let startOfThisMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
+            let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfThisMonth)
+            let endOfLastMonth = calendar.date(byAdding: .day, value: -1, to: startOfThisMonth)
+            return (startOfLastMonth, endOfLastMonth)
+        case .thisYear:
+            let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now))
+            return (startOfYear, now)
+        case .custom:
+            return (nil, nil) // Will be set by user
+        }
+    }
+}
 
 /// A simple, single-page report view showing overview statistics, projects, users, and task analysis
 struct SimpleReportsView: View
@@ -18,6 +62,19 @@ struct SimpleReportsView: View
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showShareSheet = false
+    @State private var shareType: ShareType = .text
+    @State private var sharePDFData: Data?
+    @State private var isGeneratingPDF = false
+    
+    enum ShareType {
+        case text, csv, pdf
+    }
+    
+    // Date range filtering
+    @State private var selectedDateRange: DateRangeFilter = .allTime
+    @State private var showDateRangePicker = false
+    @State private var customStartDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+    @State private var customEndDate = Date()
     
     var body: some View
     {
@@ -73,6 +130,33 @@ struct SimpleReportsView: View
                         buttonAction: generateReport
                     )
                 }
+                
+                // PDF generation overlay
+                if isGeneratingPDF
+                {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 16)
+                    {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .tint(.white)
+                        
+                        Text("Generating PDF...")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        Text("This may take a moment")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                    .padding(30)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.ultraThinMaterial)
+                    )
+                }
             }
             .navigationBarBackButtonHidden(true)
             .toolbar
@@ -102,9 +186,32 @@ struct SimpleReportsView: View
                 {
                     ToolbarItemGroup(placement: .topBarTrailing)
                     {
-                        Button(action: { showShareSheet = true })
-                        {
-                            Image(systemName: "square.and.arrow.up")
+                        Menu {
+                            Button(action: { showDateRangePicker = true }) {
+                                Label("Filter by Date", systemImage: "calendar")
+                            }
+                            
+                            Divider()
+                            
+                            Button(action: exportAsText) {
+                                Label("Export as Text", systemImage: "doc.text")
+                            }
+                            
+                            Button(action: exportAsCSV) {
+                                Label("Export as CSV", systemImage: "tablecells")
+                            }
+                            
+                            Button(action: exportAsPDF) {
+                                Label("Export as PDF", systemImage: "doc.richtext")
+                            }
+                            
+                            Divider()
+                            
+                            Button(action: { shareType = .text; showShareSheet = true }) {
+                                Label("Share Report", systemImage: "square.and.arrow.up")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
                                 .foregroundStyle(
                                     LinearGradient(
                                         colors: [.indigo, .purple],
@@ -135,9 +242,23 @@ struct SimpleReportsView: View
                 }
             }
             .sheet(isPresented: $showShareSheet) {
-                if let data = reportData {
-                    ReportShareSheet(items: [generateReportText(data: data)])
+                if let pdfData = sharePDFData, shareType == .pdf {
+                    PDFShareSheet(pdfData: pdfData)
+                } else if let data = reportData {
+                    let content = shareType == .csv ? generateCSVReport(data: data) : generateReportText(data: data)
+                    ReportShareSheet(items: [content])
                 }
+            }
+            .sheet(isPresented: $showDateRangePicker) {
+                DateRangePickerView(
+                    selectedRange: $selectedDateRange,
+                    customStartDate: $customStartDate,
+                    customEndDate: $customEndDate,
+                    onApply: {
+                        showDateRangePicker = false
+                        generateReport()
+                    }
+                )
             }
         }
     }
@@ -157,10 +278,42 @@ struct SimpleReportsView: View
                     gradientColors: [.indigo, .purple]
                 )
                 
+                // Date Range Filter Badge
+                if selectedDateRange != .allTime {
+                    dateRangeFilterBadge()
+                }
+                
                 // Summary Statistics
                 VStack(spacing: 16)
                 {
                     statisticsSection(data: data)
+                    
+                    // Task Status Chart
+                    taskStatusChartSection(data: data)
+                    
+                    // Task Type Distribution Chart
+                    if !data.tasksByType.isEmpty
+                    {
+                        taskTypeChartSection(data: data)
+                    }
+                    
+                    // Task Priority Chart
+                    if !data.tasksByPriority.isEmpty
+                    {
+                        taskPriorityChartSection(data: data)
+                    }
+                    
+                    // Project Completion Chart
+                    if !data.projectsList.isEmpty
+                    {
+                        projectCompletionChartSection(projects: data.projectsList)
+                    }
+                    
+                    // User Productivity Chart
+                    if !data.usersList.isEmpty
+                    {
+                        userProductivityChartSection(users: data.usersList)
+                    }
                     
                     // Projects Section
                     if !data.projectsList.isEmpty
@@ -211,6 +364,341 @@ struct SimpleReportsView: View
                     statRow(label: "Completion Rate", value: String(format: "%.1f%%", data.completionRate), color: .green)
                 }
             }
+        }
+    }
+    
+    // MARK: - Chart Sections
+    
+    @ViewBuilder
+    private func taskStatusChartSection(data: ReportData) -> some View
+    {
+        VStack(alignment: .leading, spacing: 16)
+        {
+            sectionHeader(icon: "chart.bar.fill", title: "Task Status Distribution")
+            
+            ModernFormCard
+            {
+                VStack(alignment: .leading, spacing: 16)
+                {
+                    Chart
+                    {
+                        BarMark(
+                            x: .value("Count", data.completedTasks),
+                            y: .value("Status", "Completed")
+                        )
+                        .foregroundStyle(.green.gradient)
+                        .annotation(position: .trailing) {
+                            Text("\(data.completedTasks)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        BarMark(
+                            x: .value("Count", data.inProgressTasks),
+                            y: .value("Status", "In Progress")
+                        )
+                        .foregroundStyle(.blue.gradient)
+                        .annotation(position: .trailing) {
+                            Text("\(data.inProgressTasks)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        BarMark(
+                            x: .value("Count", data.unassignedTasks),
+                            y: .value("Status", "Unassigned")
+                        )
+                        .foregroundStyle(.orange.gradient)
+                        .annotation(position: .trailing) {
+                            Text("\(data.unassignedTasks)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        if data.deferredTasks > 0
+                        {
+                            BarMark(
+                                x: .value("Count", data.deferredTasks),
+                                y: .value("Status", "Deferred")
+                            )
+                            .foregroundStyle(.gray.gradient)
+                            .annotation(position: .trailing) {
+                                Text("\(data.deferredTasks)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .frame(height: 200)
+                    .chartXAxis {
+                        AxisMarks(position: .bottom)
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .leading)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func taskTypeChartSection(data: ReportData) -> some View
+    {
+        let sortedTypes = data.tasksByType.sorted { $0.value > $1.value }
+        
+        VStack(alignment: .leading, spacing: 16)
+        {
+            sectionHeader(icon: "square.stack.3d.up.fill", title: "Tasks by Type")
+            
+            ModernFormCard
+            {
+                VStack(alignment: .leading, spacing: 16)
+                {
+                    Chart(sortedTypes, id: \.key) { item in
+                        SectorMark(
+                            angle: .value("Count", item.value),
+                            innerRadius: .ratio(0.5),
+                            angularInset: 2
+                        )
+                        .foregroundStyle(by: .value("Type", item.key))
+                        .cornerRadius(4)
+                    }
+                    .frame(height: 250)
+                    .chartLegend(position: .bottom, alignment: .center)
+                    
+                    // Legend with counts
+                    VStack(alignment: .leading, spacing: 8)
+                    {
+                        ForEach(sortedTypes, id: \.key) { type, count in
+                            HStack
+                            {
+                                Text(type)
+                                    .font(.caption)
+                                Spacer()
+                                Text("\(count)")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                Text(String(format: "(%.1f%%)", Double(count) / Double(data.totalTasks) * 100))
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(.vertical, 8)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func taskPriorityChartSection(data: ReportData) -> some View
+    {
+        let priorityOrder = ["High", "Medium", "Low"]
+        let sortedPriorities = data.tasksByPriority.sorted { 
+            let index1 = priorityOrder.firstIndex(of: $0.key) ?? 999
+            let index2 = priorityOrder.firstIndex(of: $1.key) ?? 999
+            return index1 < index2
+        }
+        
+        VStack(alignment: .leading, spacing: 16)
+        {
+            sectionHeader(icon: "exclamationmark.triangle.fill", title: "Tasks by Priority")
+            
+            ModernFormCard
+            {
+                VStack(alignment: .leading, spacing: 16)
+                {
+                    Chart(sortedPriorities, id: \.key) { item in
+                        BarMark(
+                            x: .value("Priority", item.key),
+                            y: .value("Count", item.value)
+                        )
+                        .foregroundStyle(priorityColor(for: item.key).gradient)
+                        .annotation(position: .top) {
+                            Text("\(item.value)")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .frame(height: 200)
+                    .chartXAxis {
+                        AxisMarks(position: .bottom)
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .leading)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func projectCompletionChartSection(projects: [ProjectSummary]) -> some View
+    {
+        let topProjects = Array(projects.prefix(10))
+        
+        VStack(alignment: .leading, spacing: 16)
+        {
+            sectionHeader(icon: "chart.line.uptrend.xyaxis", title: "Project Completion Rates")
+            
+            ModernFormCard
+            {
+                VStack(alignment: .leading, spacing: 16)
+                {
+                    Chart(topProjects) { project in
+                        BarMark(
+                            x: .value("Completion", project.completionRate),
+                            y: .value("Project", project.title)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .annotation(position: .trailing) {
+                            Text(String(format: "%.0f%%", project.completionRate))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(height: CGFloat(topProjects.count * 40 + 50))
+                    .chartXScale(domain: 0...100)
+                    .chartXAxis {
+                        AxisMarks(position: .bottom) { _ in
+                            AxisValueLabel()
+                            AxisGridLine()
+                        }
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .leading) { value in
+                            AxisValueLabel {
+                                if let project = topProjects.first(where: { $0.title == value.as(String.self) }) {
+                                    Text(project.title)
+                                        .font(.caption)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+                    }
+                    
+                    if projects.count > 10
+                    {
+                        Text("Showing top 10 of \(projects.count) projects")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 4)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func userProductivityChartSection(users: [UserSummary]) -> some View
+    {
+        let topUsers = Array(users.sorted { $0.assignedTaskCount > $1.assignedTaskCount }.prefix(10))
+        
+        VStack(alignment: .leading, spacing: 16)
+        {
+            sectionHeader(icon: "person.2.fill", title: "Team Productivity")
+            
+            ModernFormCard
+            {
+                VStack(alignment: .leading, spacing: 16)
+                {
+                    Chart(topUsers) { user in
+                        BarMark(
+                            x: .value("User", user.name),
+                            y: .value("Assigned", user.assignedTaskCount),
+                            stacking: .standard
+                        )
+                        .foregroundStyle(.orange.gradient)
+                        .position(by: .value("Type", "Assigned"))
+                        
+                        BarMark(
+                            x: .value("User", user.name),
+                            y: .value("Completed", user.completedTaskCount),
+                            stacking: .standard
+                        )
+                        .foregroundStyle(.green.gradient)
+                        .position(by: .value("Type", "Completed"))
+                    }
+                    .frame(height: 250)
+                    .chartXAxis {
+                        AxisMarks(position: .bottom) { _ in
+                            AxisValueLabel()
+                                .font(.caption2)
+                        }
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .leading)
+                    }
+                    .chartLegend(position: .top, alignment: .leading)
+                    
+                    if users.count > 10
+                    {
+                        Text("Showing top 10 of \(users.count) users by task count")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 4)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+        }
+    }
+    
+    // Helper function for priority colors
+    private func priorityColor(for priority: String) -> Color
+    {
+        switch priority.lowercased() {
+        case "high": return .red
+        case "medium": return .orange
+        case "low": return .green
+        default: return .gray
+        }
+    }
+    
+    // MARK: - Original Sections
+    
+    @ViewBuilder
+    private func dateRangeFilterBadge() -> some View
+    {
+        HStack {
+            Image(systemName: "calendar")
+                .font(.caption)
+            Text(dateRangeText())
+                .font(.caption)
+                .fontWeight(.medium)
+            
+            Button(action: {
+                selectedDateRange = .allTime
+                generateReport()
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.caption)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(Color.indigo.opacity(0.15))
+        )
+        .foregroundStyle(.indigo)
+    }
+    
+    private func dateRangeText() -> String {
+        if selectedDateRange == .custom {
+            return "\(customStartDate.formatted(date: .abbreviated, time: .omitted)) - \(customEndDate.formatted(date: .abbreviated, time: .omitted))"
+        } else {
+            return selectedDateRange.rawValue
         }
     }
     
@@ -379,7 +867,16 @@ struct SimpleReportsView: View
         {
             do
             {
-                let data = try ReportGenerator.generateReport(context: modelContext)
+                // Get date range based on filter
+                let (startDate, endDate) = selectedDateRange == .custom 
+                    ? (customStartDate, customEndDate)
+                    : selectedDateRange.dateRange()
+                
+                let data = try ReportGenerator.generateReport(
+                    context: modelContext,
+                    startDate: startDate,
+                    endDate: endDate
+                )
                 await MainActor.run {
                     reportData = data
                     isLoading = false
@@ -393,6 +890,60 @@ struct SimpleReportsView: View
                 }
             }
         }
+    }
+    
+    // MARK: - Export Functions
+    
+    private func exportAsText()
+    {
+        shareType = .text
+        sharePDFData = nil
+        showShareSheet = true
+    }
+    
+    private func exportAsCSV()
+    {
+        shareType = .csv
+        sharePDFData = nil
+        showShareSheet = true
+    }
+    
+    private func exportAsPDF()
+    {
+        guard let data = reportData else { return }
+        
+        isGeneratingPDF = true
+        
+        _Concurrency.Task {
+            // First, we need to convert ReportData to DevTaskManagerReport
+            // We'll generate a detailed report from the model context
+            do {
+                let detailedReport = try await generateDetailedReportForPDF()
+                
+                await MainActor.run {
+                    if let pdfData = PDFReportGenerator.generatePDF(from: detailedReport) {
+                        shareType = .pdf
+                        sharePDFData = pdfData
+                        showShareSheet = true
+                    } else {
+                        errorMessage = "Failed to generate PDF"
+                    }
+                    isGeneratingPDF = false
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to generate PDF: \(error.localizedDescription)"
+                    isGeneratingPDF = false
+                }
+            }
+        }
+    }
+    
+    private func generateDetailedReportForPDF() async throws -> DevTaskManagerReport
+    {
+        return try await _Concurrency.Task { @MainActor in
+            try ReportGenerator.generateDetailedReport(context: modelContext)
+        }.value
     }
     
     private func generateReportText(data: ReportData) -> String
@@ -481,20 +1032,158 @@ struct SimpleReportsView: View
         
         return text
     }
+    
+    private func generateCSVReport(data: ReportData) -> String
+    {
+        var csv = "DevTaskManager Report - Generated \(data.generatedDate.formatted())\n\n"
+        
+        csv += "OVERVIEW\n"
+        csv += "Metric,Value\n"
+        csv += "Total Projects,\(data.totalProjects)\n"
+        csv += "Total Users,\(data.totalUsers)\n"
+        csv += "Total Tasks,\(data.totalTasks)\n"
+        csv += "Completed Tasks,\(data.completedTasks)\n"
+        csv += "In Progress Tasks,\(data.inProgressTasks)\n"
+        csv += "Unassigned Tasks,\(data.unassignedTasks)\n"
+        csv += "Completion Rate,\(String(format: "%.1f%%", data.completionRate))\n\n"
+        
+        csv += "PROJECTS\n"
+        csv += "Title,Description,Tasks,Completed,Completion Rate,Date Created\n"
+        for project in data.projectsList {
+            csv += "\"\(project.title)\",\"\(project.description)\",\(project.taskCount),\(project.completedTaskCount),\(String(format: "%.1f%%", project.completionRate)),\(project.dateCreated.formatted(date: .abbreviated, time: .omitted))\n"
+        }
+        
+        csv += "\nUSERS\n"
+        csv += "Name,Role,Assigned Tasks,Completed Tasks,Date Created\n"
+        for user in data.usersList {
+            csv += "\"\(user.name)\",\"\(user.roleName)\",\(user.assignedTaskCount),\(user.completedTaskCount),\(user.dateCreated.formatted(date: .abbreviated, time: .omitted))\n"
+        }
+        
+        csv += "\nTASKS BY TYPE\n"
+        csv += "Type,Count\n"
+        for (type, count) in data.tasksByType.sorted(by: { $0.key < $1.key }) {
+            csv += "\(type),\(count)\n"
+        }
+        
+        csv += "\nTASKS BY PRIORITY\n"
+        csv += "Priority,Count\n"
+        for (priority, count) in data.tasksByPriority.sorted(by: { $0.key < $1.key }) {
+            csv += "\(priority),\(count)\n"
+        }
+        
+        return csv
+    }
 }
 
-// MARK: - Share Sheet
+// MARK: - Date Range Picker View
 
-struct ReportShareSheet: UIViewControllerRepresentable
-{
-    let items: [Any]
+struct DateRangePickerView: View {
+    @Environment(\.dismiss) var dismiss
+    @Binding var selectedRange: DateRangeFilter
+    @Binding var customStartDate: Date
+    @Binding var customEndDate: Date
+    let onApply: () -> Void
     
-    func makeUIViewController(context: Context) -> UIActivityViewController
-    {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    @State private var tempRange: DateRangeFilter
+    @State private var tempStartDate: Date
+    @State private var tempEndDate: Date
+    
+    init(selectedRange: Binding<DateRangeFilter>, 
+         customStartDate: Binding<Date>,
+         customEndDate: Binding<Date>,
+         onApply: @escaping () -> Void) {
+        self._selectedRange = selectedRange
+        self._customStartDate = customStartDate
+        self._customEndDate = customEndDate
+        self.onApply = onApply
+        
+        // Initialize temp values
+        self._tempRange = State(initialValue: selectedRange.wrappedValue)
+        self._tempStartDate = State(initialValue: customStartDate.wrappedValue)
+        self._tempEndDate = State(initialValue: customEndDate.wrappedValue)
     }
     
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Date Range", selection: $tempRange) {
+                        ForEach(DateRangeFilter.allCases) { range in
+                            Text(range.rawValue).tag(range)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                } header: {
+                    Text("Select Time Period")
+                }
+                
+                if tempRange == .custom {
+                    Section {
+                        DatePicker("Start Date", selection: $tempStartDate, displayedComponents: [.date])
+                        DatePicker("End Date", selection: $tempEndDate, displayedComponents: [.date])
+                    } header: {
+                        Text("Custom Date Range")
+                    } footer: {
+                        if tempStartDate > tempEndDate {
+                            Label("Start date must be before end date", systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.red)
+                                .font(.caption)
+                        }
+                    }
+                }
+                
+                Section {
+                    if tempRange != .allTime {
+                        let (start, end) = tempRange == .custom 
+                            ? (tempStartDate, tempEndDate)
+                            : tempRange.dateRange()
+                        
+                        if let startDate = start {
+                            LabeledContent("From", value: startDate.formatted(date: .long, time: .omitted))
+                        }
+                        if let endDate = end {
+                            LabeledContent("To", value: endDate.formatted(date: .long, time: .omitted))
+                        }
+                    } else {
+                        Text("Showing all data regardless of date")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text("Date Range Preview")
+                }
+            }
+            .navigationTitle("Filter by Date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Apply") {
+                        // Validate custom date range
+                        if tempRange == .custom && tempStartDate > tempEndDate {
+                            return
+                        }
+                        
+                        // Apply changes
+                        selectedRange = tempRange
+                        customStartDate = tempStartDate
+                        customEndDate = tempEndDate
+                        onApply()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(tempRange == .custom && tempStartDate > tempEndDate)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
 }
 
 // MARK: - Previews

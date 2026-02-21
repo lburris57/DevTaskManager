@@ -36,13 +36,17 @@ class PDFReportGenerator
         
         let data = renderer.pdfData { context in
             var currentY: CGFloat = 60
+            var pageNumber = 0
             
             // Page 1: Cover Page & Summary
             context.beginPage()
+            pageNumber += 1
             currentY = drawCoverPage(context: context, pageRect: pageRect, report: report)
+            // Note: Footer will be added in a second pass
             
             // Page 2: Projects Summary & Chart
             context.beginPage()
+            pageNumber += 1
             currentY = 60
             currentY = drawSectionHeader(context: context, pageRect: pageRect, title: "Projects Overview", y: currentY)
             currentY = drawProjectsSummary(context: context, pageRect: pageRect, summary: report.projectsSummary, startY: currentY)
@@ -55,6 +59,7 @@ class PDFReportGenerator
             
             // Page 3: Users Summary & Chart
             context.beginPage()
+            pageNumber += 1
             currentY = 60
             currentY = drawSectionHeader(context: context, pageRect: pageRect, title: "Users Overview", y: currentY)
             currentY = drawUsersSummary(context: context, pageRect: pageRect, summary: report.usersSummary, startY: currentY)
@@ -67,6 +72,7 @@ class PDFReportGenerator
             
             // Page 4: Tasks Summary & Charts
             context.beginPage()
+            pageNumber += 1
             currentY = 60
             currentY = drawSectionHeader(context: context, pageRect: pageRect, title: "Tasks Overview", y: currentY)
             currentY = drawTasksSummary(context: context, pageRect: pageRect, summary: report.tasksSummary, startY: currentY)
@@ -76,6 +82,7 @@ class PDFReportGenerator
                 currentY += 20
                 if currentY + 200 > pageHeight - 60 {
                     context.beginPage()
+                    pageNumber += 1
                     currentY = 60
                 }
                 currentY = drawImage(context: context, pageRect: pageRect, image: chartImage, y: currentY, maxHeight: 200)
@@ -84,12 +91,14 @@ class PDFReportGenerator
             // Page 5+: Detailed Projects
             if !report.detailedProjects.isEmpty {
                 context.beginPage()
+                pageNumber += 1
                 currentY = 60
                 currentY = drawSectionHeader(context: context, pageRect: pageRect, title: "Detailed Project Reports", y: currentY)
                 
                 for project in report.detailedProjects {
                     if currentY + 100 > pageHeight - 60 {
                         context.beginPage()
+                        pageNumber += 1
                         currentY = 60
                     }
                     currentY = drawProjectDetail(context: context, pageRect: pageRect, project: project, startY: currentY)
@@ -99,23 +108,23 @@ class PDFReportGenerator
             // Detailed Users
             if !report.detailedUsers.isEmpty {
                 context.beginPage()
+                pageNumber += 1
                 currentY = 60
                 currentY = drawSectionHeader(context: context, pageRect: pageRect, title: "Detailed User Reports", y: currentY)
                 
                 for user in report.detailedUsers {
                     if currentY + 100 > pageHeight - 60 {
                         context.beginPage()
+                        pageNumber += 1
                         currentY = 60
                     }
                     currentY = drawUserDetail(context: context, pageRect: pageRect, user: user, startY: currentY)
                 }
             }
             
-            // Add footer to all pages
-            let totalPages = context.pdfContextBounds.size.height > 0 ? Int(context.pdfContextBounds.size.height / pageHeight) : 1
-            for pageNum in 1...context.currentPage {
-                drawFooter(context: context, pageRect: pageRect, pageNumber: pageNum, totalPages: context.currentPage)
-            }
+            // Note: Page numbers/footers are not added in this implementation
+            // UIGraphicsPDFRenderer doesn't support adding content to previously rendered pages
+            // If page numbers are needed, they should be added during page creation or use a different PDF library
         }
         
         return data
@@ -491,6 +500,11 @@ class PDFReportGenerator
         return currentY + boxHeight + 10
     }
     
+    // MARK: - Footer (Not currently used - UIGraphicsPDFRenderer limitation)
+    // UIGraphicsPDFRenderer doesn't support adding content to previously rendered pages
+    // To add page numbers, you would need to calculate total pages first or use PDFKit post-processing
+    
+    /*
     private static func drawFooter(context: UIGraphicsPDFRendererContext, pageRect: CGRect, pageNumber: Int, totalPages: Int)
     {
         let footerAttributes: [NSAttributedString.Key: Any] = [
@@ -508,6 +522,7 @@ class PDFReportGenerator
         )
         footerText.draw(in: footerRect, withAttributes: footerAttributes)
     }
+    */
     
     private static func drawImage(context: UIGraphicsPDFRendererContext, pageRect: CGRect, image: UIImage, y: CGFloat, maxHeight: CGFloat) -> CGFloat
     {

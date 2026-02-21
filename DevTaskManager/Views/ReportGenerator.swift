@@ -88,39 +88,74 @@ struct TaskSummary: Identifiable
 /// Report generator that queries the database and creates report data
 class ReportGenerator
 {
-    static func generateReport(context: ModelContext) throws -> ReportData
+    static func generateReport(context: ModelContext, startDate: Date? = nil, endDate: Date? = nil) throws -> ReportData
     {
         // Fetch all data
-        let projectDescriptor = FetchDescriptor<Project>()
-        let userDescriptor = FetchDescriptor<User>()
-        let taskDescriptor = FetchDescriptor<Task>()
+        var projectDescriptor = FetchDescriptor<Project>()
+        var userDescriptor = FetchDescriptor<User>()
+        var taskDescriptor = FetchDescriptor<Task>()
+        
+        // Apply date filter to tasks if provided
+        if let start = startDate, let end = endDate {
+            taskDescriptor.predicate = #Predicate<Task> { task in
+                task.dateCreated >= start && task.dateCreated <= end
+            }
+        } else if let start = startDate {
+            taskDescriptor.predicate = #Predicate<Task> { task in
+                task.dateCreated >= start
+            }
+        } else if let end = endDate {
+            taskDescriptor.predicate = #Predicate<Task> { task in
+                task.dateCreated <= end
+            }
+        }
         
         let projects = try context.fetch(projectDescriptor)
         let users = try context.fetch(userDescriptor)
         let tasks = try context.fetch(taskDescriptor)
         
-        // Generate project summaries
+        // Generate project summaries (filter tasks by date range)
         let projectSummaries = projects.map { project in
-            let completedTasks = project.tasks.filter { $0.taskStatus.lowercased() == "completed" }.count
+            let filteredTasks = project.tasks.filter { task in
+                if let start = startDate, let end = endDate {
+                    return task.dateCreated >= start && task.dateCreated <= end
+                } else if let start = startDate {
+                    return task.dateCreated >= start
+                } else if let end = endDate {
+                    return task.dateCreated <= end
+                }
+                return true
+            }
+            let completedTasks = filteredTasks.filter { $0.taskStatus.lowercased() == "completed" }.count
             return ProjectSummary(
                 id: project.projectId,
                 title: project.title.isEmpty ? "Untitled Project" : project.title,
                 description: project.descriptionText,
                 dateCreated: project.dateCreated,
-                taskCount: project.tasks.count,
+                taskCount: filteredTasks.count,
                 completedTaskCount: completedTasks
             )
         }
         
-        // Generate user summaries
+        // Generate user summaries (filter tasks by date range)
         let userSummaries = users.map { user in
-            let completedTasks = user.tasks.filter { $0.taskStatus.lowercased() == "completed" }.count
+            let filteredTasks = user.tasks.filter { task in
+                if let start = startDate, let end = endDate {
+                    return task.dateCreated >= start && task.dateCreated <= end
+                } else if let start = startDate {
+                    return task.dateCreated >= start
+                } else if let end = endDate {
+                    return task.dateCreated <= end
+                }
+                return true
+            }
+            let completedTasks = filteredTasks.filter { $0.taskStatus.lowercased() == "completed" }.count
             return UserSummary(
                 id: user.userId,
                 name: user.fullName(),
                 roleName: user.roles.first?.roleName ?? "No Role",
                 dateCreated: user.dateCreated,
-                assignedTaskCount: user.tasks.count,
+                assignedTaskCount: filteredTasks.count,
                 completedTaskCount: completedTasks
             )
         }

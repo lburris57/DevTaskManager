@@ -23,6 +23,8 @@ struct DetailedReportsView: View
     @State private var selectedTab: ReportTab = .summary
     @State private var showShareSheet = false
     @State private var shareText = ""
+    @State private var sharePDFData: Data?
+    @State private var isGeneratingPDF = false
     
     enum ReportTab: String, CaseIterable
     {
@@ -62,6 +64,33 @@ struct DetailedReportsView: View
                 {
                     emptyState
                 }
+                
+                // PDF generation overlay
+                if isGeneratingPDF
+                {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 16)
+                    {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .tint(.white)
+                        
+                        Text("Generating PDF...")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        Text("This may take a moment")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                    .padding(30)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.ultraThinMaterial)
+                    )
+                }
             }
             .navigationTitle("Reports")
             .navigationBarTitleDisplayMode(.large)
@@ -91,6 +120,11 @@ struct DetailedReportsView: View
                                 Label("Export as CSV", systemImage: "tablecells")
                             }
                             
+                            Button(action: exportAsPDF)
+                            {
+                                Label("Export as PDF", systemImage: "doc.richtext")
+                            }
+                            
                             Divider()
                             
                             Button(action: shareReport)
@@ -110,9 +144,10 @@ struct DetailedReportsView: View
             }
             .sheet(isPresented: $showShareSheet)
             {
-                if #available(iOS 16.0, *)
-                {
-                    ReportViewShareSheet(items: [shareText])
+                if let pdfData = sharePDFData {
+                    PDFShareSheet(pdfData: pdfData)
+                } else if !shareText.isEmpty {
+                    ReportShareSheet(items: [shareText])
                 }
             }
             .alert("Error", isPresented: $showError)
@@ -602,6 +637,7 @@ struct DetailedReportsView: View
         guard let report = report else { return }
         
         let text = ReportGenerator.generateTextReport(report: report)
+        sharePDFData = nil
         shareText = text
         showShareSheet = true
     }
@@ -611,8 +647,28 @@ struct DetailedReportsView: View
         guard let report = report else { return }
         
         let csv = ReportGenerator.generateCSVReport(report: report)
+        sharePDFData = nil
         shareText = csv
         showShareSheet = true
+    }
+    
+    private func exportAsPDF()
+    {
+        guard let report = report else { return }
+        
+        isGeneratingPDF = true
+        
+        _Concurrency.Task { @MainActor in
+            if let pdfData = PDFReportGenerator.generatePDF(from: report) {
+                shareText = ""
+                sharePDFData = pdfData
+                showShareSheet = true
+            } else {
+                errorMessage = "Failed to generate PDF"
+                showError = true
+            }
+            isGeneratingPDF = false
+        }
     }
     
     private func shareReport()
@@ -620,6 +676,7 @@ struct DetailedReportsView: View
         guard let report = report else { return }
         
         let text = ReportGenerator.generateTextReport(report: report)
+        sharePDFData = nil
         shareText = text
         showShareSheet = true
     }
@@ -666,23 +723,6 @@ struct SummaryCard<Content: View>: View
                 .fill(Color(uiColor: .systemBackground))
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
         )
-    }
-}
-
-// MARK: - Share Sheet
-
-struct ReportViewShareSheet: UIViewControllerRepresentable
-{
-    let items: [Any]
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController
-    {
-        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context)
-    {
     }
 }
 
