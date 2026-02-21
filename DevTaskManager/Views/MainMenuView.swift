@@ -15,6 +15,7 @@ struct MainMenuView: View
 
     enum MenuDestination: Hashable, Identifiable
     {
+        case dashboard
         case projectList
         case userList
         case taskList
@@ -69,6 +70,17 @@ struct MainMenuView: View
                     {
                         VStack(spacing: 16)
                         {
+                            // Menu Card
+                            MenuCard(
+                                icon: "chart.bar.fill",
+                                title: "Dashboard",
+                                subtitle: "Overview & analytics",
+                                gradientColors: [.blue, .purple]
+                            )
+                            {
+                                selectedView = .dashboard
+                            }
+
                             // Projects Card
                             MenuCard(
                                 icon: "folder.fill",
@@ -128,6 +140,8 @@ struct MainMenuView: View
             { destination in
                 switch destination
                 {
+                case .dashboard:
+                    DashboardView()
                 case .projectList:
                     ProjectListView()
                 case .userList:
