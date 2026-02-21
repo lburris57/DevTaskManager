@@ -50,118 +50,120 @@ struct ProjectTasksView: View
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
-    
+
     // Computed property for active filter badges
-    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge] {
+    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge]
+    {
         var badges: [FilterBadgesContainer.FilterBadge] = []
-        
+
         // Add badge for task type filters
-        switch sortOrder {
-        case .taskTypeDevelopment:
-            badges.append(.init(
-                text: "Type: Development",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .taskTypeRequirements:
-            badges.append(.init(
-                text: "Type: Requirements",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .taskTypeDesign:
-            badges.append(.init(
-                text: "Type: Design",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .taskTypeUseCases:
-            badges.append(.init(
-                text: "Type: Use Cases",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .taskTypeTesting:
-            badges.append(.init(
-                text: "Type: Testing",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .taskTypeDocumentation:
-            badges.append(.init(
-                text: "Type: Documentation",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .taskTypeDatabase:
-            badges.append(.init(
-                text: "Type: Database",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .taskTypeDefectCorrection:
-            badges.append(.init(
-                text: "Type: Defect Correction",
-                icon: "hammer.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-            
-        // Add badge for priority filters
-        case .priorityHigh:
-            badges.append(.init(
-                text: "Priority: High",
-                icon: "exclamationmark.circle.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .priorityMedium:
-            badges.append(.init(
-                text: "Priority: Medium",
-                icon: "exclamationmark.circle.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .priorityLow:
-            badges.append(.init(
-                text: "Priority: Low",
-                icon: "minus.circle.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .priorityEnhancement:
-            badges.append(.init(
-                text: "Priority: Enhancement",
-                icon: "star.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-            
-        // Add badge for status filters
-        case .statusUnassigned:
-            badges.append(.init(
-                text: "Status: Unassigned",
-                icon: "circle.dashed",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .statusInProgress:
-            badges.append(.init(
-                text: "Status: In Progress",
-                icon: "clock.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .statusCompleted:
-            badges.append(.init(
-                text: "Status: Completed",
-                icon: "checkmark.circle.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-        case .statusDeferred:
-            badges.append(.init(
-                text: "Status: Deferred",
-                icon: "pause.circle.fill",
-                onClear: { sortOrder = .dateNewest }
-            ))
-            
-        default:
-            break // No badge for sort-only options
+        switch sortOrder
+        {
+            case .taskTypeDevelopment:
+                badges.append(.init(
+                    text: "Type: Development",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .taskTypeRequirements:
+                badges.append(.init(
+                    text: "Type: Requirements",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .taskTypeDesign:
+                badges.append(.init(
+                    text: "Type: Design",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .taskTypeUseCases:
+                badges.append(.init(
+                    text: "Type: Use Cases",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .taskTypeTesting:
+                badges.append(.init(
+                    text: "Type: Testing",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .taskTypeDocumentation:
+                badges.append(.init(
+                    text: "Type: Documentation",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .taskTypeDatabase:
+                badges.append(.init(
+                    text: "Type: Database",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .taskTypeDefectCorrection:
+                badges.append(.init(
+                    text: "Type: Defect Correction",
+                    icon: "hammer.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+
+            // Add badge for priority filters
+            case .priorityHigh:
+                badges.append(.init(
+                    text: "Priority: High",
+                    icon: "exclamationmark.circle.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .priorityMedium:
+                badges.append(.init(
+                    text: "Priority: Medium",
+                    icon: "exclamationmark.circle.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .priorityLow:
+                badges.append(.init(
+                    text: "Priority: Low",
+                    icon: "minus.circle.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .priorityEnhancement:
+                badges.append(.init(
+                    text: "Priority: Enhancement",
+                    icon: "star.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+
+            // Add badge for status filters
+            case .statusUnassigned:
+                badges.append(.init(
+                    text: "Status: Unassigned",
+                    icon: "circle.dashed",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .statusInProgress:
+                badges.append(.init(
+                    text: "Status: In Progress",
+                    icon: "clock.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .statusCompleted:
+                badges.append(.init(
+                    text: "Status: Completed",
+                    icon: "checkmark.circle.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+            case .statusDeferred:
+                badges.append(.init(
+                    text: "Status: Deferred",
+                    icon: "pause.circle.fill",
+                    onClear: { sortOrder = .dateNewest }
+                ))
+
+            default:
+                break // No badge for sort-only options
         }
-        
+
         return badges
     }
 
@@ -172,53 +174,53 @@ struct ProjectTasksView: View
 
         switch sortOrder
         {
-        case .taskNameAscending:
-            return tasks.sorted { $0.taskName < $1.taskName }
-        case .taskNameDescending:
-            return tasks.sorted { $0.taskName > $1.taskName }
+            case .taskNameAscending:
+                return tasks.sorted { $0.taskName < $1.taskName }
+            case .taskNameDescending:
+                return tasks.sorted { $0.taskName > $1.taskName }
 
-        // Task Type filtering and sorting
-        case .taskTypeDevelopment:
-            return tasks.filter { $0.taskType == "Development" }.sorted { $0.taskName < $1.taskName }
-        case .taskTypeRequirements:
-            return tasks.filter { $0.taskType == "Requirements" }.sorted { $0.taskName < $1.taskName }
-        case .taskTypeDesign:
-            return tasks.filter { $0.taskType == "Design" }.sorted { $0.taskName < $1.taskName }
-        case .taskTypeUseCases:
-            return tasks.filter { $0.taskType == "Use Cases" }.sorted { $0.taskName < $1.taskName }
-        case .taskTypeTesting:
-            return tasks.filter { $0.taskType == "Testing" }.sorted { $0.taskName < $1.taskName }
-        case .taskTypeDocumentation:
-            return tasks.filter { $0.taskType == "Documentation" }.sorted { $0.taskName < $1.taskName }
-        case .taskTypeDatabase:
-            return tasks.filter { $0.taskType == "Database" }.sorted { $0.taskName < $1.taskName }
-        case .taskTypeDefectCorrection:
-            return tasks.filter { $0.taskType == "Defect Correction" }.sorted { $0.taskName < $1.taskName }
+            // Task Type filtering and sorting
+            case .taskTypeDevelopment:
+                return tasks.filter { $0.taskType == "Development" }.sorted { $0.taskName < $1.taskName }
+            case .taskTypeRequirements:
+                return tasks.filter { $0.taskType == "Requirements" }.sorted { $0.taskName < $1.taskName }
+            case .taskTypeDesign:
+                return tasks.filter { $0.taskType == "Design" }.sorted { $0.taskName < $1.taskName }
+            case .taskTypeUseCases:
+                return tasks.filter { $0.taskType == "Use Cases" }.sorted { $0.taskName < $1.taskName }
+            case .taskTypeTesting:
+                return tasks.filter { $0.taskType == "Testing" }.sorted { $0.taskName < $1.taskName }
+            case .taskTypeDocumentation:
+                return tasks.filter { $0.taskType == "Documentation" }.sorted { $0.taskName < $1.taskName }
+            case .taskTypeDatabase:
+                return tasks.filter { $0.taskType == "Database" }.sorted { $0.taskName < $1.taskName }
+            case .taskTypeDefectCorrection:
+                return tasks.filter { $0.taskType == "Defect Correction" }.sorted { $0.taskName < $1.taskName }
 
-        // Priority filtering and sorting
-        case .priorityHigh:
-            return tasks.filter { $0.taskPriority == "High" }.sorted { $0.taskName < $1.taskName }
-        case .priorityMedium:
-            return tasks.filter { $0.taskPriority == "Medium" }.sorted { $0.taskName < $1.taskName }
-        case .priorityLow:
-            return tasks.filter { $0.taskPriority == "Low" }.sorted { $0.taskName < $1.taskName }
-        case .priorityEnhancement:
-            return tasks.filter { $0.taskPriority == "Enhancement" }.sorted { $0.taskName < $1.taskName }
+            // Priority filtering and sorting
+            case .priorityHigh:
+                return tasks.filter { $0.taskPriority == "High" }.sorted { $0.taskName < $1.taskName }
+            case .priorityMedium:
+                return tasks.filter { $0.taskPriority == "Medium" }.sorted { $0.taskName < $1.taskName }
+            case .priorityLow:
+                return tasks.filter { $0.taskPriority == "Low" }.sorted { $0.taskName < $1.taskName }
+            case .priorityEnhancement:
+                return tasks.filter { $0.taskPriority == "Enhancement" }.sorted { $0.taskName < $1.taskName }
 
-        // Status filtering and sorting
-        case .statusUnassigned:
-            return tasks.filter { $0.taskStatus == "Unassigned" }.sorted { $0.taskName < $1.taskName }
-        case .statusInProgress:
-            return tasks.filter { $0.taskStatus == "In Progress" }.sorted { $0.taskName < $1.taskName }
-        case .statusCompleted:
-            return tasks.filter { $0.taskStatus == "Completed" }.sorted { $0.taskName < $1.taskName }
-        case .statusDeferred:
-            return tasks.filter { $0.taskStatus == "Deferred" }.sorted { $0.taskName < $1.taskName }
+            // Status filtering and sorting
+            case .statusUnassigned:
+                return tasks.filter { $0.taskStatus == "Unassigned" }.sorted { $0.taskName < $1.taskName }
+            case .statusInProgress:
+                return tasks.filter { $0.taskStatus == "In Progress" }.sorted { $0.taskName < $1.taskName }
+            case .statusCompleted:
+                return tasks.filter { $0.taskStatus == "Completed" }.sorted { $0.taskName < $1.taskName }
+            case .statusDeferred:
+                return tasks.filter { $0.taskStatus == "Deferred" }.sorted { $0.taskName < $1.taskName }
 
-        case .dateNewest:
-            return tasks.sorted { $0.dateCreated > $1.dateCreated }
-        case .dateOldest:
-            return tasks.sorted { $0.dateCreated < $1.dateCreated }
+            case .dateNewest:
+                return tasks.sorted { $0.dateCreated > $1.dateCreated }
+            case .dateOldest:
+                return tasks.sorted { $0.dateCreated < $1.dateCreated }
         }
     }
 
@@ -227,14 +229,14 @@ struct ProjectTasksView: View
     {
         switch priority.lowercased()
         {
-        case "high":
-            return 3
-        case "medium":
-            return 2
-        case "low":
-            return 1
-        default:
-            return 0
+            case "high":
+                return 3
+            case "medium":
+                return 2
+            case "low":
+                return 1
+            default:
+                return 0
         }
     }
 
@@ -279,12 +281,12 @@ struct ProjectTasksView: View
         ZStack
         {
             // Solid background to prevent content showing through
-            Color(UIColor.systemBackground)
-                .ignoresSafeArea()
+            Color.systemBackground
+                .platformIgnoreSafeArea()
 
             // Modern gradient background overlay
             AppGradients.mainBackground
-                .ignoresSafeArea()
+                .platformIgnoreSafeArea()
 
             VStack(spacing: 0)
             {
@@ -295,7 +297,7 @@ struct ProjectTasksView: View
                     subtitle: "\(sortedTasks.count) task\(sortedTasks.count == 1 ? "" : "s")",
                     gradientColors: [.blue, .cyan]
                 )
-                
+
                 // Filter badges - shows active filters
                 FilterBadgesContainer(badges: activeFilterBadges)
 
@@ -409,236 +411,584 @@ struct ProjectTasksView: View
         }
         .toolbar
         {
-            ToolbarItemGroup(placement: .topBarTrailing)
-            {
-                // Only show sort/filter menu when there are tasks
-                if !project.tasks.isEmpty
+            #if canImport(UIKit)
+                ToolbarItemGroup(placement: .topBarTrailing)
                 {
-                    Menu
+                    // Only show sort/filter menu when there are tasks
+                    if !project.tasks.isEmpty
                     {
-                        // Task Name submenu
-                        Menu("Task Name")
+                        Menu
                         {
-                            Button(action: { sortOrder = .taskNameAscending })
+                            // Task Name submenu
+                            Menu("Task Name")
                             {
-                                if sortOrder == .taskNameAscending {
-                                    Label("A-Z", systemImage: "checkmark")
-                                } else {
-                                    Text("A-Z")
+                                Button(action: { sortOrder = .taskNameAscending })
+                                {
+                                    if sortOrder == .taskNameAscending
+                                    {
+                                        Label("A-Z", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("A-Z")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskNameDescending })
+                                {
+                                    if sortOrder == .taskNameDescending
+                                    {
+                                        Label("Z-A", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Z-A")
+                                    }
                                 }
                             }
 
-                            Button(action: { sortOrder = .taskNameDescending })
+                            // Task Type submenu
+                            Menu("Task Type")
                             {
-                                if sortOrder == .taskNameDescending {
-                                    Label("Z-A", systemImage: "checkmark")
-                                } else {
-                                    Text("Z-A")
+                                Button(action: { sortOrder = .taskTypeDevelopment })
+                                {
+                                    if sortOrder == .taskTypeDevelopment
+                                    {
+                                        Label("Development", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Development")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeRequirements })
+                                {
+                                    if sortOrder == .taskTypeRequirements
+                                    {
+                                        Label("Requirements", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Requirements")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDesign })
+                                {
+                                    if sortOrder == .taskTypeDesign
+                                    {
+                                        Label("Design", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Design")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeUseCases })
+                                {
+                                    if sortOrder == .taskTypeUseCases
+                                    {
+                                        Label("Use Cases", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Use Cases")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeTesting })
+                                {
+                                    if sortOrder == .taskTypeTesting
+                                    {
+                                        Label("Testing", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Testing")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDocumentation })
+                                {
+                                    if sortOrder == .taskTypeDocumentation
+                                    {
+                                        Label("Documentation", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Documentation")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDatabase })
+                                {
+                                    if sortOrder == .taskTypeDatabase
+                                    {
+                                        Label("Database", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Database")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDefectCorrection })
+                                {
+                                    if sortOrder == .taskTypeDefectCorrection
+                                    {
+                                        Label("Defect Correction", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Defect Correction")
+                                    }
                                 }
                             }
+
+                            // Priority submenu
+                            Menu("Priority")
+                            {
+                                Button(action: { sortOrder = .priorityHigh })
+                                {
+                                    if sortOrder == .priorityHigh
+                                    {
+                                        Label("High", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("High")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .priorityMedium })
+                                {
+                                    if sortOrder == .priorityMedium
+                                    {
+                                        Label("Medium", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Medium")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .priorityLow })
+                                {
+                                    if sortOrder == .priorityLow
+                                    {
+                                        Label("Low", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Low")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .priorityEnhancement })
+                                {
+                                    if sortOrder == .priorityEnhancement
+                                    {
+                                        Label("Enhancement", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Enhancement")
+                                    }
+                                }
+                            }
+
+                            // Status submenu
+                            Menu("Status")
+                            {
+                                Button(action: { sortOrder = .statusUnassigned })
+                                {
+                                    if sortOrder == .statusUnassigned
+                                    {
+                                        Label("Unassigned", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Unassigned")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .statusInProgress })
+                                {
+                                    if sortOrder == .statusInProgress
+                                    {
+                                        Label("In Progress", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("In Progress")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .statusCompleted })
+                                {
+                                    if sortOrder == .statusCompleted
+                                    {
+                                        Label("Completed", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Completed")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .statusDeferred })
+                                {
+                                    if sortOrder == .statusDeferred
+                                    {
+                                        Label("Deferred", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Deferred")
+                                    }
+                                }
+                            }
+
+                            // Date Created submenu
+                            Menu("Date Created")
+                            {
+                                Button(action: { sortOrder = .dateNewest })
+                                {
+                                    if sortOrder == .dateNewest
+                                    {
+                                        Label("Newest First", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Newest First")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .dateOldest })
+                                {
+                                    if sortOrder == .dateOldest
+                                    {
+                                        Label("Oldest First", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Oldest First")
+                                    }
+                                }
+                            }
+
+                            Divider()
+
+                            Button(action: {
+                                path.append(.projectDetail(project))
+                            })
+                            {
+                                Label("Edit Project", systemImage: "pencil")
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                                .foregroundStyle(AppGradients.projectGradient)
                         }
+                    }
 
-                        // Task Type submenu
-                        Menu("Task Type")
-                        {
-                            Button(action: { sortOrder = .taskTypeDevelopment })
-                            {
-                                if sortOrder == .taskTypeDevelopment {
-                                    Label("Development", systemImage: "checkmark")
-                                } else {
-                                    Text("Development")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .taskTypeRequirements })
-                            {
-                                if sortOrder == .taskTypeRequirements {
-                                    Label("Requirements", systemImage: "checkmark")
-                                } else {
-                                    Text("Requirements")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .taskTypeDesign })
-                            {
-                                if sortOrder == .taskTypeDesign {
-                                    Label("Design", systemImage: "checkmark")
-                                } else {
-                                    Text("Design")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .taskTypeUseCases })
-                            {
-                                if sortOrder == .taskTypeUseCases {
-                                    Label("Use Cases", systemImage: "checkmark")
-                                } else {
-                                    Text("Use Cases")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .taskTypeTesting })
-                            {
-                                if sortOrder == .taskTypeTesting {
-                                    Label("Testing", systemImage: "checkmark")
-                                } else {
-                                    Text("Testing")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .taskTypeDocumentation })
-                            {
-                                if sortOrder == .taskTypeDocumentation {
-                                    Label("Documentation", systemImage: "checkmark")
-                                } else {
-                                    Text("Documentation")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .taskTypeDatabase })
-                            {
-                                if sortOrder == .taskTypeDatabase {
-                                    Label("Database", systemImage: "checkmark")
-                                } else {
-                                    Text("Database")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .taskTypeDefectCorrection })
-                            {
-                                if sortOrder == .taskTypeDefectCorrection {
-                                    Label("Defect Correction", systemImage: "checkmark")
-                                } else {
-                                    Text("Defect Correction")
-                                }
-                            }
-                        }
-
-                        // Priority submenu
-                        Menu("Priority")
-                        {
-                            Button(action: { sortOrder = .priorityHigh })
-                            {
-                                if sortOrder == .priorityHigh {
-                                    Label("High", systemImage: "checkmark")
-                                } else {
-                                    Text("High")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .priorityMedium })
-                            {
-                                if sortOrder == .priorityMedium {
-                                    Label("Medium", systemImage: "checkmark")
-                                } else {
-                                    Text("Medium")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .priorityLow })
-                            {
-                                if sortOrder == .priorityLow {
-                                    Label("Low", systemImage: "checkmark")
-                                } else {
-                                    Text("Low")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .priorityEnhancement })
-                            {
-                                if sortOrder == .priorityEnhancement {
-                                    Label("Enhancement", systemImage: "checkmark")
-                                } else {
-                                    Text("Enhancement")
-                                }
-                            }
-                        }
-
-                        // Status submenu
-                        Menu("Status")
-                        {
-                            Button(action: { sortOrder = .statusUnassigned })
-                            {
-                                if sortOrder == .statusUnassigned {
-                                    Label("Unassigned", systemImage: "checkmark")
-                                } else {
-                                    Text("Unassigned")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .statusInProgress })
-                            {
-                                if sortOrder == .statusInProgress {
-                                    Label("In Progress", systemImage: "checkmark")
-                                } else {
-                                    Text("In Progress")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .statusCompleted })
-                            {
-                                if sortOrder == .statusCompleted {
-                                    Label("Completed", systemImage: "checkmark")
-                                } else {
-                                    Text("Completed")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .statusDeferred })
-                            {
-                                if sortOrder == .statusDeferred {
-                                    Label("Deferred", systemImage: "checkmark")
-                                } else {
-                                    Text("Deferred")
-                                }
-                            }
-                        }
-
-                        // Date Created submenu
-                        Menu("Date Created")
-                        {
-                            Button(action: { sortOrder = .dateNewest })
-                            {
-                                if sortOrder == .dateNewest {
-                                    Label("Newest First", systemImage: "checkmark")
-                                } else {
-                                    Text("Newest First")
-                                }
-                            }
-
-                            Button(action: { sortOrder = .dateOldest })
-                            {
-                                if sortOrder == .dateOldest {
-                                    Label("Oldest First", systemImage: "checkmark")
-                                } else {
-                                    Text("Oldest First")
-                                }
-                            }
-                        }
-                        
-                        Divider()
-
-                        Button(action: {
-                            path.append(.projectDetail(project))
-                        })
-                        {
-                            Label("Edit Project", systemImage: "pencil")
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
+                    Button(action: createNewTask)
+                    {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
                             .foregroundStyle(AppGradients.projectGradient)
                     }
                 }
-
-                Button(action: createNewTask)
+            #elseif canImport(AppKit)
+                ToolbarItemGroup(placement: .automatic)
                 {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(AppGradients.projectGradient)
+                    // Only show sort/filter menu when there are tasks
+                    if !project.tasks.isEmpty
+                    {
+                        Menu
+                        {
+                            // Task Name submenu
+                            Menu("Task Name")
+                            {
+                                Button(action: { sortOrder = .taskNameAscending })
+                                {
+                                    if sortOrder == .taskNameAscending
+                                    {
+                                        Label("A-Z", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("A-Z")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskNameDescending })
+                                {
+                                    if sortOrder == .taskNameDescending
+                                    {
+                                        Label("Z-A", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Z-A")
+                                    }
+                                }
+                            }
+
+                            // Task Type submenu
+                            Menu("Task Type")
+                            {
+                                Button(action: { sortOrder = .taskTypeDevelopment })
+                                {
+                                    if sortOrder == .taskTypeDevelopment
+                                    {
+                                        Label("Development", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Development")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeRequirements })
+                                {
+                                    if sortOrder == .taskTypeRequirements
+                                    {
+                                        Label("Requirements", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Requirements")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDesign })
+                                {
+                                    if sortOrder == .taskTypeDesign
+                                    {
+                                        Label("Design", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Design")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeUseCases })
+                                {
+                                    if sortOrder == .taskTypeUseCases
+                                    {
+                                        Label("Use Cases", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Use Cases")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeTesting })
+                                {
+                                    if sortOrder == .taskTypeTesting
+                                    {
+                                        Label("Testing", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Testing")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDocumentation })
+                                {
+                                    if sortOrder == .taskTypeDocumentation
+                                    {
+                                        Label("Documentation", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Documentation")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDatabase })
+                                {
+                                    if sortOrder == .taskTypeDatabase
+                                    {
+                                        Label("Database", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Database")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .taskTypeDefectCorrection })
+                                {
+                                    if sortOrder == .taskTypeDefectCorrection
+                                    {
+                                        Label("Defect Correction", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Defect Correction")
+                                    }
+                                }
+                            }
+
+                            // Priority submenu
+                            Menu("Priority")
+                            {
+                                Button(action: { sortOrder = .priorityHigh })
+                                {
+                                    if sortOrder == .priorityHigh
+                                    {
+                                        Label("High", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("High")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .priorityMedium })
+                                {
+                                    if sortOrder == .priorityMedium
+                                    {
+                                        Label("Medium", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Medium")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .priorityLow })
+                                {
+                                    if sortOrder == .priorityLow
+                                    {
+                                        Label("Low", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Low")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .priorityEnhancement })
+                                {
+                                    if sortOrder == .priorityEnhancement
+                                    {
+                                        Label("Enhancement", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Enhancement")
+                                    }
+                                }
+                            }
+
+                            // Status submenu
+                            Menu("Status")
+                            {
+                                Button(action: { sortOrder = .statusUnassigned })
+                                {
+                                    if sortOrder == .statusUnassigned
+                                    {
+                                        Label("Unassigned", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Unassigned")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .statusInProgress })
+                                {
+                                    if sortOrder == .statusInProgress
+                                    {
+                                        Label("In Progress", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("In Progress")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .statusCompleted })
+                                {
+                                    if sortOrder == .statusCompleted
+                                    {
+                                        Label("Completed", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Completed")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .statusDeferred })
+                                {
+                                    if sortOrder == .statusDeferred
+                                    {
+                                        Label("Deferred", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Deferred")
+                                    }
+                                }
+                            }
+
+                            // Date Created submenu
+                            Menu("Date Created")
+                            {
+                                Button(action: { sortOrder = .dateNewest })
+                                {
+                                    if sortOrder == .dateNewest
+                                    {
+                                        Label("Newest First", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Newest First")
+                                    }
+                                }
+
+                                Button(action: { sortOrder = .dateOldest })
+                                {
+                                    if sortOrder == .dateOldest
+                                    {
+                                        Label("Oldest First", systemImage: "checkmark")
+                                    }
+                                    else
+                                    {
+                                        Text("Oldest First")
+                                    }
+                                }
+                            }
+
+                            Divider()
+
+                            Button(action: {
+                                path.append(.projectDetail(project))
+                            })
+                            {
+                                Label("Edit Project", systemImage: "pencil")
+                            }
+                        } label: {
+                            Label("Sort", systemImage: "arrow.up.arrow.down")
+                        }
+                    }
+
+                    Button(action: createNewTask)
+                    {
+                        Label("Add Task", systemImage: "plus.circle.fill")
+                    }
                 }
-            }
+            #endif
         }
-        .toolbarBackground(.visible, for: .navigationBar)
+        .platformNavigationBar()
         .successToast(
             isShowing: $showDeleteToast,
             message: "'\(deletedTaskName)' deleted"
@@ -651,14 +1001,14 @@ struct ProjectTasksView: View
     {
         switch priority.lowercased()
         {
-        case "high":
-            return "exclamationmark.circle.fill"
-        case "medium":
-            return "exclamationmark.circle.fill"
-        case "low":
-            return "minus.circle.fill"
-        default:
-            return "circle.fill"
+            case "high":
+                return "exclamationmark.circle.fill"
+            case "medium":
+                return "exclamationmark.circle.fill"
+            case "low":
+                return "minus.circle.fill"
+            default:
+                return "circle.fill"
         }
     }
 
@@ -666,14 +1016,14 @@ struct ProjectTasksView: View
     {
         switch priority.lowercased()
         {
-        case "high":
-            return .red
-        case "medium":
-            return .orange
-        case "low":
-            return .green
-        default:
-            return .gray
+            case "high":
+                return .red
+            case "medium":
+                return .orange
+            case "low":
+                return .green
+            default:
+                return .gray
         }
     }
 
@@ -681,14 +1031,14 @@ struct ProjectTasksView: View
     {
         switch status.lowercased()
         {
-        case "completed":
-            return "checkmark.circle.fill"
-        case "in progress", "inprogress":
-            return "clock.fill"
-        case "unassigned":
-            return "circle.dashed"
-        default:
-            return "circle"
+            case "completed":
+                return "checkmark.circle.fill"
+            case "in progress", "inprogress":
+                return "clock.fill"
+            case "unassigned":
+                return "circle.dashed"
+            default:
+                return "circle"
         }
     }
 
@@ -696,14 +1046,14 @@ struct ProjectTasksView: View
     {
         switch status.lowercased()
         {
-        case "unassigned":
-            return .orange.opacity(0.8) // Light orange
-        case "completed":
-            return .green
-        case "in progress", "inprogress":
-            return .blue.opacity(0.7) // Light blue
-        default:
-            return .secondary
+            case "unassigned":
+                return .orange.opacity(0.8) // Light orange
+            case "completed":
+                return .green
+            case "in progress", "inprogress":
+                return .blue.opacity(0.7) // Light blue
+            default:
+                return .secondary
         }
     }
 }

@@ -21,7 +21,7 @@ class Task
     var dateCreated: Date = Date()
     var dateAssigned: Date?
     var lastUpdated: Date?
-    
+
     var project: Project?
 
     @Relationship(deleteRule: .cascade, inverse: \TaskItem.parentTask)
@@ -43,17 +43,17 @@ class Task
         self.taskItems = taskItems
         self.project = project
     }
-    
+
     static func loadTasks() -> [Task]
     {
         let task1 = Task(taskName: "Task1", taskType: TaskTypeEnum.development.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.low.title, dateCreated: Date(), taskItems: [])
-        
+
         let task2 = Task(taskName: "Task2", taskType: TaskTypeEnum.testing.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.medium.title, dateCreated: Date(), taskItems: [])
-        
+
         let task3 = Task(taskName: "Task3", taskType: TaskTypeEnum.design.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, dateCreated: Date(), taskItems: [])
-        
+
         let task4 = Task(taskName: "Task4", taskType: TaskTypeEnum.documentation.title, taskStatus: TaskStatusEnum.unassigned.title, taskPriority: TaskPriorityEnum.high.title, dateCreated: Date(), taskItems: [])
-        
+
         return [task1, task2, task3, task4]
     }
 }

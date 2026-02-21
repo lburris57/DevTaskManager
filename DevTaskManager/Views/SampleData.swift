@@ -65,6 +65,7 @@ struct SampleData
         {
             Log.info("Creating users...")
             let users = createUsers(with: roles)
+            
             for user in users
             {
                 modelContext.insert(user)
@@ -170,15 +171,18 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 45), // 45 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 2) // 2 days ago
         )
+        
         project1.users = Array(users.prefix(3))
         modelContext.insert(project1)
 
         // Create tasks for project1 and link them
         let tasks1 = createTasksForECommerce(users: users, project: project1)
+        
         for task in tasks1
         {
             modelContext.insert(task)
         }
+        
         projects.append(project1)
 
         // Project 2: Mobile Banking App
@@ -188,14 +192,17 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 30), // 30 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 1) // 1 day ago
         )
+        
         project2.users = Array(users.suffix(3))
         modelContext.insert(project2)
 
         let tasks2 = createTasksForBanking(users: users, project: project2)
+        
         for task in tasks2
         {
             modelContext.insert(task)
         }
+        
         projects.append(project2)
 
         // Project 3: Task Management System
@@ -205,14 +212,17 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 20), // 20 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 3) // 3 hours ago
         )
+        
         project3.users = users
         modelContext.insert(project3)
 
         let tasks3 = createTasksForTaskManager(users: users, project: project3)
+        
         for task in tasks3
         {
             modelContext.insert(task)
         }
+        
         projects.append(project3)
 
         // Project 4: Social Media Dashboard
@@ -222,14 +232,17 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 15), // 15 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 24 * 5) // 5 days ago
         )
+        
         project4.users = [users[0], users[2], users[4]]
         modelContext.insert(project4)
 
         let tasks4 = createTasksForSocialMedia(users: users, project: project4)
+        
         for task in tasks4
         {
             modelContext.insert(task)
         }
+        
         projects.append(project4)
 
         // Project 5: Healthcare Portal (just started)
@@ -239,14 +252,17 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 5), // 5 days ago
             lastUpdated: Date().addingTimeInterval(-60 * 60 * 2) // 2 hours ago
         )
+        
         project5.users = [users[1], users[3]]
         modelContext.insert(project5)
 
         let tasks5 = createTasksForHealthcare(users: users, project: project5)
+        
         for task in tasks5
         {
             modelContext.insert(task)
         }
+        
         projects.append(project5)
 
         // Project 6: Fitness Tracker App (empty project for testing)
@@ -256,6 +272,7 @@ struct SampleData
             dateCreated: Date().addingTimeInterval(-60 * 60 * 24 * 2), // 2 days ago
             lastUpdated: nil
         )
+        
         project6.users = []
         modelContext.insert(project6)
         projects.append(project6)

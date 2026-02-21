@@ -4,7 +4,6 @@
 //
 //  Created by Larry Burris on 4/17/25.
 //
-import FloatingPromptTextField
 import SwiftData
 import SwiftUI
 
@@ -80,12 +79,12 @@ struct ProjectDetailView: View
         ZStack
         {
             // Solid background to prevent content showing through
-            Color(UIColor.systemBackground)
-                .ignoresSafeArea()
+            Color.systemBackground
+                .platformIgnoreSafeArea()
 
             // Modern gradient background overlay
             AppGradients.mainBackground
-                .ignoresSafeArea()
+                .platformIgnoreSafeArea()
 
             VStack(spacing: 0)
             {
@@ -176,10 +175,8 @@ struct ProjectDetailView: View
             toolbarLeadingContent
             toolbarTrailingContent
         }
-        .toolbarBackground(.visible, for: .navigationBar)
+        .platformNavigationBar()
         .onDisappear(perform: validateProject)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
     }
 
     // MARK: - Toolbar Components
@@ -187,7 +184,7 @@ struct ProjectDetailView: View
     @ToolbarContentBuilder
     private var toolbarLeadingContent: some ToolbarContent
     {
-        ToolbarItem(placement: .topBarLeading)
+        ToolbarItem(placement: .platformLeading)
         {
             navigationMenu
         }
@@ -196,7 +193,7 @@ struct ProjectDetailView: View
     @ToolbarContentBuilder
     private var toolbarTrailingContent: some ToolbarContent
     {
-        ToolbarItem(placement: .topBarTrailing)
+        ToolbarItem(placement: .platformCancellation)
         {
             Button("Cancel")
             {

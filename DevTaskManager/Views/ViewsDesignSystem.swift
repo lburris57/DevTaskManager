@@ -54,7 +54,7 @@ struct ModernListRow<Content: View>: View
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(UIColor.systemBackground))
+                    .fill(Color.systemBackground)
                     .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
             )
             .padding(.horizontal, 16)
@@ -79,7 +79,7 @@ struct ModernFormCard<Content: View>: View
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(UIColor.systemBackground))
+                    .fill(Color.systemBackground)
                     .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
             )
             .padding(.horizontal, 16)
@@ -103,7 +103,9 @@ struct ModernNavigationBar: ViewModifier
                     EmptyView()
                 }
             }
+        #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
+        #endif
     }
 }
 

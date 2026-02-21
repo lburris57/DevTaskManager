@@ -9,6 +9,11 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>DevTaskManagerMac.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 		<key>DevTaskManagerTests.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
@@ -28,6 +33,11 @@
 			<true/>
 		</dict>
 		<key>912D4BC32DAA278500F4BE80</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>91BB680E2F49741000FA6035</key>
 		<dict>
 			<key>primary</key>
 			<true/>

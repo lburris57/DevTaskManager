@@ -6,8 +6,8 @@
 //  Renamed from ReportView.swift for clarity
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 /// A detailed, tabbed report view with separate sections for Summary, Projects, Users, and Tasks
 /// Includes export functionality for Text and CSV formats
@@ -15,7 +15,7 @@ struct DetailedReportsView: View
 {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
-    
+
     @State private var report: DevTaskManagerReport?
     @State private var isGenerating = false
     @State private var showError = false
@@ -25,7 +25,7 @@ struct DetailedReportsView: View
     @State private var shareText = ""
     @State private var sharePDFData: Data?
     @State private var isGeneratingPDF = false
-    
+
     enum ReportTab: String, CaseIterable
     {
         case summary = "Summary"
@@ -33,7 +33,7 @@ struct DetailedReportsView: View
         case users = "Users"
         case tasks = "Tasks"
     }
-    
+
     var body: some View
     {
         NavigationStack
@@ -41,12 +41,17 @@ struct DetailedReportsView: View
             ZStack
             {
                 // Background
-                Color(uiColor: .systemBackground)
-                    .ignoresSafeArea()
-                
+                #if canImport(UIKit)
+                    Color(uiColor: .systemBackground)
+                        .ignoresSafeArea()
+                #elseif canImport(AppKit)
+                    Color(nsColor: .windowBackgroundColor)
+                        .ignoresSafeArea()
+                #endif
+
                 AppGradients.mainBackground
                     .ignoresSafeArea()
-                
+
                 if isGenerating
                 {
                     ProgressView("Generating Report...")
@@ -64,23 +69,23 @@ struct DetailedReportsView: View
                 {
                     emptyState
                 }
-                
+
                 // PDF generation overlay
                 if isGeneratingPDF
                 {
                     Color.black.opacity(0.3)
                         .ignoresSafeArea()
-                    
+
                     VStack(spacing: 16)
                     {
                         ProgressView()
                             .scaleEffect(1.5)
                             .tint(.white)
-                        
+
                         Text("Generating PDF...")
                             .font(.headline)
                             .foregroundColor(.white)
-                        
+
                         Text("This may take a moment")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.8))
@@ -93,81 +98,133 @@ struct DetailedReportsView: View
                 }
             }
             .navigationTitle("Reports")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar
-            {
-                ToolbarItem(placement: .navigationBarLeading)
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.large)
+            #endif
+                .toolbar
                 {
-                    Button("Close")
+                    #if canImport(UIKit)
+                        ToolbarItem(placement: .navigationBarLeading)
+                        {
+                            Button("Close")
+                            {
+                                dismiss()
+                            }
+                        }
+                    #elseif canImport(AppKit)
+                        ToolbarItem(placement: .cancellationAction)
+                        {
+                            Button("Close")
+                            {
+                                dismiss()
+                            }
+                        }
+                    #endif
+
+                    if report != nil
                     {
-                        dismiss()
+                        #if canImport(UIKit)
+                            ToolbarItemGroup(placement: .navigationBarTrailing)
+                            {
+                                Menu
+                                {
+                                    Button(action: exportAsText)
+                                    {
+                                        Label("Export as Text", systemImage: "doc.text")
+                                    }
+
+                                    Button(action: exportAsCSV)
+                                    {
+                                        Label("Export as CSV", systemImage: "tablecells")
+                                    }
+
+                                    Button(action: exportAsPDF)
+                                    {
+                                        Label("Export as PDF", systemImage: "doc.richtext")
+                                    }
+
+                                    Divider()
+
+                                    Button(action: shareReport)
+                                    {
+                                        Label("Share Report", systemImage: "square.and.arrow.up")
+                                    }
+                                } label: {
+                                    Image(systemName: "square.and.arrow.up")
+                                }
+
+                                Button(action: generateReport)
+                                {
+                                    Image(systemName: "arrow.clockwise")
+                                }
+                            }
+                        #elseif canImport(AppKit)
+                            ToolbarItemGroup(placement: .automatic)
+                            {
+                                Menu
+                                {
+                                    Button(action: exportAsText)
+                                    {
+                                        Label("Export as Text", systemImage: "doc.text")
+                                    }
+
+                                    Button(action: exportAsCSV)
+                                    {
+                                        Label("Export as CSV", systemImage: "tablecells")
+                                    }
+
+                                    Button(action: exportAsPDF)
+                                    {
+                                        Label("Export as PDF", systemImage: "doc.richtext")
+                                    }
+
+                                    Divider()
+
+                                    Button(action: shareReport)
+                                    {
+                                        Label("Share Report", systemImage: "square.and.arrow.up")
+                                    }
+                                } label: {
+                                    Label("Export", systemImage: "square.and.arrow.up")
+                                }
+
+                                Button(action: generateReport)
+                                {
+                                    Label("Refresh", systemImage: "arrow.clockwise")
+                                }
+                            }
+                        #endif
                     }
                 }
-                
-                if report != nil
+                .sheet(isPresented: $showShareSheet)
                 {
-                    ToolbarItemGroup(placement: .navigationBarTrailing)
+                    if let pdfData = sharePDFData
                     {
-                        Menu
-                        {
-                            Button(action: exportAsText)
-                            {
-                                Label("Export as Text", systemImage: "doc.text")
-                            }
-                            
-                            Button(action: exportAsCSV)
-                            {
-                                Label("Export as CSV", systemImage: "tablecells")
-                            }
-                            
-                            Button(action: exportAsPDF)
-                            {
-                                Label("Export as PDF", systemImage: "doc.richtext")
-                            }
-                            
-                            Divider()
-                            
-                            Button(action: shareReport)
-                            {
-                                Label("Share Report", systemImage: "square.and.arrow.up")
-                            }
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                        
-                        Button(action: generateReport)
-                        {
-                            Image(systemName: "arrow.clockwise")
-                        }
+                        PDFShareSheet(pdfData: pdfData)
+                    }
+                    else if !shareText.isEmpty
+                    {
+                        ReportShareSheet(items: [shareText])
                     }
                 }
-            }
-            .sheet(isPresented: $showShareSheet)
-            {
-                if let pdfData = sharePDFData {
-                    PDFShareSheet(pdfData: pdfData)
-                } else if !shareText.isEmpty {
-                    ReportShareSheet(items: [shareText])
-                }
-            }
-            .alert("Error", isPresented: $showError)
-            {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(errorMessage)
-            }
-            .onAppear
-            {
-                if report == nil
+                .alert("Error", isPresented: $showError)
                 {
-                    generateReport()
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text(errorMessage)
                 }
-            }
+                .onAppear
+                {
+                    if report == nil
+                    {
+                        generateReport()
+                    }
+                }
         }
     }
-    
+
     // MARK: - Content Views
-    
+
     @ViewBuilder
     private func reportContent(report: DevTaskManagerReport) -> some View
     {
@@ -175,18 +232,19 @@ struct DetailedReportsView: View
         {
             // Report Header
             reportHeader(date: report.generatedDate)
-            
+
             // Tab Picker
             Picker("Report Section", selection: $selectedTab)
             {
-                ForEach(ReportTab.allCases, id: \.self) { tab in
+                ForEach(ReportTab.allCases, id: \.self)
+                { tab in
                     Text(tab.rawValue).tag(tab)
                 }
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
             .padding(.vertical, 8)
-            
+
             // Tab Content
             ScrollView
             {
@@ -208,7 +266,7 @@ struct DetailedReportsView: View
             }
         }
     }
-    
+
     private func reportHeader(date: Date) -> some View
     {
         VStack(spacing: 4)
@@ -222,18 +280,18 @@ struct DetailedReportsView: View
                         endPoint: .bottomTrailing
                     )
                 )
-            
+
             Text("Generated Report")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            
+
             Text(date.formatted(date: .long, time: .shortened))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 12)
     }
-    
+
     private var emptyState: some View
     {
         VStack(spacing: 20)
@@ -241,16 +299,16 @@ struct DetailedReportsView: View
             Image(systemName: "chart.bar.doc.horizontal")
                 .font(.system(size: 60))
                 .foregroundStyle(.secondary.opacity(0.5))
-            
+
             Text("No Report Generated")
                 .font(.title2)
                 .fontWeight(.bold)
-            
+
             Text("Generate a report to see comprehensive data about your projects, users, and tasks.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            
+
             Button(action: generateReport)
             {
                 Label("Generate Report", systemImage: "chart.bar.doc.horizontal")
@@ -273,9 +331,9 @@ struct DetailedReportsView: View
         }
         .padding(40)
     }
-    
+
     // MARK: - Summary View
-    
+
     @ViewBuilder
     private func summaryView(report: DevTaskManagerReport) -> some View
     {
@@ -287,7 +345,8 @@ struct DetailedReportsView: View
                 icon: "folder.fill",
                 gradient: AppGradients.projectGradient,
                 content: {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 8)
+                    {
                         summaryRow("Total Projects", value: "\(report.projectsSummary.totalProjects)")
                         summaryRow("With Tasks", value: "\(report.projectsSummary.projectsWithTasks)")
                         summaryRow("Without Tasks", value: "\(report.projectsSummary.projectsWithoutTasks)")
@@ -296,33 +355,36 @@ struct DetailedReportsView: View
                     }
                 }
             )
-            
+
             // Users Summary Card
             SummaryCard(
                 title: "Users",
                 icon: "person.3.fill",
                 gradient: AppGradients.userGradient,
                 content: {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 8)
+                    {
                         summaryRow("Total Users", value: "\(report.usersSummary.totalUsers)")
                         summaryRow("With Tasks", value: "\(report.usersSummary.usersWithTasks)")
                         summaryRow("Without Tasks", value: "\(report.usersSummary.usersWithoutTasks)")
                         summaryRow("Total Assigned", value: "\(report.usersSummary.totalTasksAssigned)")
                         summaryRow("Avg Tasks/User", value: String(format: "%.1f", report.usersSummary.averageTasksPerUser))
-                        if let mostActive = report.usersSummary.mostActiveUser {
+                        if let mostActive = report.usersSummary.mostActiveUser
+                        {
                             summaryRow("Most Active", value: "\(mostActive) (\(report.usersSummary.mostActiveUserTaskCount))")
                         }
                     }
                 }
             )
-            
+
             // Tasks Summary Card
             SummaryCard(
                 title: "Tasks",
                 icon: "checklist",
                 gradient: AppGradients.taskGradient,
                 content: {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 8)
+                    {
                         summaryRow("Total Tasks", value: "\(report.tasksSummary.totalTasks)")
                         Divider()
                         summaryRow("Unassigned", value: "\(report.tasksSummary.unassignedTasks)", badge: .orange)
@@ -337,9 +399,9 @@ struct DetailedReportsView: View
             )
         }
     }
-    
+
     // MARK: - Projects View
-    
+
     @ViewBuilder
     private func projectsView(projects: [ProjectReport]) -> some View
     {
@@ -351,14 +413,15 @@ struct DetailedReportsView: View
         }
         else
         {
-            ForEach(projects) { project in
+            ForEach(projects)
+            { project in
                 ModernListRow
                 {
                     VStack(alignment: .leading, spacing: 8)
                     {
                         Text(project.title)
                             .font(.headline)
-                        
+
                         if !project.description.isEmpty
                         {
                             Text(project.description)
@@ -366,21 +429,21 @@ struct DetailedReportsView: View
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
                         }
-                        
+
                         HStack
                         {
                             Label("Created", systemImage: "calendar")
                                 .font(.caption)
                             Text(project.dateCreated.formatted(date: .abbreviated, time: .omitted))
                                 .font(.caption)
-                            
+
                             Spacer()
-                            
+
                             Label("\(project.taskCount)", systemImage: "checkmark.circle")
                                 .font(.caption)
                         }
                         .foregroundStyle(.secondary)
-                        
+
                         // Task breakdown
                         HStack(spacing: 12)
                         {
@@ -393,9 +456,9 @@ struct DetailedReportsView: View
             }
         }
     }
-    
+
     // MARK: - Users View
-    
+
     @ViewBuilder
     private func usersView(users: [UserReport]) -> some View
     {
@@ -407,35 +470,36 @@ struct DetailedReportsView: View
         }
         else
         {
-            ForEach(users) { user in
+            ForEach(users)
+            { user in
                 ModernListRow
                 {
                     VStack(alignment: .leading, spacing: 8)
                     {
                         Text(user.name)
                             .font(.headline)
-                        
+
                         if !user.roles.isEmpty
                         {
                             Text(user.roles.joined(separator: ", "))
                                 .font(.subheadline)
                                 .foregroundStyle(.purple)
                         }
-                        
+
                         HStack
                         {
                             Label("Joined", systemImage: "calendar")
                                 .font(.caption)
                             Text(user.dateCreated.formatted(date: .abbreviated, time: .omitted))
                                 .font(.caption)
-                            
+
                             Spacer()
-                            
+
                             Label("\(user.totalTasksAssigned) tasks", systemImage: "checkmark.circle")
                                 .font(.caption)
                         }
                         .foregroundStyle(.secondary)
-                        
+
                         // Task breakdown
                         HStack(spacing: 12)
                         {
@@ -448,9 +512,9 @@ struct DetailedReportsView: View
             }
         }
     }
-    
+
     // MARK: - Tasks View
-    
+
     @ViewBuilder
     private func tasksView(tasks: [TaskReport]) -> some View
     {
@@ -462,7 +526,8 @@ struct DetailedReportsView: View
         }
         else
         {
-            ForEach(tasks) { task in
+            ForEach(tasks)
+            { task in
                 ModernListRow
                 {
                     VStack(alignment: .leading, spacing: 8)
@@ -471,12 +536,12 @@ struct DetailedReportsView: View
                         {
                             Text(task.name)
                                 .font(.headline)
-                            
+
                             Spacer()
-                            
+
                             priorityBadge(task.taskPriority)
                         }
-                        
+
                         HStack
                         {
                             Image(systemName: "folder.fill")
@@ -486,7 +551,7 @@ struct DetailedReportsView: View
                                 .font(.caption)
                                 .foregroundStyle(.blue)
                         }
-                        
+
                         if let assignee = task.assignedUserName
                         {
                             HStack
@@ -499,18 +564,18 @@ struct DetailedReportsView: View
                                     .foregroundStyle(.green)
                             }
                         }
-                        
+
                         HStack
                         {
                             Label(task.taskType, systemImage: "hammer.fill")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            
+
                             Spacer()
-                            
+
                             statusBadge(task.taskStatus)
                         }
-                        
+
                         Text("Created: \(task.dateCreated.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -519,18 +584,18 @@ struct DetailedReportsView: View
             }
         }
     }
-    
+
     // MARK: - Helper Views
-    
+
     private func summaryRow(_ label: String, value: String, badge: Color? = nil) -> some View
     {
         HStack
         {
             Text(label)
                 .font(.body)
-            
+
             Spacer()
-            
+
             if let badge = badge
             {
                 Text(value)
@@ -551,7 +616,7 @@ struct DetailedReportsView: View
             }
         }
     }
-    
+
     private func taskBadge(_ text: String, color: Color) -> some View
     {
         Text(text)
@@ -562,11 +627,12 @@ struct DetailedReportsView: View
             .foregroundStyle(color)
             .clipShape(RoundedRectangle(cornerRadius: 6))
     }
-    
+
     private func statusBadge(_ status: String) -> some View
     {
         let color: Color = {
-            switch status.lowercased() {
+            switch status.lowercased()
+            {
             case "completed": return .green
             case "in progress": return .blue
             case "unassigned": return .orange
@@ -574,7 +640,7 @@ struct DetailedReportsView: View
             default: return .secondary
             }
         }()
-        
+
         return Text(status)
             .font(.caption)
             .fontWeight(.medium)
@@ -584,18 +650,19 @@ struct DetailedReportsView: View
             .foregroundStyle(color)
             .clipShape(RoundedRectangle(cornerRadius: 6))
     }
-    
+
     private func priorityBadge(_ priority: String) -> some View
     {
         let color: Color = {
-            switch priority.lowercased() {
+            switch priority.lowercased()
+            {
             case "high": return .red
             case "medium": return .orange
             case "low": return .green
             default: return .gray
             }
         }()
-        
+
         return Text(priority)
             .font(.caption)
             .fontWeight(.medium)
@@ -605,25 +672,28 @@ struct DetailedReportsView: View
             .foregroundStyle(color)
             .clipShape(RoundedRectangle(cornerRadius: 6))
     }
-    
+
     // MARK: - Actions
-    
+
     private func generateReport()
     {
         isGenerating = true
-        
-        _Concurrency.Task {
+
+        _Concurrency.Task
+        {
             do
             {
                 let generatedReport = try ReportGenerator.generateDetailedReport(context: modelContext)
-                await MainActor.run {
+                await MainActor.run
+                {
                     self.report = generatedReport
                     self.isGenerating = false
                 }
             }
             catch
             {
-                await MainActor.run {
+                await MainActor.run
+                {
                     self.errorMessage = "Failed to generate report: \(error.localizedDescription)"
                     self.showError = true
                     self.isGenerating = false
@@ -631,50 +701,54 @@ struct DetailedReportsView: View
             }
         }
     }
-    
+
     private func exportAsText()
     {
         guard let report = report else { return }
-        
+
         let text = ReportGenerator.generateTextReport(report: report)
         sharePDFData = nil
         shareText = text
         showShareSheet = true
     }
-    
+
     private func exportAsCSV()
     {
         guard let report = report else { return }
-        
+
         let csv = ReportGenerator.generateCSVReport(report: report)
         sharePDFData = nil
         shareText = csv
         showShareSheet = true
     }
-    
+
     private func exportAsPDF()
     {
         guard let report = report else { return }
-        
+
         isGeneratingPDF = true
-        
-        _Concurrency.Task { @MainActor in
-            if let pdfData = PDFReportGenerator.generatePDF(from: report) {
+
+        _Concurrency.Task
+        { @MainActor in
+            if let pdfData = PDFReportGenerator.generatePDF(from: report)
+            {
                 shareText = ""
                 sharePDFData = pdfData
                 showShareSheet = true
-            } else {
+            }
+            else
+            {
                 errorMessage = "Failed to generate PDF"
                 showError = true
             }
             isGeneratingPDF = false
         }
     }
-    
+
     private func shareReport()
     {
         guard let report = report else { return }
-        
+
         let text = ReportGenerator.generateTextReport(report: report)
         sharePDFData = nil
         shareText = text
@@ -690,7 +764,7 @@ struct SummaryCard<Content: View>: View
     let icon: String
     let gradient: LinearGradient
     @ViewBuilder let content: () -> Content
-    
+
     var body: some View
     {
         VStack(alignment: .leading, spacing: 12)
@@ -702,25 +776,29 @@ struct SummaryCard<Content: View>: View
                     RoundedRectangle(cornerRadius: 8)
                         .fill(gradient)
                         .frame(width: 36, height: 36)
-                    
+
                     Image(systemName: icon)
                         .foregroundColor(.white)
                         .font(.system(size: 18, weight: .semibold))
                 }
-                
+
                 Text(title)
                     .font(.title3)
                     .fontWeight(.bold)
-                
+
                 Spacer()
             }
-            
+
             content()
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
+            #if canImport(UIKit)
                 .fill(Color(uiColor: .systemBackground))
+            #elseif canImport(AppKit)
+                .fill(Color(nsColor: .windowBackgroundColor))
+            #endif
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
         )
     }
@@ -730,19 +808,19 @@ struct SummaryCard<Content: View>: View
 
 // Commented out temporarily to resolve compilation issues
 /*
-#Preview("With Sample Data") {
-    DetailedReportsView()
-        .modelContainer(createPreviewContainer())
-}
+ #Preview("With Sample Data") {
+     DetailedReportsView()
+         .modelContainer(createPreviewContainer())
+ }
 
-@MainActor
-private func createPreviewContainer() -> ModelContainer {
-    let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(
-        for: Project.self, User.self, Role.self, Task.self, TaskItem.self,
-        configurations: configuration
-    )
-    SampleData.createSampleData(in: container.mainContext)
-    return container
-}
-*/
+ @MainActor
+ private func createPreviewContainer() -> ModelContainer {
+     let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+     let container = try! ModelContainer(
+         for: Project.self, User.self, Role.self, Task.self, TaskItem.self,
+         configurations: configuration
+     )
+     SampleData.createSampleData(in: container.mainContext)
+     return container
+ }
+ */

@@ -13,10 +13,10 @@ class User
     @Attribute(.unique) var userId = UUID().uuidString
     var firstName: String = Constants.EMPTY_STRING
     var lastName: String = Constants.EMPTY_STRING
-    
+
     @Relationship(deleteRule: .nullify)
     var roles: [Role] = []
-    
+
     var dateCreated: Date = Date()
     var lastUpdated: Date?
 
@@ -33,19 +33,19 @@ class User
         self.lastUpdated = lastUpdated ?? dateCreated
         self.tasks = tasks
     }
-    
+
     func fullName() -> String
     {
         return "\(firstName) \(lastName)"
     }
-    
+
     static func loadUsers() -> [User]
     {
         let user1 = User(userId: "1", firstName: "Larry", lastName: "Burris")
         let user2 = User(userId: "2", firstName: "John", lastName: "Doe")
         let user3 = User(userId: "3", firstName: "Jane", lastName: "Doe")
         let user4 = User(userId: "4", firstName: "Michael", lastName: "Scott")
-        
+
         return [user1, user2, user3, user4]
     }
 }

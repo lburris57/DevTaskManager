@@ -7,21 +7,25 @@
 import SwiftUI
 
 /// A reusable badge component to display active filters in list views
-struct FilterBadgeView: View {
+struct FilterBadgeView: View
+{
     let filterText: String
     let icon: String
     let onClear: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 6) {
+
+    var body: some View
+    {
+        HStack(spacing: 6)
+        {
             Image(systemName: icon)
                 .font(.caption)
-            
+
             Text(filterText)
                 .font(.caption)
                 .fontWeight(.medium)
-            
-            Button(action: onClear) {
+
+            Button(action: onClear)
+            {
                 Image(systemName: "xmark.circle.fill")
                     .font(.caption)
             }
@@ -38,21 +42,28 @@ struct FilterBadgeView: View {
 }
 
 /// Helper to display multiple filter badges in a horizontal scroll
-struct FilterBadgesContainer: View {
+struct FilterBadgesContainer: View
+{
     let badges: [FilterBadge]
-    
-    struct FilterBadge: Identifiable {
+
+    struct FilterBadge: Identifiable
+    {
         let id = UUID()
         let text: String
         let icon: String
         let onClear: () -> Void
     }
-    
-    var body: some View {
-        if !badges.isEmpty {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(badges) { badge in
+
+    var body: some View
+    {
+        if !badges.isEmpty
+        {
+            ScrollView(.horizontal, showsIndicators: false)
+            {
+                HStack(spacing: 8)
+                {
+                    ForEach(badges)
+                    { badge in
                         FilterBadgeView(
                             filterText: badge.text,
                             icon: badge.icon,
@@ -70,18 +81,18 @@ struct FilterBadgesContainer: View {
 // MARK: - Example Usage
 
 /*
- 
+
  In your list view, add this state:
- 
+
  @State private var selectedPriority: String? = nil
  @State private var selectedStatus: String? = nil
  @State private var selectedUser: String? = nil
- 
+
  Then create the badges:
- 
+
  var activeFilterBadges: [FilterBadgesContainer.FilterBadge] {
      var badges: [FilterBadgesContainer.FilterBadge] = []
-     
+
      if let priority = selectedPriority {
          badges.append(
              FilterBadgesContainer.FilterBadge(
@@ -91,7 +102,7 @@ struct FilterBadgesContainer: View {
              )
          )
      }
-     
+
      if let status = selectedStatus {
          badges.append(
              FilterBadgesContainer.FilterBadge(
@@ -101,7 +112,7 @@ struct FilterBadgesContainer: View {
              )
          )
      }
-     
+
      if let user = selectedUser {
          badges.append(
              FilterBadgesContainer.FilterBadge(
@@ -111,31 +122,33 @@ struct FilterBadgesContainer: View {
              )
          )
      }
-     
+
      return badges
  }
- 
+
  In your view hierarchy:
- 
+
  VStack {
      // Header
      ModernHeaderView(...)
-     
+
      // Filter badges (shows active filters)
      FilterBadgesContainer(badges: activeFilterBadges)
-     
+
      // Your list content
      ScrollView {
          ...
      }
  }
- 
+
  */
 
 // MARK: - Preview
 
-#Preview("Single Filter") {
-    VStack {
+#Preview("Single Filter")
+{
+    VStack
+    {
         FilterBadgeView(
             filterText: "Priority: High",
             icon: "exclamationmark.triangle",
@@ -145,10 +158,11 @@ struct FilterBadgesContainer: View {
     }
 }
 
-#Preview("Multiple Filters") {
+#Preview("Multiple Filters")
+{
     FilterBadgesContainer(badges: [
         .init(text: "Priority: High", icon: "exclamationmark.triangle", onClear: {}),
         .init(text: "Status: In Progress", icon: "checkmark.circle", onClear: {}),
-        .init(text: "User: Sarah Johnson", icon: "person", onClear: {})
+        .init(text: "User: Sarah Johnson", icon: "person", onClear: {}),
     ])
 }

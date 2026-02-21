@@ -18,6 +18,7 @@ struct UserTasksView: View
     var onDismissToMain: (() -> Void)? = nil
 
     @Binding var path: [AppNavigationDestination]
+
     @State private var sortOrder = SortOrder.dateNewest
 
     // Sort order options
@@ -120,7 +121,7 @@ struct UserTasksView: View
         ZStack
         {
             // Solid background to prevent content showing through
-            Color(UIColor.systemBackground)
+            Color.systemBackground
                 .ignoresSafeArea()
 
             // Modern gradient background overlay
@@ -144,7 +145,9 @@ struct UserTasksView: View
                         LazyVStack(spacing: 8)
                         {
                             ForEach(sortedTasks)
-                            { task in
+                            {
+                                task in
+
                                 NavigationLink(value: AppNavigationDestination.taskDetail(task, context: .userTasksList))
                                 {
                                     ModernListRow
@@ -227,7 +230,7 @@ struct UserTasksView: View
         }
         .toolbar
         {
-            ToolbarItem(placement: .topBarLeading)
+            ToolbarItem(placement: .navigation)
             {
                 Menu
                 {
@@ -269,7 +272,7 @@ struct UserTasksView: View
                 }
             }
 
-            ToolbarItemGroup(placement: .topBarTrailing)
+            ToolbarItemGroup(placement: .primaryAction)
             {
                 Menu
                 {
@@ -328,9 +331,11 @@ struct UserTasksView: View
                 }
             }
         }
+        #if os(iOS)
         .toolbarBackground(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        #endif
     }
 
     // MARK: - Helper Functions

@@ -37,41 +37,43 @@ struct UserListView: View
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
-    
+
     // Computed property for active filter badges
-    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge] {
+    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge]
+    {
         var badges: [FilterBadgesContainer.FilterBadge] = []
-        
+
         // Add badge for role filters (not sort options)
-        switch sortOrder {
-        case .roleAdministrator:
-            badges.append(.init(
-                text: "Role: Administrator",
-                icon: "person.badge.key",
-                onClear: { sortOrder = .nameAscending }
-            ))
-        case .roleDeveloper:
-            badges.append(.init(
-                text: "Role: Developer",
-                icon: "person.badge.key",
-                onClear: { sortOrder = .nameAscending }
-            ))
-        case .roleBusinessAnalyst:
-            badges.append(.init(
-                text: "Role: Business Analyst",
-                icon: "person.badge.key",
-                onClear: { sortOrder = .nameAscending }
-            ))
-        case .roleValidator:
-            badges.append(.init(
-                text: "Role: Validator",
-                icon: "person.badge.key",
-                onClear: { sortOrder = .nameAscending }
-            ))
-        default:
-            break // No badge for sort-only options
+        switch sortOrder
+        {
+            case .roleAdministrator:
+                badges.append(.init(
+                    text: "Role: Administrator",
+                    icon: "person.badge.key",
+                    onClear: { sortOrder = .nameAscending }
+                ))
+            case .roleDeveloper:
+                badges.append(.init(
+                    text: "Role: Developer",
+                    icon: "person.badge.key",
+                    onClear: { sortOrder = .nameAscending }
+                ))
+            case .roleBusinessAnalyst:
+                badges.append(.init(
+                    text: "Role: Business Analyst",
+                    icon: "person.badge.key",
+                    onClear: { sortOrder = .nameAscending }
+                ))
+            case .roleValidator:
+                badges.append(.init(
+                    text: "Role: Validator",
+                    icon: "person.badge.key",
+                    onClear: { sortOrder = .nameAscending }
+                ))
+            default:
+                break // No badge for sort-only options
         }
-        
+
         return badges
     }
 
@@ -80,26 +82,26 @@ struct UserListView: View
     {
         switch sortOrder
         {
-        case .nameAscending:
-            return users.sorted { $0.fullName() < $1.fullName() }
-        case .nameDescending:
-            return users.sorted { $0.fullName() > $1.fullName() }
+            case .nameAscending:
+                return users.sorted { $0.fullName() < $1.fullName() }
+            case .nameDescending:
+                return users.sorted { $0.fullName() > $1.fullName() }
 
-        // Role filtering and sorting
-        case .roleAdministrator:
-            return users.filter { $0.roles.contains(where: { $0.roleName == "Administrator" }) }.sorted { $0.fullName() < $1.fullName() }
-        case .roleDeveloper:
-            return users.filter { $0.roles.contains(where: { $0.roleName == "Developer" }) }.sorted { $0.fullName() < $1.fullName() }
-        case .roleBusinessAnalyst:
-            return users.filter { $0.roles.contains(where: { $0.roleName == "Business Analyst" }) }.sorted { $0.fullName() < $1.fullName() }
-        case .roleValidator:
-            return users.filter { $0.roles.contains(where: { $0.roleName == "Validator" }) }.sorted { $0.fullName() < $1.fullName() }
+            // Role filtering and sorting
+            case .roleAdministrator:
+                return users.filter { $0.roles.contains(where: { $0.roleName == "Administrator" }) }.sorted { $0.fullName() < $1.fullName() }
+            case .roleDeveloper:
+                return users.filter { $0.roles.contains(where: { $0.roleName == "Developer" }) }.sorted { $0.fullName() < $1.fullName() }
+            case .roleBusinessAnalyst:
+                return users.filter { $0.roles.contains(where: { $0.roleName == "Business Analyst" }) }.sorted { $0.fullName() < $1.fullName() }
+            case .roleValidator:
+                return users.filter { $0.roles.contains(where: { $0.roleName == "Validator" }) }.sorted { $0.fullName() < $1.fullName() }
 
-        // Date Created sorting
-        case .dateNewest:
-            return users.sorted { $0.dateCreated > $1.dateCreated }
-        case .dateOldest:
-            return users.sorted { $0.dateCreated < $1.dateCreated }
+            // Date Created sorting
+            case .dateNewest:
+                return users.sorted { $0.dateCreated > $1.dateCreated }
+            case .dateOldest:
+                return users.sorted { $0.dateCreated < $1.dateCreated }
         }
     }
 
@@ -109,6 +111,7 @@ struct UserListView: View
         for index in offsets
         {
             let user = sortedUsers[index]
+            
             deletedUserName = user.fullName()
             modelContext.delete(user)
         }
@@ -134,12 +137,12 @@ struct UserListView: View
             ZStack
             {
                 // Solid background to prevent content showing through
-                Color(UIColor.systemBackground)
-                    .ignoresSafeArea()
+                Color.systemBackground
+                    .platformIgnoreSafeArea()
 
                 // Modern gradient background overlay
                 AppGradients.mainBackground
-                    .ignoresSafeArea()
+                    .platformIgnoreSafeArea()
 
                 VStack(spacing: 0)
                 {
@@ -150,7 +153,7 @@ struct UserListView: View
                         subtitle: "\(sortedUsers.count) team members",
                         gradientColors: [.purple, .pink]
                     )
-                    
+
                     // Filter badges - shows active role filters
                     FilterBadgesContainer(badges: activeFilterBadges)
 
@@ -161,7 +164,9 @@ struct UserListView: View
                             LazyVStack(spacing: 8)
                             {
                                 ForEach(sortedUsers)
-                                { user in
+                                {
+                                    user in
+                                    
                                     ModernListRow
                                     {
                                         userRow(for: user)
@@ -186,40 +191,54 @@ struct UserListView: View
             .navigationBarBackButtonHidden(true)
             .toolbar
             {
-                ToolbarItem(placement: .navigationBarLeading)
-                {
-                    Button(action: {
-                        dismiss()
-                    })
+                #if canImport(UIKit)
+                    ToolbarItem(placement: .navigationBarLeading)
                     {
-                        HStack(spacing: 4)
+                        Button(action: {
+                            dismiss()
+                        })
                         {
-                            Image(systemName: "chevron.left")
-                                .font(.body.weight(.semibold))
-                            Text("Back")
-                                .font(.body)
+                            HStack(spacing: 4)
+                            {
+                                Image(systemName: "chevron.left")
+                                    .font(.body.weight(.semibold))
+                                Text("Back")
+                                    .font(.body)
+                            }
+                            .foregroundStyle(AppGradients.userGradient)
                         }
-                        .foregroundStyle(AppGradients.userGradient)
                     }
-                }
+                #elseif canImport(AppKit)
+                    ToolbarItem(placement: .navigation)
+                    {
+                        Button(action: {
+                            dismiss()
+                        })
+                        {
+                            Label("Back", systemImage: "chevron.left")
+                        }
+                    }
+                #endif
 
                 toolbarContent
             }
-            .toolbarBackground(.visible, for: .navigationBar)
+            .platformNavigationBar()
             .navigationDestination(for: AppNavigationDestination.self)
-            { destination in
+            {
+                destination in
+                
                 switch destination
                 {
-                case let .userDetail(user):
-                    UserDetailView(user: user, path: $path)
-                case let .userTasks(user):
-                    UserTasksView(user: user, onDismissToMain: { dismiss() }, path: $path)
-                case let .taskDetail(task, context):
-                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
-                case let .projectDetail(project):
-                    ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-                case let .projectTasks(project):
-                    ProjectTasksView(project: project, path: $path)
+                    case let .userDetail(user):
+                        UserDetailView(user: user, path: $path)
+                    case let .userTasks(user):
+                        UserTasksView(user: user, onDismissToMain: { dismiss() }, path: $path)
+                    case let .taskDetail(task, context):
+                        TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
+                    case let .projectDetail(project):
+                        ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
+                    case let .projectTasks(project):
+                        ProjectTasksView(project: project, path: $path)
                 }
             }
         }
@@ -329,116 +348,274 @@ struct UserListView: View
 
     private var toolbarContent: some ToolbarContent
     {
-        ToolbarItemGroup(placement: .topBarTrailing)
-        {
-            // Only show sort/filter menu when there are users
-            if !users.isEmpty
+        #if canImport(UIKit)
+            ToolbarItemGroup(placement: .topBarTrailing)
             {
-                Menu
+                // Only show sort/filter menu when there are users
+                if !users.isEmpty
                 {
-                    // User Name submenu
-                    Menu("User Name")
+                    Menu
                     {
-                        Button(action: { sortOrder = .nameAscending })
+                        // User Name submenu
+                        Menu("User Name")
                         {
-                            if sortOrder == .nameAscending {
-                                Label("A-Z", systemImage: "checkmark")
-                            } else {
-                                Text("A-Z")
+                            Button(action: { sortOrder = .nameAscending })
+                            {
+                                if sortOrder == .nameAscending
+                                {
+                                    Label("A-Z", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("A-Z")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .nameDescending })
+                            {
+                                if sortOrder == .nameDescending
+                                {
+                                    Label("Z-A", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Z-A")
+                                }
                             }
                         }
 
-                        Button(action: { sortOrder = .nameDescending })
+                        // Role submenu
+                        Menu("Role")
                         {
-                            if sortOrder == .nameDescending {
-                                Label("Z-A", systemImage: "checkmark")
-                            } else {
-                                Text("Z-A")
+                            Button(action: { sortOrder = .roleAdministrator })
+                            {
+                                if sortOrder == .roleAdministrator
+                                {
+                                    Label("Administrator", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Administrator")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .roleDeveloper })
+                            {
+                                if sortOrder == .roleDeveloper
+                                {
+                                    Label("Developer", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Developer")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .roleBusinessAnalyst })
+                            {
+                                if sortOrder == .roleBusinessAnalyst
+                                {
+                                    Label("Business Analyst", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Business Analyst")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .roleValidator })
+                            {
+                                if sortOrder == .roleValidator
+                                {
+                                    Label("Validator", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Validator")
+                                }
                             }
                         }
+
+                        // Date Created submenu
+                        Menu("Date Created")
+                        {
+                            Button(action: { sortOrder = .dateNewest })
+                            {
+                                if sortOrder == .dateNewest
+                                {
+                                    Label("Newest First", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Newest First")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .dateOldest })
+                            {
+                                if sortOrder == .dateOldest
+                                {
+                                    Label("Oldest First", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Oldest First")
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .foregroundStyle(AppGradients.userGradient)
                     }
+                }
 
-                    // Role submenu
-                    Menu("Role")
+                Button(action:
                     {
-                        Button(action: { sortOrder = .roleAdministrator })
-                        {
-                            if sortOrder == .roleAdministrator {
-                                Label("Administrator", systemImage: "checkmark")
-                            } else {
-                                Text("Administrator")
-                            }
-                        }
+                        let user = User(firstName: Constants.EMPTY_STRING,
+                                        lastName: Constants.EMPTY_STRING)
 
-                        Button(action: { sortOrder = .roleDeveloper })
-                        {
-                            if sortOrder == .roleDeveloper {
-                                Label("Developer", systemImage: "checkmark")
-                            } else {
-                                Text("Developer")
-                            }
-                        }
-
-                        Button(action: { sortOrder = .roleBusinessAnalyst })
-                        {
-                            if sortOrder == .roleBusinessAnalyst {
-                                Label("Business Analyst", systemImage: "checkmark")
-                            } else {
-                                Text("Business Analyst")
-                            }
-                        }
-
-                        Button(action: { sortOrder = .roleValidator })
-                        {
-                            if sortOrder == .roleValidator {
-                                Label("Validator", systemImage: "checkmark")
-                            } else {
-                                Text("Validator")
-                            }
-                        }
-                    }
-
-                    // Date Created submenu
-                    Menu("Date Created")
-                    {
-                        Button(action: { sortOrder = .dateNewest })
-                        {
-                            if sortOrder == .dateNewest {
-                                Label("Newest First", systemImage: "checkmark")
-                            } else {
-                                Text("Newest First")
-                            }
-                        }
-
-                        Button(action: { sortOrder = .dateOldest })
-                        {
-                            if sortOrder == .dateOldest {
-                                Label("Oldest First", systemImage: "checkmark")
-                            } else {
-                                Text("Oldest First")
-                            }
-                        }
-                    }
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down")
+                        // Don't insert or save yet - let the detail view handle it
+                        path.append(.userDetail(user))
+                    })
+                {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
                         .foregroundStyle(AppGradients.userGradient)
                 }
             }
-
-            Button(action:
-                {
-                    let user = User(firstName: Constants.EMPTY_STRING,
-                                    lastName: Constants.EMPTY_STRING)
-
-                    // Don't insert or save yet - let the detail view handle it
-                    path.append(.userDetail(user))
-                })
+        #elseif canImport(AppKit)
+            ToolbarItemGroup(placement: .automatic)
             {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(AppGradients.userGradient)
+                // Only show sort/filter menu when there are users
+                if !users.isEmpty
+                {
+                    Menu
+                    {
+                        // User Name submenu
+                        Menu("User Name")
+                        {
+                            Button(action: { sortOrder = .nameAscending })
+                            {
+                                if sortOrder == .nameAscending
+                                {
+                                    Label("A-Z", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("A-Z")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .nameDescending })
+                            {
+                                if sortOrder == .nameDescending
+                                {
+                                    Label("Z-A", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Z-A")
+                                }
+                            }
+                        }
+
+                        // Role submenu
+                        Menu("Role")
+                        {
+                            Button(action: { sortOrder = .roleAdministrator })
+                            {
+                                if sortOrder == .roleAdministrator
+                                {
+                                    Label("Administrator", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Administrator")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .roleDeveloper })
+                            {
+                                if sortOrder == .roleDeveloper
+                                {
+                                    Label("Developer", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Developer")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .roleBusinessAnalyst })
+                            {
+                                if sortOrder == .roleBusinessAnalyst
+                                {
+                                    Label("Business Analyst", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Business Analyst")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .roleValidator })
+                            {
+                                if sortOrder == .roleValidator
+                                {
+                                    Label("Validator", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Validator")
+                                }
+                            }
+                        }
+
+                        // Date Created submenu
+                        Menu("Date Created")
+                        {
+                            Button(action: { sortOrder = .dateNewest })
+                            {
+                                if sortOrder == .dateNewest
+                                {
+                                    Label("Newest First", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Newest First")
+                                }
+                            }
+
+                            Button(action: { sortOrder = .dateOldest })
+                            {
+                                if sortOrder == .dateOldest
+                                {
+                                    Label("Oldest First", systemImage: "checkmark")
+                                }
+                                else
+                                {
+                                    Text("Oldest First")
+                                }
+                            }
+                        }
+                    } label: {
+                        Label("Sort", systemImage: "arrow.up.arrow.down")
+                    }
+                }
+
+                Button(action:
+                    {
+                        let user = User(firstName: Constants.EMPTY_STRING,
+                                        lastName: Constants.EMPTY_STRING)
+
+                        // Don't insert or save yet - let the detail view handle it
+                        path.append(.userDetail(user))
+                    })
+                {
+                    Label("Add User", systemImage: "plus.circle.fill")
+                }
             }
-        }
+        #endif
     }
 }
 

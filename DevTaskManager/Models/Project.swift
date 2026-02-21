@@ -16,7 +16,7 @@ final class Project
     var dateCreated: Date = Date()
     var lastUpdated: Date?
     var users: [User] = []
-    
+
     @Relationship(deleteRule: .cascade, inverse: \Task.project)
     var tasks: [Task] = []
 
@@ -26,12 +26,13 @@ final class Project
         self.title = title
         self.descriptionText = descriptionText
         self.dateCreated = dateCreated
+
         // If lastUpdated is not provided, set it to dateCreated for new projects
         self.lastUpdated = lastUpdated ?? dateCreated
         self.users = users
         self.tasks = tasks
     }
-    
+
     static func loadSampleProject() -> Project
     {
         return Project(title: "Sample Project", descriptionText: "This is a sample project.")

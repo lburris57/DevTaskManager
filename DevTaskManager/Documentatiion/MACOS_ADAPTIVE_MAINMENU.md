@@ -1,9 +1,19 @@
+# macOS-Adaptive MainMenuView Implementation
+
+## Overview
+
+This guide shows how to create a MainMenuView that provides:
+- **iOS/iPadOS**: Beautiful card-based menu (current design)
+- **macOS**: Native 3-column sidebar layout
+
+## Complete Implementation
+
+```swift
 //
 //  MainMenuView.swift
 //  DevTaskManager
 //
-//  Created by Larry Burris on 4/20/25.
-//  Updated for macOS support on 2/20/26
+//  Cross-platform main menu with adaptive layouts
 //
 import SwiftData
 import SwiftUI
@@ -11,16 +21,17 @@ import SwiftUI
 struct MainMenuView: View
 {
     @Environment(\.modelContext) var modelContext
+
     @State private var showSuccessToast = false
     @State private var selectedView: MenuDestination?
 
+    // Menu destinations
     enum MenuDestination: Hashable, Identifiable
     {
         case dashboard
         case projectList
         case userList
         case taskList
-        case reports
 
         var id: Self { self }
     }
@@ -28,80 +39,62 @@ struct MainMenuView: View
     var body: some View
     {
         #if os(macOS)
-            macOSLayout
+        macOSLayout
         #else
-            iOSLayout
+        iOSLayout
         #endif
     }
-
-    // MARK: - macOS Layout (Sidebar Navigation)
-
+    
+    // MARK: - macOS Layout (Native Sidebar)
+    
     @ViewBuilder
     private var macOSLayout: some View
     {
         NavigationSplitView
         {
-            // Sidebar
+            // Sidebar (Column 1)
             List(selection: $selectedView)
             {
                 Section("Analytics")
                 {
-                    NavigationLink(value: MenuDestination.dashboard)
-                    {
-                        Label("Dashboard", systemImage: "chart.bar.fill")
-                    }
-
-                    NavigationLink(value: MenuDestination.reports)
-                    {
-                        Label("Reports", systemImage: "chart.bar.doc.horizontal.fill")
-                    }
+                    Label("Dashboard", systemImage: "chart.bar.fill")
+                        .tag(MenuDestination.dashboard)
                 }
-
+                
                 Section("Management")
                 {
-                    NavigationLink(value: MenuDestination.projectList)
+                    Label("Projects", systemImage: "folder.fill")
+                        .tag(MenuDestination.projectList)
+                    
+                    Label("Users", systemImage: "person.3.fill")
+                        .tag(MenuDestination.userList)
+                    
+                    Label("Tasks", systemImage: "checklist")
+                        .tag(MenuDestination.taskList)
+                }
+                
+                #if DEBUG
+                Section("Development")
+                {
+                    Button(action: loadSampleData)
                     {
-                        Label("Projects", systemImage: "folder.fill")
-                    }
-
-                    NavigationLink(value: MenuDestination.userList)
-                    {
-                        Label("Users", systemImage: "person.3.fill")
-                    }
-
-                    NavigationLink(value: MenuDestination.taskList)
-                    {
-                        Label("Tasks", systemImage: "checklist")
+                        Label("Load Sample Data", systemImage: "hammer.fill")
                     }
                 }
-
-                #if DEBUG
-                    Section("Development")
-                    {
-                        Button(action: loadSampleData)
-                        {
-                            Label("Load Sample Data", systemImage: "hammer.fill")
-                        }
-                    }
                 #endif
             }
             .listStyle(.sidebar)
-            .navigationTitle("Dev Task Manager")
+            .navigationTitle("DevTaskManager")
             .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 300)
-            #if os(macOS)
-                .toolbar
-                {
-                    ToolbarItem(placement: .navigation)
-                    {
-                        Button(action: toggleSidebar)
-                        {
-                            Label("Toggle Sidebar", systemImage: "sidebar.left")
-                        }
+            .toolbar {
+                ToolbarItem(placement: .navigation) {
+                    Button(action: toggleSidebar) {
+                        Label("Toggle Sidebar", systemImage: "sidebar.left")
                     }
                 }
-            #endif
+            }
         } detail: {
-            // Detail view
+            // Detail view (Columns 2 & 3)
             if let destination = selectedView
             {
                 destinationView(for: destination)
@@ -109,18 +102,18 @@ struct MainMenuView: View
             }
             else
             {
-                // Welcome screen
+                // Welcome/empty state
                 welcomeView
             }
         }
         .successToast(
             isShowing: $showSuccessToast,
-            message: "Sample data loaded successfully! 🎉"
+            message: "Sample data loaded successfully"
         )
     }
-
+    
     // MARK: - iOS Layout (Card Menu)
-
+    
     @ViewBuilder
     private var iOSLayout: some View
     {
@@ -130,15 +123,16 @@ struct MainMenuView: View
             {
                 // Background gradient
                 AppGradients.mainBackground
-                    .ignoresSafeArea()
+                    .platformIgnoreSafeArea()
 
-                VStack(spacing: 0)
+                VStack(spacing: 24)
                 {
-                    // Header section with app title and subtitle
+                    // App Header
                     headerView
-                        .padding(.vertical, 20)
+                        .padding(.top, 40)
+                        .padding(.bottom, 20)
 
-                    // Main menu cards
+                    // Menu Cards
                     ScrollView
                     {
                         VStack(spacing: 16)
@@ -146,39 +140,30 @@ struct MainMenuView: View
                             menuCards
                         }
                         .padding(.horizontal, 20)
-                        .padding(.top, 10)
                     }
 
                     Spacer()
                 }
             }
-            #if canImport(UIKit)
-            .navigationBarHidden(true)
             .fullScreenCover(item: $selectedView)
             { destination in
                 destinationView(for: destination)
             }
-            #elseif canImport(AppKit)
-            .sheet(item: $selectedView)
-            { destination in
-                destinationView(for: destination)
-            }
-            #endif
-            .successToast(
-                isShowing: $showSuccessToast,
-                message: "Sample data loaded successfully! 🎉"
-            )
         }
+        .successToast(
+            isShowing: $showSuccessToast,
+            message: "Sample data loaded successfully"
+        )
     }
-
+    
     // MARK: - Shared Components
-
+    
     @ViewBuilder
     private var headerView: some View
     {
         VStack(spacing: 8)
         {
-            Image(systemName: "checkmark.circle.fill")
+            Image(systemName: "checklist.checked")
                 .font(.system(size: 60))
                 .foregroundStyle(
                     LinearGradient(
@@ -187,25 +172,22 @@ struct MainMenuView: View
                         endPoint: .bottomTrailing
                     )
                 )
-                .padding(.top, 20)
 
-            Text("Dev Task Manager")
+            Text("DevTaskManager")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundStyle(.primary)
 
-            Text("Organize your development workflow")
+            Text("Manage your projects efficiently")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                .padding(.bottom, 10)
         }
     }
-
+    
     @ViewBuilder
     private var welcomeView: some View
     {
         VStack(spacing: 20)
         {
-            Image(systemName: "checkmark.circle.fill")
+            Image(systemName: "checklist.checked")
                 .font(.system(size: 80))
                 .foregroundStyle(
                     LinearGradient(
@@ -214,23 +196,23 @@ struct MainMenuView: View
                         endPoint: .bottomTrailing
                     )
                 )
-
-            Text("Welcome to Dev Task Manager")
+            
+            Text("Welcome to DevTaskManager")
                 .font(.largeTitle.bold())
-
+            
             Text("Select a section from the sidebar to begin")
                 .font(.title3)
                 .foregroundStyle(.secondary)
-
+            
             #if DEBUG
-                Button("Load Sample Data", action: loadSampleData)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+            Button("Load Sample Data", action: loadSampleData)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
             #endif
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
+    
     @ViewBuilder
     private var menuCards: some View
     {
@@ -240,8 +222,7 @@ struct MainMenuView: View
             title: "Dashboard",
             subtitle: "Overview & analytics",
             gradientColors: [.blue, .purple]
-        )
-        {
+        ) {
             selectedView = .dashboard
         }
 
@@ -250,95 +231,92 @@ struct MainMenuView: View
             icon: "folder.fill",
             title: "Projects",
             subtitle: "Manage your projects",
-            gradientColors: [.blue, .cyan],
-            action: { selectedView = .projectList }
-        )
+            gradientColors: [.blue, .cyan]
+        ) {
+            selectedView = .projectList
+        }
 
         // Users Card
         MenuCard(
             icon: "person.3.fill",
             title: "Users",
-            subtitle: "Manage team members",
-            gradientColors: [.purple, .pink],
-            action: { selectedView = .userList }
-        )
+            subtitle: "Team members",
+            gradientColors: [.purple, .pink]
+        ) {
+            selectedView = .userList
+        }
 
         // Tasks Card
         MenuCard(
             icon: "checklist",
             title: "Tasks",
-            subtitle: "View all tasks",
-            gradientColors: [.orange, .red],
-            action: { selectedView = .taskList }
-        )
-
-        // Reports Card
-        MenuCard(
-            icon: "chart.bar.doc.horizontal.fill",
-            title: "Reports",
-            subtitle: "View project analytics",
-            gradientColors: [.indigo, .purple],
-            action: { selectedView = .reports }
-        )
+            subtitle: "Track your work",
+            gradientColors: [.orange, .red]
+        ) {
+            selectedView = .taskList
+        }
 
         #if DEBUG
-            // Developer Tools Card (Debug only)
-            MenuCard(
-                icon: "hammer.fill",
-                title: "Developer Tools",
-                subtitle: "Load sample data",
-                gradientColors: [.green, .mint],
-                action: loadSampleData
-            )
+        // Developer Tools Card
+        MenuCard(
+            icon: "hammer.fill",
+            title: "Developer Tools",
+            subtitle: "Load sample data",
+            gradientColors: [.green, .mint]
+        ) {
+            loadSampleData()
+        }
         #endif
     }
-
+    
     // MARK: - Navigation
-
+    
     @ViewBuilder
     private func destinationView(for destination: MenuDestination) -> some View
     {
         switch destination
         {
         case .dashboard:
-            DashboardView()
+            // Replace with your DashboardView when ready
+            Text("Dashboard")
+                .font(.largeTitle)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.systemBackground)
+            
         case .projectList:
             ProjectListView()
+            
         case .userList:
             UserListView()
+            
         case .taskList:
             TaskListView()
-        case .reports:
-            SimpleReportsView()
         }
     }
-
+    
     // MARK: - Actions
-
-    // Load sample data with visual feedback
+    
     private func loadSampleData()
     {
         SampleData.createSampleData(in: modelContext)
-
-        // Show success toast (auto-dismisses after 3 seconds)
         withAnimation
         {
             showSuccessToast = true
         }
     }
-
+    
     #if os(macOS)
-        private func toggleSidebar()
-        {
-            NSApp.keyWindow?.firstResponder?.tryToPerform(
-                #selector(NSSplitViewController.toggleSidebar(_:)),
-                with: nil
-            )
-        }
+    private func toggleSidebar()
+    {
+        NSApp.keyWindow?.firstResponder?.tryToPerform(
+            #selector(NSSplitViewController.toggleSidebar(_:)),
+            with: nil
+        )
+    }
     #endif
 }
 
-// MARK: - MenuCard Component
+// MARK: - Menu Card Component
 
 struct MenuCard: View
 {
@@ -353,20 +331,11 @@ struct MenuCard: View
 
     var body: some View
     {
-        #if DEBUG
-        let _ = print("🎯 Platform check:")
-        #if os(macOS)
-        let _ = print("✅ os(macOS) = true - Using macOSLayout")
-        #else
-        let _ = print("❌ os(macOS) = false - Using iOSLayout")
-        #endif
-        #endif
-
-        return Button(action: action)
+        Button(action: action)
         {
             HStack(spacing: 16)
             {
-                // Icon with gradient background
+                // Icon
                 ZStack
                 {
                     RoundedRectangle(cornerRadius: 12)
@@ -378,14 +347,19 @@ struct MenuCard: View
                             )
                         )
                         .frame(width: 60, height: 60)
-                        .shadow(color: gradientColors.first?.opacity(0.3) ?? .clear, radius: 8, x: 0, y: 4)
+                        .shadow(
+                            color: gradientColors.first?.opacity(0.3) ?? .clear,
+                            radius: 8,
+                            x: 0,
+                            y: 4
+                        )
 
                     Image(systemName: icon)
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(.white)
                 }
 
-                // Title and subtitle
+                // Text
                 VStack(alignment: .leading, spacing: 4)
                 {
                     Text(title)
@@ -401,7 +375,7 @@ struct MenuCard: View
 
                 // Chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.secondary)
             }
             .padding(16)
@@ -414,34 +388,31 @@ struct MenuCard: View
         }
         .buttonStyle(.plain)
         #if os(iOS)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged
-                    { _ in
-                        withAnimation(.easeInOut(duration: 0.1))
-                        {
-                            isPressed = true
-                        }
-                    }
-                    .onEnded
-                    { _ in
-                        withAnimation(.easeInOut(duration: 0.1))
-                        {
-                            isPressed = false
-                        }
-                    }
-            )
-        #else
-                .onHover
-                { hovering in
-                    withAnimation(.easeInOut(duration: 0.15))
-                    {
-                        isHovering = hovering
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isPressed = true
                     }
                 }
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isPressed = false
+                    }
+                    action()
+                }
+        )
+        #else
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovering = hovering
+            }
+        }
         #endif
     }
 }
+
+// MARK: - Previews
 
 #Preview("iOS", traits: .modifier(SampleDataPreviewModifier()))
 {
@@ -449,9 +420,76 @@ struct MenuCard: View
 }
 
 #if os(macOS)
-    #Preview("macOS", traits: .modifier(SampleDataPreviewModifier()))
-    {
-        MainMenuView()
-            .frame(width: 1200, height: 800)
-    }
+#Preview("macOS", traits: .modifier(SampleDataPreviewModifier()))
+{
+    MainMenuView()
+        .frame(width: 1200, height: 800)
+}
 #endif
+```
+
+## Key Features
+
+### macOS Layout
+- **3-column NavigationSplitView**
+- Collapsible sidebar with toggle button
+- Minimum window size enforcement
+- Native macOS sidebar styling
+- Section headers for organization
+
+### iOS Layout
+- Beautiful card-based menu
+- Full-screen navigation
+- Gradient backgrounds
+- Touch-optimized interactions
+
+### Shared
+- Same MenuDestination enum
+- Unified navigation logic
+- Consistent data loading
+- Toast notifications
+
+## Window Configuration
+
+Add to your App file for optimal macOS experience:
+
+```swift
+@main
+struct DevTaskManagerApp: App {
+    // ... model container ...
+    
+    var body: some Scene {
+        WindowGroup {
+            MainMenuView()
+        }
+        .modelContainer(sharedModelContainer)
+        #if os(macOS)
+        .defaultSize(width: 1200, height: 800)
+        .windowStyle(.automatic)
+        .windowToolbarStyle(.unified)
+        .commands {
+            // Add menu bar commands here
+        }
+        #endif
+    }
+}
+```
+
+## Testing
+
+1. **iOS**: Tap cards → Full screen views
+2. **macOS**: Click sidebar → Split view layout
+3. **Sidebar**: Click toggle button to show/hide
+4. **Resize**: Window resizes gracefully
+
+## Benefits
+
+✅ Native experience on each platform
+✅ Single codebase
+✅ Minimal code duplication
+✅ Easy to maintain
+✅ Platform-appropriate interactions
+
+---
+
+*macOS-Adaptive MainMenuView Guide*

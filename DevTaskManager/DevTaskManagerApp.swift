@@ -4,17 +4,8 @@
 //
 //  Created by Larry Burris on 4/12/25.
 //
-import Inject
 import SwiftData
 import SwiftUI
-
-/*
- Just 3 steps to enable injection in your SwiftUI Views
-
- 1. Import Inject in each view
- 2. Add @ObserveInjection var inject to your view struct
- 3. Call .enableInjection() at the end of your body definition
- */
 
 @main
 struct DevTaskManagerApp: App

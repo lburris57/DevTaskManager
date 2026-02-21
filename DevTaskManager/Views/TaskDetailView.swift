@@ -4,7 +4,6 @@
 //
 //  Created by Larry Burris on 4/20/25.
 //
-import FloatingPromptTextField
 import SwiftData
 import SwiftUI
 
@@ -44,6 +43,7 @@ struct TaskDetailView: View
     {
         _task = Bindable(wrappedValue: task)
         _path = path
+        
         self.onDismissToMain = onDismissToMain
         self.sourceContext = sourceContext
 
@@ -120,12 +120,12 @@ struct TaskDetailView: View
         ZStack
         {
             // Solid background to prevent content showing through
-            Color(UIColor.systemBackground)
-                .ignoresSafeArea()
+            Color.systemBackground
+                .platformIgnoreSafeArea()
 
             // Modern gradient background overlay
             AppGradients.mainBackground
-                .ignoresSafeArea()
+                .platformIgnoreSafeArea()
 
             VStack(spacing: 0)
             {
@@ -223,6 +223,7 @@ struct TaskDetailView: View
                                         ForEach(TaskTypeEnum.allCases)
                                         {
                                             taskType in
+                                            
                                             Text(taskType.title).tag(taskType.title)
                                         }
                                     }
@@ -247,6 +248,7 @@ struct TaskDetailView: View
                                         ForEach(TaskStatusEnum.allCases)
                                         {
                                             taskStatus in
+                                            
                                             Text(taskStatus.title).tag(taskStatus.title)
                                         }
                                     }
@@ -271,6 +273,7 @@ struct TaskDetailView: View
                                         ForEach(TaskPriorityEnum.allCases)
                                         {
                                             taskPriority in
+                                            
                                             Text(taskPriority.title).tag(taskPriority.title)
                                         }
                                     }
@@ -297,6 +300,7 @@ struct TaskDetailView: View
                                         ForEach(users)
                                         {
                                             user in
+                                            
                                             Text(user.fullName())
                                                 .tag(user as User?)
                                         }
@@ -349,10 +353,8 @@ struct TaskDetailView: View
             toolbarLeadingContent
             toolbarTrailingContent
         }
-        .toolbarBackground(.visible, for: .navigationBar)
+        .platformNavigationBar()
         .onDisappear(perform: validateTask)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
     }
 
     // MARK: - Toolbar Components
@@ -360,7 +362,7 @@ struct TaskDetailView: View
     @ToolbarContentBuilder
     private var toolbarLeadingContent: some ToolbarContent
     {
-        ToolbarItem(placement: .topBarLeading)
+        ToolbarItem(placement: .platformLeading)
         {
             navigationMenu
         }
@@ -369,7 +371,7 @@ struct TaskDetailView: View
     @ToolbarContentBuilder
     private var toolbarTrailingContent: some ToolbarContent
     {
-        ToolbarItem(placement: .topBarTrailing)
+        ToolbarItem(placement: .platformCancellation)
         {
             Button("Cancel")
             {
@@ -391,12 +393,12 @@ struct TaskDetailView: View
             } label: {
                 switch sourceContext
                 {
-                case .taskList:
-                    Label("Back To Task List", systemImage: "list.bullet.clipboard")
-                case .userTasksList:
-                    Label("Back To Assigned Tasks", systemImage: "person.crop.circle.badge.checkmark")
-                case .projectTasksList:
-                    Label("Back To Project Tasks", systemImage: "folder.badge.gearshape")
+                    case .taskList:
+                        Label("Back To Task List", systemImage: "list.bullet.clipboard")
+                    case .userTasksList:
+                        Label("Back To Assigned Tasks", systemImage: "person.crop.circle.badge.checkmark")
+                    case .projectTasksList:
+                        Label("Back To Project Tasks", systemImage: "folder.badge.gearshape")
                 }
             }
 
@@ -431,6 +433,7 @@ struct TaskDetailView: View
     private func navigateToMainMenu()
     {
         path.removeAll()
+        
         if let onDismissToMain = onDismissToMain
         {
             onDismissToMain()

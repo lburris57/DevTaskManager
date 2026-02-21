@@ -11,15 +11,15 @@ import SwiftData
 struct ReportData
 {
     let generatedDate: Date
-    
+
     // Project Statistics
     let totalProjects: Int
     let projectsList: [ProjectSummary]
-    
+
     // User Statistics
     let totalUsers: Int
     let usersList: [UserSummary]
-    
+
     // Task Statistics
     let totalTasks: Int
     let completedTasks: Int
@@ -29,19 +29,22 @@ struct ReportData
     let tasksByType: [String: Int]
     let tasksByPriority: [String: Int]
     let tasksList: [TaskSummary]
-    
+
     // Computed properties
-    var completionRate: Double {
+    var completionRate: Double
+    {
         guard totalTasks > 0 else { return 0 }
         return Double(completedTasks) / Double(totalTasks) * 100
     }
-    
-    var tasksPerProject: Double {
+
+    var tasksPerProject: Double
+    {
         guard totalProjects > 0 else { return 0 }
         return Double(totalTasks) / Double(totalProjects)
     }
-    
-    var tasksPerUser: Double {
+
+    var tasksPerUser: Double
+    {
         guard totalUsers > 0 else { return 0 }
         return Double(totalTasks) / Double(totalUsers)
     }
@@ -55,8 +58,9 @@ struct ProjectSummary: Identifiable
     let dateCreated: Date
     let taskCount: Int
     let completedTaskCount: Int
-    
-    var completionRate: Double {
+
+    var completionRate: Double
+    {
         guard taskCount > 0 else { return 0 }
         return Double(completedTaskCount) / Double(taskCount) * 100
     }
@@ -91,50 +95,72 @@ class ReportGenerator
     static func generateReport(context: ModelContext, startDate: Date? = nil, endDate: Date? = nil) throws -> ReportData
     {
         print("🔍 ========== GENERATING REPORT ==========")
-        
+
         // Fetch all data with relationships
         var projectDescriptor = FetchDescriptor<Project>()
         projectDescriptor.relationshipKeyPathsForPrefetching = [\.tasks, \.users]
-        
+
         var userDescriptor = FetchDescriptor<User>()
         userDescriptor.relationshipKeyPathsForPrefetching = [\.roles, \.tasks]
-        
+
         var taskDescriptor = FetchDescriptor<Task>()
-        
+
         // Apply date filter to tasks if provided
-        if let start = startDate, let end = endDate {
-            taskDescriptor.predicate = #Predicate<Task> { task in
+        if let start = startDate, let end = endDate
+        {
+            taskDescriptor.predicate = #Predicate<Task>
+            { task in
                 task.dateCreated >= start && task.dateCreated <= end
             }
-        } else if let start = startDate {
-            taskDescriptor.predicate = #Predicate<Task> { task in
+        }
+        else if let start = startDate
+        {
+            taskDescriptor.predicate = #Predicate<Task>
+            { task in
                 task.dateCreated >= start
             }
-        } else if let end = endDate {
-            taskDescriptor.predicate = #Predicate<Task> { task in
+        }
+        else if let end = endDate
+        {
+            taskDescriptor.predicate = #Predicate<Task>
+            {
+                task in
+                
                 task.dateCreated <= end
             }
         }
-        
+
         let projects = try context.fetch(projectDescriptor)
         let users = try context.fetch(userDescriptor)
         let tasks = try context.fetch(taskDescriptor)
-        
+
         print("✅ Fetched \(users.count) users from database")
-        
+
         // Generate project summaries (filter tasks by date range)
-        let projectSummaries = projects.map { project in
-            let filteredTasks = project.tasks.filter { task in
-                if let start = startDate, let end = endDate {
+        let projectSummaries = projects.map
+        {
+            project in
+            
+            let filteredTasks = project.tasks.filter
+            {
+                task in
+                
+                if let start = startDate, let end = endDate
+                {
                     return task.dateCreated >= start && task.dateCreated <= end
-                } else if let start = startDate {
+                }
+                else if let start = startDate
+                {
                     return task.dateCreated >= start
-                } else if let end = endDate {
+                }
+                else if let end = endDate
+                {
                     return task.dateCreated <= end
                 }
                 return true
             }
             let completedTasks = filteredTasks.filter { $0.taskStatus.lowercased() == "completed" }.count
+            
             return ProjectSummary(
                 id: project.projectId,
                 title: project.title.isEmpty ? "Untitled Project" : project.title,
@@ -144,44 +170,67 @@ class ReportGenerator
                 completedTaskCount: completedTasks
             )
         }
-        
+
         // Generate user summaries (filter tasks by date range)
-        let userSummaries = users.map { user in
-            let filteredTasks = user.tasks.filter { task in
-                if let start = startDate, let end = endDate {
+        let userSummaries = users.map
+        {
+            user in
+            
+            let filteredTasks = user.tasks.filter
+            {
+                task in
+                
+                if let start = startDate, let end = endDate
+                {
                     return task.dateCreated >= start && task.dateCreated <= end
-                } else if let start = startDate {
+                }
+                else if let start = startDate
+                {
                     return task.dateCreated >= start
-                } else if let end = endDate {
+                }
+                else if let end = endDate
+                {
                     return task.dateCreated <= end
                 }
+                
                 return true
             }
-            let completedTasks = filteredTasks.filter { $0.taskStatus.lowercased() == "completed" }.count
             
+            let completedTasks = filteredTasks.filter { $0.taskStatus.lowercased() == "completed" }.count
+
             // Force access to roles to ensure they're loaded
             _ = user.roles.count
-            
+
             // Debug: Log role information
             print("📊 Report - User: \(user.fullName()), Roles count: \(user.roles.count)")
-            if !user.roles.isEmpty {
-                for role in user.roles {
+            if !user.roles.isEmpty
+            {
+                for role in user.roles
+                {
                     print("   Role: \(role.roleName)")
                 }
-            } else {
+            }
+            else
+            {
                 print("   ⚠️ NO ROLES FOUND for \(user.fullName())!")
             }
-            
+
             // Get role names - join multiple roles if present, or show "No Role"
             let roleNames: String
-            if user.roles.isEmpty {
+            
+            if user.roles.isEmpty
+            {
                 roleNames = "No Role"
-            } else if user.roles.count == 1 {
+            }
+            else if user.roles.count == 1
+            {
                 roleNames = user.roles[0].roleName
-            } else {
+            }
+            else
+            {
                 roleNames = user.roles.map { $0.roleName }.joined(separator: ", ")
             }
-            
+
             return UserSummary(
                 id: user.userId,
                 name: user.fullName(),
@@ -191,9 +240,12 @@ class ReportGenerator
                 completedTaskCount: completedTasks
             )
         }
-        
+
         // Generate task summaries
-        let taskSummaries = tasks.map { task in
+        let taskSummaries = tasks.map
+        {
+            task in
+            
             TaskSummary(
                 id: task.taskId,
                 name: task.taskName.isEmpty ? "Untitled Task" : task.taskName,
@@ -206,25 +258,28 @@ class ReportGenerator
                 dateCompleted: task.dateCompleted
             )
         }
-        
+
         // Calculate task statistics
         let completedTasks = tasks.filter { $0.taskStatus.lowercased() == "completed" }.count
         let inProgressTasks = tasks.filter { $0.taskStatus.lowercased() == "in progress" }.count
         let unassignedTasks = tasks.filter { $0.taskStatus.lowercased() == "unassigned" }.count
         let deferredTasks = tasks.filter { $0.taskStatus.lowercased() == "deferred" }.count
-        
+
         // Group tasks by type
         var tasksByType: [String: Int] = [:]
-        for task in tasks {
+        for task in tasks
+        {
             tasksByType[task.taskType, default: 0] += 1
         }
-        
+
         // Group tasks by priority
         var tasksByPriority: [String: Int] = [:]
-        for task in tasks {
+        
+        for task in tasks
+        {
             tasksByPriority[task.taskPriority, default: 0] += 1
         }
-        
+
         return ReportData(
             generatedDate: Date(),
             totalProjects: projects.count,
@@ -242,6 +297,7 @@ class ReportGenerator
         )
     }
 }
+
 // MARK: - Extended Report Types (for detailed reporting)
 
 struct DevTaskManagerReport
@@ -341,7 +397,7 @@ extension ReportGenerator
         let projects = try fetchProjects(context: context)
         let users = try fetchUsers(context: context)
         let tasks = try fetchTasks(context: context)
-        
+
         return DevTaskManagerReport(
             generatedDate: Date(),
             projectsSummary: generateProjectsSummary(projects: projects),
@@ -352,34 +408,37 @@ extension ReportGenerator
             detailedTasks: generateTaskReports(tasks: tasks)
         )
     }
-    
+
     private static func fetchProjects(context: ModelContext) throws -> [Project]
     {
         var descriptor = FetchDescriptor<Project>(sortBy: [SortDescriptor(\.title)])
         descriptor.relationshipKeyPathsForPrefetching = [\.tasks, \.users]
+        
         return try context.fetch(descriptor)
     }
-    
+
     private static func fetchUsers(context: ModelContext) throws -> [User]
     {
         var descriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.lastName)])
         descriptor.relationshipKeyPathsForPrefetching = [\.roles, \.tasks]
+        
         return try context.fetch(descriptor)
     }
-    
+
     private static func fetchTasks(context: ModelContext) throws -> [Task]
     {
         var descriptor = FetchDescriptor<Task>(sortBy: [SortDescriptor(\.dateCreated)])
         descriptor.relationshipKeyPathsForPrefetching = [\.project, \.assignedUser]
+        
         return try context.fetch(descriptor)
     }
-    
+
     private static func generateProjectsSummary(projects: [Project]) -> ProjectsSummary
     {
         let projectsWithTasks = projects.filter { !$0.tasks.isEmpty }
         let totalTasks = projects.reduce(0) { $0 + $1.tasks.count }
         let averageTasks = projects.isEmpty ? 0.0 : Double(totalTasks) / Double(projects.count)
-        
+
         return ProjectsSummary(
             totalProjects: projects.count,
             projectsWithTasks: projectsWithTasks.count,
@@ -390,15 +449,15 @@ extension ReportGenerator
             newestProject: projects.map(\.dateCreated).max()
         )
     }
-    
+
     private static func generateUsersSummary(users: [User]) -> UsersSummary
     {
         let usersWithTasks = users.filter { !$0.tasks.isEmpty }
         let totalTasks = users.reduce(0) { $0 + $1.tasks.count }
         let averageTasks = users.isEmpty ? 0.0 : Double(totalTasks) / Double(users.count)
-        
+
         let mostActive = users.max { $0.tasks.count < $1.tasks.count }
-        
+
         return UsersSummary(
             totalUsers: users.count,
             usersWithTasks: usersWithTasks.count,
@@ -409,38 +468,44 @@ extension ReportGenerator
             mostActiveUserTaskCount: mostActive?.tasks.count ?? 0
         )
     }
-    
+
     private static func generateTasksSummary(tasks: [Task]) -> TasksSummary
     {
         let unassigned = tasks.filter { $0.taskStatus.lowercased() == "unassigned" }.count
         let inProgress = tasks.filter { $0.taskStatus.lowercased() == "in progress" }.count
         let completed = tasks.filter { $0.taskStatus.lowercased() == "completed" }.count
         let deferred = tasks.filter { $0.taskStatus.lowercased() == "deferred" }.count
-        
+
         var typeDict: [String: Int] = [:]
-        for task in tasks {
+        
+        for task in tasks
+        {
             typeDict[task.taskType, default: 0] += 1
         }
-        
+
         var priorityDict: [String: Int] = [:]
-        for task in tasks {
+        
+        for task in tasks
+        {
             priorityDict[task.taskPriority, default: 0] += 1
         }
-        
+
         let now = Date()
         let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now) ?? now
         let monthAgo = Calendar.current.date(byAdding: .month, value: -1, to: now) ?? now
-        
-        let completedThisWeek = tasks.filter {
+
+        let completedThisWeek = tasks.filter
+        {
             $0.taskStatus.lowercased() == "completed" &&
-            ($0.dateCompleted ?? .distantPast) >= weekAgo
+                ($0.dateCompleted ?? .distantPast) >= weekAgo
         }.count
-        
-        let completedThisMonth = tasks.filter {
+
+        let completedThisMonth = tasks.filter
+        {
             $0.taskStatus.lowercased() == "completed" &&
-            ($0.dateCompleted ?? .distantPast) >= monthAgo
+                ($0.dateCompleted ?? .distantPast) >= monthAgo
         }.count
-        
+
         return TasksSummary(
             totalTasks: tasks.count,
             unassignedTasks: unassigned,
@@ -455,15 +520,18 @@ extension ReportGenerator
             completedThisMonth: completedThisMonth
         )
     }
-    
+
     private static func generateProjectReports(projects: [Project]) -> [ProjectReport]
     {
-        projects.map { project in
+        projects.map
+        {
+            project in
+            
             let tasks = project.tasks
             let completed = tasks.filter { $0.taskStatus.lowercased() == "completed" }.count
             let inProgress = tasks.filter { $0.taskStatus.lowercased() == "in progress" }.count
             let unassigned = tasks.filter { $0.taskStatus.lowercased() == "unassigned" }.count
-            
+
             return ProjectReport(
                 id: project.projectId,
                 title: project.title.isEmpty ? "Untitled Project" : project.title,
@@ -478,15 +546,18 @@ extension ReportGenerator
             )
         }
     }
-    
+
     private static func generateUserReports(users: [User]) -> [UserReport]
     {
-        users.map { user in
+        users.map
+        {
+            user in
+            
             let tasks = user.tasks
             let completed = tasks.filter { $0.taskStatus.lowercased() == "completed" }.count
             let inProgress = tasks.filter { $0.taskStatus.lowercased() == "in progress" }.count
             let unassigned = tasks.filter { $0.taskStatus.lowercased() == "unassigned" }.count
-            
+
             return UserReport(
                 id: user.userId,
                 name: user.fullName(),
@@ -499,10 +570,13 @@ extension ReportGenerator
             )
         }
     }
-    
+
     private static func generateTaskReports(tasks: [Task]) -> [TaskReport]
     {
-        tasks.map { task in
+        tasks.map
+        {
+            task in
+            
             TaskReport(
                 id: task.taskId,
                 name: task.taskName.isEmpty ? "Untitled Task" : task.taskName,
@@ -517,7 +591,7 @@ extension ReportGenerator
             )
         }
     }
-    
+
     static func generateTextReport(report: DevTaskManagerReport) -> String
     {
         var text = """
@@ -525,10 +599,10 @@ extension ReportGenerator
         DEV TASK MANAGER - COMPREHENSIVE REPORT
         ═══════════════════════════════════════════════════════════
         Generated: \(report.generatedDate.formatted(date: .long, time: .shortened))
-        
-        
+
+
         """
-        
+
         text += """
         ───────────────────────────────────────────────────────────
         PROJECTS SUMMARY
@@ -538,10 +612,10 @@ extension ReportGenerator
         Projects without Tasks: \(report.projectsSummary.projectsWithoutTasks)
         Total Tasks Across All Projects: \(report.projectsSummary.totalTasksAcrossProjects)
         Average Tasks per Project: \(String(format: "%.1f", report.projectsSummary.averageTasksPerProject))
-        
-        
+
+
         """
-        
+
         text += """
         ───────────────────────────────────────────────────────────
         USERS SUMMARY
@@ -552,126 +626,137 @@ extension ReportGenerator
         Total Tasks Assigned: \(report.usersSummary.totalTasksAssigned)
         Average Tasks per User: \(String(format: "%.1f", report.usersSummary.averageTasksPerUser))
         Most Active User: \(report.usersSummary.mostActiveUser ?? "N/A") (\(report.usersSummary.mostActiveUserTaskCount) tasks)
-        
-        
+
+
         """
-        
+
         text += """
         ───────────────────────────────────────────────────────────
         TASKS SUMMARY
         ───────────────────────────────────────────────────────────
         Total Tasks: \(report.tasksSummary.totalTasks)
-        
+
         By Status:
           • Unassigned: \(report.tasksSummary.unassignedTasks)
           • In Progress: \(report.tasksSummary.inProgressTasks)
           • Completed: \(report.tasksSummary.completedTasks)
           • Deferred: \(report.tasksSummary.deferredTasks)
-        
+
         Completed This Week: \(report.tasksSummary.completedThisWeek)
         Completed This Month: \(report.tasksSummary.completedThisMonth)
-        
+
         By Type:
         """
-        
-        for (type, count) in report.tasksSummary.tasksByType.sorted(by: { $0.key < $1.key }) {
+
+        for (type, count) in report.tasksSummary.tasksByType.sorted(by: { $0.key < $1.key })
+        {
             text += "\n  • \(type): \(count)"
         }
-        
+
         text += "\n\nBy Priority:\n"
-        for (priority, count) in report.tasksSummary.tasksByPriority.sorted(by: { $0.key < $1.key }) {
+        
+        for (priority, count) in report.tasksSummary.tasksByPriority.sorted(by: { $0.key < $1.key })
+        {
             text += "  • \(priority): \(count)\n"
         }
-        
+
         text += """
-        
-        
+
+
         ═══════════════════════════════════════════════════════════
         DETAILED PROJECT REPORTS
         ═══════════════════════════════════════════════════════════
-        
+
         """
-        
-        for project in report.detailedProjects {
+
+        for project in report.detailedProjects
+        {
             text += """
             Project: \(project.title)
             Description: \(project.description.isEmpty ? "No description" : project.description)
             Created: \(project.dateCreated.formatted(date: .abbreviated, time: .omitted))
             Tasks: \(project.taskCount) (✓ \(project.completedTaskCount) | ⏳ \(project.inProgressTaskCount) | ○ \(project.unassignedTaskCount))
-            
-            
+
+
             """
         }
-        
+
         text += """
         ═══════════════════════════════════════════════════════════
         DETAILED USER REPORTS
         ═══════════════════════════════════════════════════════════
-        
+
         """
-        
-        for user in report.detailedUsers {
+
+        for user in report.detailedUsers
+        {
             text += """
             User: \(user.name)
             Roles: \(user.roles.joined(separator: ", "))
             Created: \(user.dateCreated.formatted(date: .abbreviated, time: .omitted))
             Tasks: \(user.totalTasksAssigned) (✓ \(user.completedTasks) | ⏳ \(user.inProgressTasks) | ○ \(user.unassignedTasks))
-            
-            
+
+
             """
         }
-        
+
         text += """
         ═══════════════════════════════════════════════════════════
         DETAILED TASK REPORTS
         ═══════════════════════════════════════════════════════════
-        
+
         """
-        
-        for task in report.detailedTasks {
+
+        for task in report.detailedTasks
+        {
             text += """
             Task: \(task.name)
             Project: \(task.projectName)
             Assigned To: \(task.assignedUserName ?? "Unassigned")
             Type: \(task.taskType) | Priority: \(task.taskPriority) | Status: \(task.taskStatus)
             Created: \(task.dateCreated.formatted(date: .abbreviated, time: .omitted))
-            
-            
+
+
             """
         }
-        
+
         text += """
         ═══════════════════════════════════════════════════════════
         END OF REPORT
         ═══════════════════════════════════════════════════════════
         """
-        
+
         return text
     }
-    
+
     static func generateCSVReport(report: DevTaskManagerReport) -> String
     {
         var csv = "DevTaskManager Report - Generated \(report.generatedDate.formatted())\n\n"
-        
+
         csv += "PROJECTS\n"
         csv += "Title,Description,Date Created,Last Updated,Total Tasks,Completed,In Progress,Unassigned\n"
-        for project in report.detailedProjects {
+        
+        for project in report.detailedProjects
+        {
             csv += "\"\(project.title)\",\"\(project.description)\",\(project.dateCreated.formatted(date: .abbreviated, time: .omitted)),\(project.lastUpdated?.formatted(date: .abbreviated, time: .omitted) ?? "N/A"),\(project.taskCount),\(project.completedTaskCount),\(project.inProgressTaskCount),\(project.unassignedTaskCount)\n"
         }
-        
+
         csv += "\nUSERS\n"
         csv += "Name,Roles,Date Created,Total Tasks,Completed,In Progress,Unassigned\n"
-        for user in report.detailedUsers {
+        
+        for user in report.detailedUsers
+        {
             csv += "\"\(user.name)\",\"\(user.roles.joined(separator: "; "))\",\(user.dateCreated.formatted(date: .abbreviated, time: .omitted)),\(user.totalTasksAssigned),\(user.completedTasks),\(user.inProgressTasks),\(user.unassignedTasks)\n"
         }
-        
+
         csv += "\nTASKS\n"
         csv += "Name,Project,Assigned To,Type,Status,Priority,Date Created,Date Assigned,Date Completed\n"
-        for task in report.detailedTasks {
+        
+        for task in report.detailedTasks
+        {
             csv += "\"\(task.name)\",\"\(task.projectName)\",\"\(task.assignedUserName ?? "Unassigned")\",\(task.taskType),\(task.taskStatus),\(task.taskPriority),\(task.dateCreated.formatted(date: .abbreviated, time: .omitted)),\(task.dateAssigned?.formatted(date: .abbreviated, time: .omitted) ?? "N/A"),\(task.dateCompleted?.formatted(date: .abbreviated, time: .omitted) ?? "N/A")\n"
         }
-        
+
         return csv
     }
 }
-

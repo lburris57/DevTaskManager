@@ -25,7 +25,7 @@ struct DashboardView: View
             ZStack
             {
                 // Solid background to prevent content showing through
-                Color(UIColor.systemBackground)
+                Color.systemBackground
                     .ignoresSafeArea()
 
                 // Modern gradient background overlay
@@ -69,7 +69,7 @@ struct DashboardView: View
             .navigationBarBackButtonHidden(true)
             .toolbar
             {
-                ToolbarItem(placement: .navigationBarLeading)
+                ToolbarItem(placement: .navigation)
                 {
                     Button(action: {
                         dismiss()
@@ -92,7 +92,9 @@ struct DashboardView: View
                     }
                 }
             }
+            #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
+            #endif
             .navigationDestination(for: AppNavigationDestination.self)
             { destination in
                 destinationView(for: destination)
@@ -382,7 +384,7 @@ struct StatCard: View
         .padding(.vertical, 16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.systemBackground))
+                .fill(Color.systemBackground)
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
         )
     }
@@ -425,7 +427,7 @@ struct DashboardCard<Content: View>: View
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.systemBackground))
+                .fill(Color.systemBackground)
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
         )
         .padding(.horizontal, 16)
@@ -761,17 +763,19 @@ struct ProjectProgressRow: View
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
+                .fill(Color.secondarySystemBackground)
         )
     }
 }
 
-#Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier()))
-{
-    DashboardView()
-}
+#if swift(>=6.0)
+    #Preview("With Sample Data", traits: .modifier(SampleDataPreviewModifier()))
+    {
+        DashboardView()
+    }
 
-#Preview("Empty State", traits: .modifier(EmptyDataPreviewModifier()))
-{
-    DashboardView()
-}
+    #Preview("Empty State", traits: .modifier(EmptyDataPreviewModifier()))
+    {
+        DashboardView()
+    }
+#endif

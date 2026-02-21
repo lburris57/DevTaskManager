@@ -6,11 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		912D4C3D2DAD9A9300F4BE80 /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 912D4C3C2DAD9A9300F4BE80 /* Inject */; };
-		912D4C912DB202D400F4BE80 /* FloatingPromptTextField in Frameworks */ = {isa = PBXBuildFile; productRef = 912D4C902DB202D400F4BE80 /* FloatingPromptTextField */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		912D4BBB2DAA278500F4BE80 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -33,11 +28,115 @@
 		912D4BBA2DAA278500F4BE80 /* DevTaskManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DevTaskManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		912D4BC42DAA278500F4BE80 /* DevTaskManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DevTaskManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		915DB7C72DECE6DE007D8471 /* DevTaskManagerTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DevTaskManagerTests.xctestplan; sourceTree = "<group>"; };
+		91BB680F2F49741000FA6035 /* DevTaskManagerMac.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DevTaskManagerMac.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		91BB681D2F4975FD00FA6035 /* Exceptions for "DevTaskManager" folder in "DevTaskManagerMac" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				Constants.swift,
+				DevTaskManagerApp.swift,
+				Documentatiion/ACTUAL_FIX_APPLIED.md,
+				Documentatiion/COMPILATION_ERROR_FIX.md,
+				Documentatiion/COMPILATION_FIXES_APPLIED.md,
+				Documentatiion/COMPILER_TYPE_CHECK_FIX.md,
+				Documentatiion/COMPLETE_FIX_GUIDE.md,
+				Documentatiion/CROSS_PLATFORM_EXTENSIONS_SUMMARY.md,
+				Documentatiion/DASHBOARD_DOCUMENTATION.md,
+				Documentatiion/DASHBOARD_INTEGRATION_GUIDE.md,
+				Documentatiion/DASHBOARD_INTEGRATION_SUMMARY.md,
+				Documentatiion/DASHBOARD_VISUAL_GUIDE.md,
+				Documentatiion/DEFERRED_TASKS_COMPLETE_FIX.md,
+				Documentatiion/DEFERRED_TASKS_FIX.md,
+				Documentatiion/DOCUMENTATION_CREATION_SUMMARY.md,
+				Documentatiion/DOCUMENTATION_INDEX.md,
+				Documentatiion/DOCUMENTATION_ORGANIZATION_GUIDE.md,
+				Documentatiion/DOCUMENTATION_README.md,
+				Documentatiion/DocumentationINJECT_REMOVAL_SUMMARY.md,
+				Documentatiion/EXISTING_MAINMENUVIEW_INTEGRATION.md,
+				Documentatiion/FINAL_FIX_SUMMARY.md,
+				Documentatiion/FINAL_PREVIEW_FIX.md,
+				Documentatiion/fix_macos_compatibility.sh,
+				Documentatiion/FIX_REMAINING_ERRORS.md,
+				Documentatiion/IMPLEMENTATION_STATUS_REPORT.md,
+				Documentatiion/INJECT_REMOVAL_SUMMARY.md,
+				Documentatiion/MACOS_ADAPTIVE_MAINMENU.md,
+				Documentatiion/MACOS_FINAL_SUMMARY.md,
+				Documentatiion/MACOS_IMPLEMENTATION_SUMMARY.md,
+				Documentatiion/MACOS_KEYBOARD_SHORTCUTS.md,
+				Documentatiion/MAINMENUVIEW_DOCUMENTATION.md,
+				Documentatiion/NAVIGATION_REFACTOR_SUMMARY.md,
+				Documentatiion/NAVIGATION_VERIFICATION.md,
+				Documentatiion/PDF_EXPORT_DOCUMENTATION.md,
+				Documentatiion/PDF_EXPORT_QUICK_REFERENCE.md,
+				Documentatiion/PREVIEW_TRAITS_GUIDE.md,
+				Documentatiion/PREVIEW_TRAITS_QUICKSTART.md,
+				Documentatiion/PREVIEW_TRAITS_SUMMARY.md,
+				Documentatiion/PROJECT_NAVIGATION_ENHANCEMENT.md,
+				Documentatiion/PROJECT_TASK_RELATIONSHIP_FIX.md,
+				Documentatiion/PROJECT_TESTS_DOCUMENTATION.md,
+				Documentatiion/PROJECTLISTVIEW_DOCUMENTATION.md,
+				Documentatiion/REPORTS_VIEW_RENAME_GUIDE.md,
+				Documentatiion/SAMPLE_DATA_GUIDE.md,
+				Documentatiion/TASK_CONTEXT_FIX_SUMMARY.md,
+				Documentatiion/TASK_PROJECT_RELATIONSHIP_FIX.md,
+				Documentatiion/TASKLISTVIEW_DOCUMENTATION.md,
+				Documentatiion/TASKLISTVIEW_ENHANCEMENT_SUMMARY.md,
+				Documentatiion/TEAM_CHART_LEGEND_ADDED.md,
+				Documentatiion/TOAST_IMPLEMENTATION_SUMMARY.md,
+				Documentatiion/TOAST_NOTIFICATION_GUIDE.md,
+				Documentatiion/USER_CHART_HORIZONTAL_FIX.md,
+				Documentatiion/USERLISTVIEW_DOCUMENTATION.md,
+				Enums/ComplexityEnum.swift,
+				Enums/DevelopmentCategoryEnum.swift,
+				Enums/PermissionsEnum.swift,
+				Enums/RoleNamesEnum.swift,
+				Enums/TaskPriorityEnum.swift,
+				Enums/TaskStatusEnum.swift,
+				Enums/TaskTypeEnum.swift,
+				Log.swift,
+				Managers/DatabaseManager.swift,
+				Models/Project.swift,
+				Models/Role.swift,
+				Models/Task.swift,
+				Models/TaskItem.swift,
+				Models/User.swift,
+				Views/DashboardView.swift,
+				Views/DetailedReportsView.swift,
+				Views/FilterBadgeView.swift,
+				Views/MainMenuView.swift,
+				"Views/ModelContainer+SampleData.swift",
+				Views/NavigationDestination.swift,
+				Views/PDFReportGenerator.swift,
+				Views/PlatformHelpers.swift,
+				Views/ProjectDetailView.swift,
+				Views/ProjectListView.swift,
+				Views/ProjectTasksView.swift,
+				Views/ReportGenerator.swift,
+				Views/ReportShareSheets.swift,
+				Views/SampleData.swift,
+				Views/SampleDataPreviewModifier.swift,
+				Views/SimpleReportsView.swift,
+				Views/TaskDetailView.swift,
+				Views/TaskListView.swift,
+				Views/ToastView.swift,
+				Views/UserDetailView.swift,
+				Views/UserListView.swift,
+				Views/UserTasksView.swift,
+				Views/ViewsDesignSystem.swift,
+			);
+			target = 91BB680E2F49741000FA6035 /* DevTaskManagerMac */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		912D4BAF2DAA278500F4BE80 /* DevTaskManager */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				91BB681D2F4975FD00FA6035 /* Exceptions for "DevTaskManager" folder in "DevTaskManagerMac" target */,
+			);
 			path = DevTaskManager;
 			sourceTree = "<group>";
 		};
@@ -51,6 +150,11 @@
 			path = DevTaskManagerUITests;
 			sourceTree = "<group>";
 		};
+		91BB68102F49741000FA6035 /* DevTaskManagerMac */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DevTaskManagerMac;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,8 +162,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				912D4C912DB202D400F4BE80 /* FloatingPromptTextField in Frameworks */,
-				912D4C3D2DAD9A9300F4BE80 /* Inject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +179,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		91BB680C2F49741000FA6035 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -87,6 +196,7 @@
 				912D4BAF2DAA278500F4BE80 /* DevTaskManager */,
 				912D4BBD2DAA278500F4BE80 /* DevTaskManagerTests */,
 				912D4BC72DAA278500F4BE80 /* DevTaskManagerUITests */,
+				91BB68102F49741000FA6035 /* DevTaskManagerMac */,
 				912D4C3B2DAD9A9300F4BE80 /* Frameworks */,
 				912D4BAE2DAA278500F4BE80 /* Products */,
 			);
@@ -98,6 +208,7 @@
 				912D4BAD2DAA278500F4BE80 /* DevTaskManager.app */,
 				912D4BBA2DAA278500F4BE80 /* DevTaskManagerTests.xctest */,
 				912D4BC42DAA278500F4BE80 /* DevTaskManagerUITests.xctest */,
+				91BB680F2F49741000FA6035 /* DevTaskManagerMac.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -129,8 +240,6 @@
 			);
 			name = DevTaskManager;
 			packageProductDependencies = (
-				912D4C3C2DAD9A9300F4BE80 /* Inject */,
-				912D4C902DB202D400F4BE80 /* FloatingPromptTextField */,
 			);
 			productName = DevTaskManager;
 			productReference = 912D4BAD2DAA278500F4BE80 /* DevTaskManager.app */;
@@ -182,6 +291,28 @@
 			productReference = 912D4BC42DAA278500F4BE80 /* DevTaskManagerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		91BB680E2F49741000FA6035 /* DevTaskManagerMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 91BB68132F49741000FA6035 /* Build configuration list for PBXNativeTarget "DevTaskManagerMac" */;
+			buildPhases = (
+				91BB680B2F49741000FA6035 /* Sources */,
+				91BB680C2F49741000FA6035 /* Frameworks */,
+				91BB680D2F49741000FA6035 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				91BB68102F49741000FA6035 /* DevTaskManagerMac */,
+			);
+			name = DevTaskManagerMac;
+			packageProductDependencies = (
+			);
+			productName = DevTaskManagerMac;
+			productReference = 91BB680F2F49741000FA6035 /* DevTaskManagerMac.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -189,7 +320,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1630;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					912D4BAC2DAA278500F4BE80 = {
@@ -203,6 +334,9 @@
 						CreatedOnToolsVersion = 16.3;
 						TestTargetID = 912D4BAC2DAA278500F4BE80;
 					};
+					91BB680E2F49741000FA6035 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 				};
 			};
 			buildConfigurationList = 912D4BA82DAA278400F4BE80 /* Build configuration list for PBXProject "DevTaskManager" */;
@@ -215,8 +349,6 @@
 			mainGroup = 912D4BA42DAA278400F4BE80;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */,
-				912D4C8F2DB202C700F4BE80 /* XCRemoteSwiftPackageReference "FloatingPromptTextField" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 912D4BAE2DAA278500F4BE80 /* Products */;
@@ -226,6 +358,7 @@
 				912D4BAC2DAA278500F4BE80 /* DevTaskManager */,
 				912D4BB92DAA278500F4BE80 /* DevTaskManagerTests */,
 				912D4BC32DAA278500F4BE80 /* DevTaskManagerUITests */,
+				91BB680E2F49741000FA6035 /* DevTaskManagerMac */,
 			);
 		};
 /* End PBXProject section */
@@ -252,6 +385,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		91BB680D2F49741000FA6035 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -270,6 +410,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		912D4BC02DAA278500F4BE80 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		91BB680B2F49741000FA6035 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -423,6 +570,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C37927XKUL;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -434,9 +584,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.larryburris.DevTaskManager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -451,6 +605,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C37927XKUL;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -462,9 +619,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.larryburris.DevTaskManager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -543,6 +704,46 @@
 			};
 			name = Release;
 		};
+		91BB68142F49741000FA6035 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = C37927XKUL;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.larryburris.DevTaskManagerMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		91BB68152F49741000FA6035 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = C37927XKUL;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.larryburris.DevTaskManagerMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -582,39 +783,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		91BB68132F49741000FA6035 /* Build configuration list for PBXNativeTarget "DevTaskManagerMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				91BB68142F49741000FA6035 /* Debug */,
+				91BB68152F49741000FA6035 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/krzysztofzablocki/Inject";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.5.2;
-			};
-		};
-		912D4C8F2DB202C700F4BE80 /* XCRemoteSwiftPackageReference "FloatingPromptTextField" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/EmilioPelaez/FloatingPromptTextField";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.4.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		912D4C3C2DAD9A9300F4BE80 /* Inject */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 912D4C3A2DAD9A6E00F4BE80 /* XCRemoteSwiftPackageReference "Inject" */;
-			productName = Inject;
-		};
-		912D4C902DB202D400F4BE80 /* FloatingPromptTextField */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 912D4C8F2DB202C700F4BE80 /* XCRemoteSwiftPackageReference "FloatingPromptTextField" */;
-			productName = FloatingPromptTextField;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 912D4BA52DAA278400F4BE80 /* Project object */;
 }

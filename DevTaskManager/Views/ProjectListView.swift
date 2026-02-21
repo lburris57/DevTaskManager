@@ -18,7 +18,7 @@ struct ProjectListView: View
     @State private var sortOrder = SortOrder.titleAscending
     @State private var showDeleteToast = false
     @State private var deletedProjectName = ""
-    
+
     // Filter states (for future filtering)
     @State private var selectedStatus: String? = nil
 
@@ -32,20 +32,22 @@ struct ProjectListView: View
         case dateNewest = "Newest First"
         case dateOldest = "Oldest First"
     }
-    
+
     // Computed property for active filter badges
-    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge] {
+    private var activeFilterBadges: [FilterBadgesContainer.FilterBadge]
+    {
         var badges: [FilterBadgesContainer.FilterBadge] = []
-        
+
         // Add badge for status filter if active
-        if let status = selectedStatus {
+        if let status = selectedStatus
+        {
             badges.append(.init(
                 text: "Status: \(status)",
                 icon: "checkmark.circle",
                 onClear: { selectedStatus = nil }
             ))
         }
-        
+
         return badges
     }
 
@@ -63,9 +65,10 @@ struct ProjectListView: View
         {
             filtered = projects.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         }
-        
+
         // Apply status filter if selected (example - customize based on your needs)
-        if let status = selectedStatus {
+        if let status = selectedStatus
+        {
             // Example: You could filter by completion percentage, task count, etc.
             // For now, this is a placeholder for when you add actual status filtering
             // filtered = filtered.filter { /* your filter logic */ }
@@ -163,12 +166,12 @@ struct ProjectListView: View
             ZStack
             {
                 // Solid background to prevent content showing through
-                Color(UIColor.systemBackground)
-                    .ignoresSafeArea()
+                Color.systemBackground
+                    .platformIgnoreSafeArea()
 
                 // Modern gradient background overlay
                 AppGradients.mainBackground
-                    .ignoresSafeArea()
+                    .platformIgnoreSafeArea()
 
                 VStack(spacing: 0)
                 {
@@ -179,7 +182,7 @@ struct ProjectListView: View
                         subtitle: "\(filteredProjects.count) total",
                         gradientColors: [.blue, .cyan]
                     )
-                    
+
                     // Filter badges - shows active filters
                     FilterBadgesContainer(badges: activeFilterBadges)
 
@@ -203,7 +206,7 @@ struct ProjectListView: View
                     .padding(12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(UIColor.systemBackground))
+                            .fill(Color.systemBackground)
                             .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
                     )
                     .padding(.horizontal, 16)
@@ -260,7 +263,7 @@ struct ProjectListView: View
             .navigationBarBackButtonHidden(true)
             .toolbar
             {
-                ToolbarItem(placement: .navigationBarLeading)
+                ToolbarItem(placement: .navigation)
                 {
                     Button(action: {
                         dismiss()
@@ -277,7 +280,7 @@ struct ProjectListView: View
                     }
                 }
 
-                ToolbarItemGroup(placement: .topBarTrailing)
+                ToolbarItemGroup(placement: .primaryAction)
                 {
                     // Only show sort menu when there are projects
                     if !projects.isEmpty
@@ -306,21 +309,23 @@ struct ProjectListView: View
                     }
                 }
             }
-            .toolbarBackground(.visible, for: .navigationBar)
+            .platformNavigationBar()
             .navigationDestination(for: AppNavigationDestination.self)
-            { destination in
+            {
+                destination in
+                
                 switch destination
                 {
-                case let .projectTasks(project):
-                    ProjectTasksView(project: project, path: $path)
-                case let .projectDetail(project):
-                    ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
-                case let .taskDetail(task, context):
-                    TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
-                case let .userDetail(user):
-                    UserDetailView(user: user, path: $path)
-                case let .userTasks(user):
-                    UserTasksView(user: user, path: $path)
+                    case let .projectTasks(project):
+                        ProjectTasksView(project: project, path: $path)
+                    case let .projectDetail(project):
+                        ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() })
+                    case let .taskDetail(task, context):
+                        TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
+                    case let .userDetail(user):
+                        UserDetailView(user: user, path: $path)
+                    case let .userTasks(user):
+                        UserTasksView(user: user, path: $path)
                 }
             }
             .onAppear(perform: saveRoles)

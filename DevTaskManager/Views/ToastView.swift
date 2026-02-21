@@ -45,6 +45,7 @@ struct ToastView: View
 struct ToastModifier: ViewModifier
 {
     @Binding var isShowing: Bool
+    
     let message: String
     let icon: String
     let iconColor: Color
@@ -66,6 +67,7 @@ struct ToastModifier: ViewModifier
                             _Concurrency.Task
                             {
                                 try? await _Concurrency.Task.sleep(for: .seconds(duration))
+                                
                                 await MainActor.run
                                 {
                                     withAnimation

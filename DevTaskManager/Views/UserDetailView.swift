@@ -4,7 +4,6 @@
 //
 //  Created by Larry Burris on 4/19/25.
 //
-import FloatingPromptTextField
 import SwiftData
 import SwiftUI
 
@@ -39,7 +38,7 @@ struct UserDetailView: View
     {
         print("🔄 Populating initial role for: \(user.fullName())")
         print("   Current roles in user object: \(user.roles.map { $0.roleName })")
-        
+
         if let userRole = user.roles.first?.roleName, !userRole.isEmpty, userRole != RoleNamesEnum.all.title
         {
             selectedRole = userRole
@@ -82,14 +81,14 @@ struct UserDetailView: View
         print("💾 ========== SAVING USER ==========")
         print("   Name: \(user.fullName())")
         print("   Selected Role: \(selectedRole)")
-        
+
         // Clear existing roles
         user.roles.removeAll()
 
         // Create a new Role instance for this user (not shared)
         let newRole = Role(roleName: selectedRole, permissions: [])
         user.roles.append(newRole)
-        
+
         print("   ✅ Assigned role: \(selectedRole)")
 
         user.lastUpdated = Date()
@@ -101,16 +100,19 @@ struct UserDetailView: View
             print("   📝 Inserted new user")
         }
 
-        do {
+        do
+        {
             try modelContext.save()
             print("   ✅ Context saved successfully")
-        } catch {
+        }
+        catch
+        {
             print("   ❌ Error saving context: \(error)")
         }
 
         // Mark as saved so validateUser doesn't delete it
         userSaved = true
-        
+
         dismiss()
     }
 
@@ -119,7 +121,7 @@ struct UserDetailView: View
         ZStack
         {
             // Solid background to prevent content showing through
-            Color(UIColor.systemBackground)
+            Color.systemBackground
                 .ignoresSafeArea()
 
             // Modern gradient background overlay
@@ -235,7 +237,7 @@ struct UserDetailView: View
         }
         .toolbar
         {
-            ToolbarItem(placement: .topBarLeading)
+            ToolbarItem(placement: .navigation)
             {
                 Button(action: {
                     dismiss()
@@ -252,7 +254,7 @@ struct UserDetailView: View
                 }
             }
 
-            ToolbarItem(placement: .topBarTrailing)
+            ToolbarItem(placement: .primaryAction)
             {
                 Button("Cancel")
                 {
@@ -261,10 +263,12 @@ struct UserDetailView: View
                 .foregroundStyle(AppGradients.userGradient)
             }
         }
+        #if os(iOS)
         .toolbarBackground(.visible, for: .navigationBar)
-        .onAppear(perform: populateInitialSelectedRoleValue)
-        .onDisappear(perform: validateUser)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        #endif
+        .onAppear(perform: populateInitialSelectedRoleValue)
+        .onDisappear(perform: validateUser)
     }
 }
