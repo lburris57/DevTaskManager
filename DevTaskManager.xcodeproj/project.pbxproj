@@ -124,6 +124,7 @@
 				Views/TaskDetailView.swift,
 				Views/TaskListView.swift,
 				Views/ToastView.swift,
+				Views/TOOLBAR_ALIGNMENT_FIX.md,
 				Views/USER_CANCEL_FIX_SUMMARY.md,
 				Views/UserDetailView.swift,
 				Views/UserListView.swift,

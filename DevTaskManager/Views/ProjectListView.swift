@@ -299,9 +299,9 @@ struct ProjectListView: View
                         case let .projectDetail(project):
                             ProjectDetailView(project: project, path: $path, onDismissToMain: { dismiss() }, detailSelection: detailSelection)
                         case let .taskDetail(task, context):
-                            TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context, detailSelection: detailSelection)
+                            TaskDetailView(task: task, path: $path, onDismissToMain: { dismiss() }, sourceContext: context)
                         case let .userDetail(user):
-                            UserDetailView(user: user, path: $path, detailSelection: detailSelection)
+                            UserDetailView(user: user, path: $path)
                         case let .userTasks(user):
                             UserTasksView(user: user, path: $path)
                     }
@@ -399,7 +399,7 @@ struct ProjectListView: View
         #if os(macOS)
         .toolbar
         {
-            ToolbarItemGroup(placement: .automatic)
+            ToolbarItemGroup(placement: .primaryAction)
             {
                 // Only show sort menu when there are projects
                 if !projects.isEmpty
@@ -436,9 +436,9 @@ struct ProjectListView: View
                 case let .projectDetail(project):
                     ProjectDetailView(project: project, path: $path, onDismissToMain: {}, detailSelection: detailSelection)
                 case let .taskDetail(task, context):
-                    TaskDetailView(task: task, path: $path, onDismissToMain: {}, sourceContext: context, detailSelection: detailSelection)
+                    TaskDetailView(task: task, path: $path, onDismissToMain: {}, sourceContext: context)
                 case let .userDetail(user):
-                    UserDetailView(user: user, path: $path, detailSelection: detailSelection)
+                    UserDetailView(user: user, path: $path)
                 case let .userTasks(user):
                     UserTasksView(user: user, path: $path)
             }
