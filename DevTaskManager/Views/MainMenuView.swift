@@ -215,12 +215,8 @@ struct MainMenuView: View
     {
         NavigationStack
         {
-            ZStack
+            ScrollView
             {
-                // Background gradient
-                AppGradients.mainBackground
-                    .ignoresSafeArea()
-
                 VStack(spacing: 0)
                 {
                     // Header section with app title and subtitle
@@ -228,19 +224,18 @@ struct MainMenuView: View
                         .padding(.vertical, 20)
 
                     // Main menu cards
-                    ScrollView
+                    VStack(spacing: 16)
                     {
-                        VStack(spacing: 16)
-                        {
-                            menuCards
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 10)
+                        menuCards
                     }
-
-                    Spacer()
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
                 }
             }
+            .background(
+                AppGradients.mainBackground
+                    .ignoresSafeArea()
+            )
             #if canImport(UIKit)
             .navigationBarHidden(true)
             .fullScreenCover(item: $selectedView)

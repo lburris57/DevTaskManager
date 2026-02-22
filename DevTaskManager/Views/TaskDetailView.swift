@@ -496,15 +496,13 @@ struct TaskDetailView: View
                 detailSelection.wrappedValue = nil
             }
         } else {
-            if !path.isEmpty {
-                path.removeLast()
-            }
+            // When navigating within a NavigationStack, just dismiss
+            // The dismiss() will automatically pop back one level
             dismiss()
         }
         #else
-        if !path.isEmpty {
-            path.removeLast()
-        }
+        // On iOS, just dismiss to go back one level
+        // The NavigationStack handles the path automatically
         dismiss()
         #endif
     }
